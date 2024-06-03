@@ -1,9 +1,112 @@
+# ERM Diagramm inklusive kurzer Beschreibung
+
+## Tabelle: Users
+> Passwörter, die gehasht gespeichert werden, haben eine feste Länge VARCHAR(x)
+
+| Schlüssel | Feldbeschreibung                          |
+|-----------|-------------------------------------------|
+| PK        | ID INTEGER AUTO_INCREMENT                 |
+|           | username VARCHAR(30) UNIQUE NOT NULL      |
+|           | password (DATENTYP???) NOT NULL           |
+|           | role ENUM('ADMIN', 'USER') DEFAULT 'USER' |
+
+Ein User hat (0, *) Photos.  
+Ein Photo gehört (1, 1) Benutzer.
+
+## Tabelle: Photos
+
+| Schlüssel | Feldbeschreibung                |
+|-----------|---------------------------------|
+| PK        | ID INTEGER AUTO_INCREMENT       |
+| FK        | Users_ID                        |
+|           | title VARCHAR(30) NOT NULL      |
+|           | taken DATE NOT NULL             |
+|           | url VARCHAR(30) UNIQUE NOT NULL |
+
+
+Ein Photo ist in (0, *) Alben.  
+Ein Album enthält (0, *) Photos.
+
+Ein Photo besitzt (0, *) Tags.  
+Ein Tag gehört zu (1, *) Photos
+
+## Tabelle: Albums
+| Schlüssel  | Feldbeschreibung            |
+|------------|-----------------------------|
+| PK         | ID INTEGER AUTO_INCREMENT   |
+|            | title VARCHAR(30) NOT NULL  |
+| FK         | Users_ID                    | 
+
+Ein Album besitzt (0, *) Tags.  
+Ein Tag gehört zu (1, *) Album.
+
+## Tabelle: Tags
+| Schlüssel | Feldbeschreibung          |
+|-----------|---------------------------|
+| PK        | ID INTEGER AUTO_INCREMENT |
+|           | name VARCHAR(30) NOT NULL | 
+
+## Verbindungstabelle PhotosTags
+| Schlüssel | Feldbeschreibung                              |
+|-----------|-----------------------------------------------|
+| PK        | Photos_ID INTEGER AUTO_INCREMENT              | 
+| PK        | Tags_ID INTEGER AUTO_INCREMENT                |
+|           | PRIMARY KEY (Photos_ID, TAGS_ID)              |
+|           | FOREIGN KEY (Photos_ID) REFERENCES Photos(ID) |
+|           | PRIMARY KEY (Tags_ID) REFERENCES Tags(ID)     |
+
+
+## Verbindungstabelle AlbumsTags
+| Schlüssel | Feldbeschreibung                             |
+|-----------|----------------------------------------------|
+| PK        | Alben_ID INTEGER AUTO_INCREMENT              | 
+| PK        | Tags_ID INTEGER AUTO_INCREMENT               |
+|           | PRIMARY KEY (ALBEN_ID, TAGS_ID)              |
+|           | FOREIGN KEY (ALBEN_ID) REFERENCES Albums(ID) |
+|           | PRIMARY KEY (Tags_ID) REFERENCES Tags(ID)    |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Beschreibung der RESTful-API
 **WICHTIG:**
 1. Wie möchten wir die Fotos in der Datenbank speichern
 2. Wie übertragen wird das Passwort mit JSON bei der Anfrage des Clients
    und bei der Antwort des Servers?
 3. Restlichen Routen nach definieren Schema vervollständigen
+
+FRAGEN:
+- wenn nutzer bild nicht gehört 404 oder 403
+- bei patch nochmal alle Infos übertragen?
+
+TODO:
+- patch routen
+- album erstellen: kann direkt ein Bild übergeben werden
+- Passwort in response???
+- Routen um Bilder mit album zu verbinden/zu trennen
 
 ## Basis-URL
 Die Basis-URL für alle Endpunkte lautet: `http://localhost:8080`
@@ -119,7 +222,8 @@ JSON-Antwort:
     },
     {
       "ID" : 2,
-      "username" : "johanneshaeuser",
+      "username" : "johanneshaeuser", 
+      "password" : "_____",
       "role" : "USER"
     }
   ]
@@ -131,6 +235,13 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 ```JSON
 {
   "message" : "Ein interner Severfehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+}
+```
+
+2. ausführender User ist kein Admin  → **403 (Forbidden)**
+```JSON
+{
+  "message" : "Sie haben keine Berechtigung diese Funktion auszuführen. Bitte kontaktieren sie ihren Administrator."
 }
 ```
 
@@ -160,10 +271,24 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 }
 ```
 
-2. Datenbank- und/oder Serverfehler → **500 (Internal Server Error)**
+2. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+}
+```
+
+3. Datenbank- und/oder Serverfehler → **500 (Internal Server Error)**
 ```JSON
 {
   "message" : "Ein interner Severfehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+}
+```
+
+4. ausführender User ist kein Admin  → **403 (Forbidden)**
+```JSON
+{
+  "message" : "Sie haben keine Berechtigung diese Funktion auszuführen. Bitte kontaktieren sie ihren Administrator."
 }
 ```
 
@@ -178,8 +303,7 @@ JSON-Anfrage:
 {
   "user" : {
     "username" : "noelhoppe",
-    "pasword" : "___",
-    "role" : "USER"
+    "pasword" : "___"
   }
 }
 ```
@@ -211,11 +335,10 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
   "message" : "Das Feld Pasword darf nicht leer sein."
 }
 ```
-
-3. Versuch, einen Nutzer ohne Rolle zu erstellen → **400 (Bad Request)**
+Username existiert bereits → **409 (Conflict)**
 ```JSON
 {
-  "message" : "Das Feld Role darf nicht leer sein."
+  "message" : "Dieser Username ist bereits vergeben. Bitte wählen sie einen noch nicht belegten Username."
 }
 ```
 
@@ -223,6 +346,13 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 ```JSON
 {
   "message" : "Ein interner Severfehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+}
+```
+
+5. ausführender User ist kein Admin  → **403 (Forbidden)**
+```JSON
+{
+  "message" : "Sie haben keine Berechtigung diese Funktion auszuführen. Bitte kontaktieren sie ihren Administrator."
 }
 ```
 
@@ -255,6 +385,19 @@ Mögliche Fehler, inkl. Statuscodes und JSON Fehlermeldung
 ```JSON
 {
   "message" : "EIn interner Servefehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+}
+```
+
+4. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+}
+```
+5. ausführender User ist kein Admin  → **403 (Forbidden)**
+```JSON
+{
+  "message" : "Sie haben keine Berechtigung diese Funktion auszuführen. Bitte kontaktieren sie ihren Administrator."
 }
 ```
 
@@ -304,6 +447,20 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 }
 ```
 
+3. Angegebener Nutzer exisitert nicht → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Der angegebene Benutzer wurde nicht gefunden."
+}
+```
+
+4. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+}
+```
+
 ---
 
 > Endpunkt: GET /photos/:photos_ID/users/:users_ID  
@@ -337,6 +494,15 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
   "message" : "Ein interner Severfehler ist aufgetreten. Bitte versuchen Sie es später erneut."
 }
 ```
+
+3. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+}
+```
+
+
 
 ---
 
@@ -413,6 +579,20 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 }
 ```
 
+5. Angegebener Nutzer exisitert nicht → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Der angegebene Benutzer wurde nicht gefunden."
+}
+```
+
+6. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+}
+```
+
 ---
 
 > Endpunkt: PATCH /photos/:photos_ID/users/:users_ID
@@ -421,28 +601,276 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 
 > Endpunkt: DELETE /photos/:photos_ID/users/:users_ID
 
+Statuscode (erfolgreich): 204 (No Content)
+
+Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
+
+1. Foto exisitert nicht  → **404 (Not Found)**
+```JSON
+{
+  "message" : "Das angegebene Foto wurde nicht gefunden"
+}
+```
+
+2. Datenbank- und/oder Serverfehler → **500 (Internal Server Error)**
+```JSON
+{
+  "message" : "Ein interner Severfehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+}
+```
+
+3. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+}
+```
+
+
+
 ---
 
 ### Fotolaben
 
 ---
 
-> Endpuntkt: GET /alben/users/:users_ID
+> Endpuntkt: GET /albums/users/:users_ID
+
+Statusode (erfolgreich): **200 (Ok)**
+
+JSON-Antwort:
+
+```JSON
+{
+   "users_ID": 1,
+   "albums": [
+      {
+         "ID": 1,
+         "title": "Meine Fotos",
+         "photos": [
+            {
+               "ID": 1,
+               "title": "Weihnachtsmarkt",
+               "taken": "2023-12-12",
+               "url": "___"
+            },
+            {
+               "ID": 2,
+               "title": "Silvesterparty",
+               "taken": "2023-12-31",
+               "url": "___"
+            }
+         ]
+      },
+      {
+         "ID": 2,
+         "title": "Meine anderen Fotos",
+         "photos": [
+            {
+               "ID": 3,
+               "title": "Landschaft",
+               "taken": "2007-05-01",
+               "url": "___"
+            },
+            {
+               "ID": 4,
+               "title": "Urlaub",
+               "taken": "2023-07-28",
+               "url": "___"
+            }
+         ]
+      }
+   ]
+}
+```
+
+Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
+1. Datenbank- und/oder Serverfehler →  **500 (Internale Server Error)**
+```JSON
+{
+  "message" : "Ein interner Severfehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+}
+```
+
+2. Der Nutzer hat keine Alben → **404 (Not Found)**
+```JSON
+{
+  "message" : "Der Benutzer hat keine Alben."
+}
+```
+
+3. Angegebener Nutzer exisitert nicht → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Der angegebene Benutzer wurde nicht gefunden."
+}
+```
+
+4. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+}
+```
 
 ---
 
-> Endpunkt: GET /alben/:alben_ID/users/:users_ID
+> Endpunkt: GET /albums/:albums_ID/users/:users_ID
+
+
+Statuscode (erfolgreich) : **200 (Ok)**
+
+JSON-Antwort:
+```JSON
+{
+  "users_ID" : 1,
+   "album":
+      {
+         "ID": 1,
+         "title": "Meine Fotos",
+         "photos": [
+            {
+               "ID": 1,
+               "title": "Weihnachtsmarkt",
+               "taken": "2023-12-12",
+               "url": "___"
+            },
+            {
+               "ID": 2,
+               "title": "Silvesterparty",
+               "taken": "2023-12-31",
+               "url": "___"
+            }
+         ]
+      }
+}
+```
+
+Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
+1. Angegebenes Album nicht gefunden → **404 (Not Found)**
+```JSON
+{
+  "message" : "Das angegebene Album wurde nicht gefunden."
+}
+```
+
+2. Datenbank- und/oder Serverfehler => **500 (Internal Server Error)**
+```JSON
+{
+  "message" : "Ein interner Severfehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+}
+```
+
+3. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+}
+```
+
 
 ---
 
-> Endpunkt: POST /alben/users/:users_ID
+> Endpunkt: POST /albums/users/:users_ID
+
+Statusode (erolgreich) : 201 (Created)
+
+JSON-Anfrage:
+```JSON
+{
+  "album" : {
+    "title" : "Noch mehr Fotos"
+  },
+  "tags" : [
+    {
+      "name" : "Bilder"
+    },
+    {
+      "name" : "Fotos"
+    }
+  ]
+}
+```
+
+JSON-Antwort:
+```JSON
+{
+  "message": "Album erfolgreich angelegt",
+  "album": {
+    "id" : 3,
+    "title": "Noch mehr Fotos",
+  },
+  "tags" : [
+    {
+      "name" : "Bilder"
+    },
+    {
+      "name" : "Fotos"
+    }
+  ]
+}
+```
+
+Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
+1. Versuch, ein Album ohne Titel zu erstellen → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Das Feld Titel darf nicht leer sein."
+}
+```
+
+4. Datenbank- und/oder Serverfehler → **500 (Internal Server Error)**
+```JSON
+{
+  "message" : "Ein interner Severfehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+}
+```
+
+5. Angegebener Nutzer exisitert nicht → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Der angegebene Benutzer wurde nicht gefunden."
+}
+```
+
+6. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+}
+```
 
 ---
 
-> Endpunkt: PATCH /alben/:alben_ID/users/:users_ID
+> Endpunkt: PATCH /albums/:albums_ID/users/:users_ID
 
 ---
 
-> Endpunkt: DELETE /alben/:alben_ID/users/:users_ID
+> Endpunkt: DELETE /albums/:albums_ID/users/:users_ID
+
+Statuscode (erfolgreich): 204 (No Content)
+
+Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
+
+1. Album exisitert nicht  → **404 (Not Found)**
+```JSON
+{
+  "message" : "Das angegebene Album wurde nicht gefunden"
+}
+```
+
+2. Datenbank- und/oder Serverfehler → **500 (Internal Server Error)**
+```JSON
+{
+  "message" : "Ein interner Severfehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+}
+```
+
+4. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+```JSON
+{
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+}
+```
 
 ---

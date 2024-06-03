@@ -1,0 +1,48 @@
+CREATE DATABASE MediaVaultDB;
+
+USE MediaVaultDB;
+
+CREATE TABLE Users(
+    ID INTEGER AUTO_INCREMENT PRIMARY KEY ,
+    username VARCHAR(30) UNIQUE NOT NULL,
+    pasword VARCHAR(256) NOT NULL, -- Welche Länge hat das gehashte Passwort in unserere Implementierung ?
+    role ENUM('ADMIN', 'USER') DEFAULT 'USER'
+);
+
+CREATE TABLE Photos(
+    ID INTEGER AUTO_INCREMENT PRIMARY KEY,
+    Users_ID INTEGER,
+    FOREIGN KEY (Users_ID) REFERENCES Users(ID),
+    title VARCHAR(30) NOT NULL,
+    taken DATE NOT NULL,
+    url VARCHAR(30) UNIQUE NOT NULL
+);
+
+Create TABLE Albums(
+  ID INTEGER AUTO_INCREMENT PRIMARY KEY ,
+  Users_ID INTEGER,
+  title VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE Tags(
+    ID INTEGER AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(30) NOT NULL
+);
+
+CREATE TABLE PhotosTags(
+    Photos_ID INTEGER,
+    TAGS_ID INTEGER,
+    PRIMARY KEY (Photos_ID, TAGS_ID),
+
+    FOREIGN KEY (Photos_ID) REFERENCES Photos(ID),
+    FOREIGN KEY (TAGS_ID) REFERENCES Tags(ID)
+);
+
+CREATE TABLE AlbumsTags(
+    Alben_ID INTEGER,
+    Tags_ID INTEGER,
+    PRIMARY KEY (Alben_ID, Tags_ID),
+
+    FOREIGN KEY (Alben_ID) REFERENCES Albums(ID),
+    FOREIGN KEY (Tags_ID) REFERENCES Tags(ID)
+);
