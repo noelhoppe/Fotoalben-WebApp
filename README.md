@@ -1,14 +1,25 @@
+# Informationen zur Inbetriebnahme der Anwendung
+
+---
+
+# DDL Skript für die Initialisierung der Datenbank (u.a. anlegen eines Admin-Nutzer)
+
+---
+
+
+
 # ERM Diagramm inklusive kurzer Beschreibung
 
-## Tabelle: Users
-> Passwörter, die gehasht gespeichert werden, haben eine feste Länge VARCHAR(x)
+---
 
-| Schlüssel | Feldbeschreibung                          |
-|-----------|-------------------------------------------|
-| PK        | ID INTEGER AUTO_INCREMENT                 |
-|           | username VARCHAR(30) UNIQUE NOT NULL      |
-|           | password (DATENTYP???) NOT NULL           |
-|           | role ENUM('ADMIN', 'USER') DEFAULT 'USER' |
+## Tabelle: Users
+
+| Schlüssel | Feldbeschreibung                             |
+|-----------|----------------------------------------------|
+| PK        | ID INTEGER AUTO_INCREMENT                    |
+|           | username VARCHAR(30) UNIQUE NOT NULL         |
+|           | password (DATENTYP???) NOT NULL              |
+|           | role ENUM('ADMIN', 'USER') DEFAULT 'USER'    |
 
 Ein User hat (0, *) Photos.  
 Ein Photo gehört (1, 1) Benutzer.
@@ -67,49 +78,29 @@ Ein Tag gehört zu (1, *) Album.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Beschreibung der RESTful-API
-**WICHTIG:**
-1. Wie möchten wir die Fotos in der Datenbank speichern
-2. Wie übertragen wird das Passwort mit JSON bei der Anfrage des Clients
-   und bei der Antwort des Servers?
-3. Restlichen Routen nach definieren Schema vervollständigen
 
-FRAGEN:
-- wenn nutzer bild nicht gehört 404 oder 403
-- bei patch nochmal alle Infos übertragen?
+---
 
-TODO:
+**TODO:**
 - patch routen
 - album erstellen: kann direkt ein Bild übergeben werden
 - Passwort in response???
-- Routen um Bilder mit album zu verbinden/zu trennen
+- Routen um Bilder mit album zu verbinden/zu trennen?
+- wenn nutzer bild nicht gehört 404 oder 403?
+- bei patch nochmal alle Infos übertragen? sollte man lieber put verwenden?
+- id bei foto zurückgeben (einziger unique parameter), ganauso bei album
+- Wie möchten wir die Fotos in der Datenbank speichern (URL oder BLOB)? 
+- Wie übertragen wird das Passwort mit JSON bei der Anfrage des Clients
+   und bei der Antwort des Servers bzw. übertragen wir es bei der Antwort des Servers überhaupt?
+- Welche Länge haben Passwörter, die gehaht gespeichert werden
+- Beschreibung des ERM Diagramm in Ordnung? Unterschied zur Beschreibung des DDL Scripts?
+
+---
 
 ## Basis-URL
 Die Basis-URL für alle Endpunkte lautet: `http://localhost:8080`
+
 
 ## Beschreibung der Endpunkte
 
@@ -117,7 +108,8 @@ Die Basis-URL für alle Endpunkte lautet: `http://localhost:8080`
 
 ---
 
-> Endpunkt: POST /login
+> Endpunkt: POST /login  
+> Ein Nutzer meldet sich mit seinem Nutzernamen und Passwort an.
 
 Statuscode (erfolgreich) : **201 (Created)**
 
@@ -137,9 +129,7 @@ JSON-Antwort:
   "message" : "Login erfolgreich.",
   "sessionID" : "a1b2c3d4e5f6g7h8i9j0",
   "user" : {
-    "ID" : 1,
     "username" : "noelhoppe",
-    "password" : "___",
     "role" : "USER"
   }
 }
@@ -167,7 +157,7 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON Antwort:
 }
 ```
 
-4. Datenbank- und/oder Serverfehler → **500 (Internal Server Error)**
+4. Datenbank- und/oder Serverfehler, u.a falscher Datentyp → **500 (Internal Server Error)**
 ```JSON
 {
   "message" : "Ein interner Severfehler ist aufgetreten. Bitte versuchen Sie es später erneut."
@@ -176,7 +166,8 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON Antwort:
 
 ---
 
-> Endpunkt: POST /logout
+> Endpunkt: POST /logout  
+> Der Benutzer meldet sich von der Anwendung ab.
 
 Statuscode (erfolgreich) : **200 (Ok)**
 
@@ -185,9 +176,7 @@ JSON-Antwort:
 {
   "message" : "Logout erfolgreich.",
   "user" : {
-    "id" : 1,
     "username" : "noelhoppe",
-    "password" : "___",
     "role" : "USER"
   }
 }
@@ -207,6 +196,7 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON Antwort:
 ---
 
 > Endpunkt: GET /users
+> Der Nutzer mit der Rolle Admin kann alle Nutzerkonten anzeigen.
 
 Statuscode (erfolgreich) : **200 (Ok)**  
 
@@ -215,15 +205,11 @@ JSON-Antwort:
 {
   "users" : [
     {
-      "ID" : 1,
       "username" : "noelhoppe",
-      "password" : "___",
       "role" : "ADMIN"
     },
     {
-      "ID" : 2,
-      "username" : "johanneshaeuser", 
-      "password" : "_____",
+      "username" : "johanneshaeuser",
       "role" : "USER"
     }
   ]
@@ -238,7 +224,7 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 }
 ```
 
-2. ausführender User ist kein Admin  → **403 (Forbidden)**
+2. ausführender User ist kein Admin → **403 (Forbidden)**
 ```JSON
 {
   "message" : "Sie haben keine Berechtigung diese Funktion auszuführen. Bitte kontaktieren sie ihren Administrator."
@@ -247,7 +233,8 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 
 ---
 
-> GET /users/:users_ID  
+> GET /users/:users_username  
+> Der Nutzer mit der Rolle Admin kann nach Nutzern suchen und diese anzeigen.
 
 Statuscode (erfolgreich) : **200 (Ok)**  
 
@@ -255,9 +242,7 @@ JSON-Antwort:
 ```JSON
 {
   "user" : {
-    "ID" : 1, 
     "username" : "Noel Hoppe",
-    "password" : "___",
     "role" : "ADMIN"
   }
 }
@@ -274,7 +259,7 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 2. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
 ```JSON
 {
-  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss ein String sein!"
 }
 ```
 
@@ -285,7 +270,7 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 }
 ```
 
-4. ausführender User ist kein Admin  → **403 (Forbidden)**
+4. ausführender User ist kein Admin → **403 (Forbidden)**
 ```JSON
 {
   "message" : "Sie haben keine Berechtigung diese Funktion auszuführen. Bitte kontaktieren sie ihren Administrator."
@@ -295,6 +280,7 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 ---
 
 > Endpunkt: POST /users  
+> Der Nutzer mit der Rolle Admin kann Nutzer mit einem Benutzernamen und Passwort hinzufügen.
  
 Statusode (erolgreich) : **201 (Created)**  
 
@@ -313,9 +299,7 @@ JSON-Antwort:
 {
   "message": "Benutzer erfolgreich angelegt",
   "user": {
-    "id" : 1,
     "username": "noelhoppe",
-    "password" : "___",
     "role" : "USER"
   }
 }
@@ -335,7 +319,7 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
   "message" : "Das Feld Pasword darf nicht leer sein."
 }
 ```
-Username existiert bereits → **409 (Conflict)**
+3. Username existiert bereits → **409 (Conflict)**
 ```JSON
 {
   "message" : "Dieser Username ist bereits vergeben. Bitte wählen sie einen noch nicht belegten Username."
@@ -349,7 +333,7 @@ Username existiert bereits → **409 (Conflict)**
 }
 ```
 
-5. ausführender User ist kein Admin  → **403 (Forbidden)**
+5. ausführender User ist kein Admin → **403 (Forbidden)**
 ```JSON
 {
   "message" : "Sie haben keine Berechtigung diese Funktion auszuführen. Bitte kontaktieren sie ihren Administrator."
@@ -358,11 +342,46 @@ Username existiert bereits → **409 (Conflict)**
 
 ---
 
-> Endpunkt: PATCH /users/:users_ID   
+> Endpunkt: PATCH /users/:users_username
+> Der Nutzer mit der Rolle Admin kann Nutzerkonten bearbeiten, d.h den Benutzernamen und/oder das Passwort ändern
+
+Statuscode(erfolgreich) : 200 (Ok)
+
+JSON-Anfrage 1 (Passswort ändern)
+```JSON
+{
+   "password" : "___"
+}
+```
+
+JSON-Anfrage 2 (Nutzername ändern)
+```JSON
+{
+   "username" : "neuer_benutzername"
+}
+```
+
+JSON-Antwort 1
+```JSON
+{
+   "message" : "Passwort erfolgreich geändert."
+}
+```
+
+JSON-Antwort 2
+```JSON
+{
+   "message" : "Benutzername erfolgreich geändert.",
+   "users" : {
+      "username": "neuer_benutzername"
+   }
+}
+```
 
 ---
 
-> Endpunkt: DELETE /users/:user_ID
+> Endpunkt: DELETE /users/:users_username  
+> Der Benutzer mit der Rolle Admin kann Nutzerkonten löschen.
 
 Statuscode (erfolgreich) : **204 (No Content)**
 
@@ -388,13 +407,13 @@ Mögliche Fehler, inkl. Statuscodes und JSON Fehlermeldung
 }
 ```
 
-4. User ID ungültig (falscher Datentyp) → **400 (Bad Request)**
+4. Username ungültig (falscher Datentyp) → **400 (Bad Request)**
 ```JSON
 {
-  "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
+  "message" : "Ungültiger Nutzername. Username muss ein String sein!"
 }
 ```
-5. ausführender User ist kein Admin  → **403 (Forbidden)**
+5. ausführender User ist kein Admin → **403 (Forbidden)**
 ```JSON
 {
   "message" : "Sie haben keine Berechtigung diese Funktion auszuführen. Bitte kontaktieren sie ihren Administrator."
@@ -407,23 +426,21 @@ Mögliche Fehler, inkl. Statuscodes und JSON Fehlermeldung
 
 ---
 
-> Endpunkt: GET /photos/users/:user_id  
+> Endpunkt: GET /photos  
+> Ein Nutzer fragt seine gesamten Fotos an.
 
 Statusode (erfolgreich): **200 (Ok)**
 
 JSON-Antwort:  
 ```JSON
 {
-  "users_ID" : 1,
   "photos" : [
     {
-      "ID" : 1,
       "title" : "Weihnachtsmarkt",
       "taken" : "2023-12-12",
       "url" : "___"
     },
     {
-      "ID" : 2,
       "title" : "Silvesterparty",
       "taken" : "2023-12-31",
       "url" : "___"
@@ -463,16 +480,15 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 
 ---
 
-> Endpunkt: GET /photos/:photos_ID/users/:users_ID  
+> Endpunkt: GET /photos/:suchparameter  
+> Ein Nutzer durchsucht seine Fotos nach Titel und Schlagworte und zeigt die Treffer an.
 
 Statuscode (erfolgreich) : **200 (Ok)**
 
 JSON-Antwort:
 ```JSON
 {
-  "users_ID" : 1,
   "photo" : {
-    "ID" : 1, 
     "title" : "Weihnachtsmarkt",
     "taken" : "2023-12-12",
     "url" : "___"
@@ -502,15 +518,14 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 }
 ```
 
-
-
 ---
 
-> Endpunkt: POST /photos/users/:users_ID
+> Endpunkt: POST /photos  
+> Ein Nutzer erstellt ein neues Foto mit einem Bild, Titel und Erstelldatum (Pflichtfelder) sowie optionalen Schlagwörtern.
 
 Statusode (erolgreich) : 201 (Created)
 
-JSON-Anfrage:
+JSON-Anfrage 1:
 ```JSON
 {
   "photo" : {
@@ -529,12 +544,11 @@ JSON-Anfrage:
 }
 ```
 
-JSON-Antwort:
+JSON-Antwort 1:
 ```JSON
 {
   "message": "Foto erfolgreich angelegt",
   "photo": {
-    "id" : 1,
     "title": "Weihnachtsmarkt",
     "taken" : "2023-12-12",
     "url" : "images/..."
@@ -547,6 +561,29 @@ JSON-Antwort:
       "name" : "Freunde"
     }
   ]
+}
+```
+
+JSON-Anfrage 2:
+```JSON
+{
+  "photo" : {
+    "title" : "Weihnachtsmarkt",
+    "taken" : "2023-12-12",
+    "url" : "___"
+  }
+}
+```
+
+JSON-Antwort 2:
+```JSON
+{
+  "message": "Foto erfolgreich angelegt",
+  "photo": {
+    "title": "Weihnachtsmarkt",
+    "taken" : "2023-12-12",
+    "url" : "images/..."
+  }
 }
 ```
 
@@ -595,11 +632,12 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 
 ---
 
-> Endpunkt: PATCH /photos/:photos_ID/users/:users_ID
+> Endpunkt: PATCH /photos/:photos_ID/:suchparameter
+
 
 ---
 
-> Endpunkt: DELETE /photos/:photos_ID/users/:users_ID
+> Endpunkt: DELETE /photos/:photos_ID
 
 Statuscode (erfolgreich): 204 (No Content)
 
@@ -634,7 +672,8 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 
 ---
 
-> Endpuntkt: GET /albums/users/:users_ID
+> Endpuntkt: GET /albums  
+> Ein Nutzer zeigt seine gesamten Alben an. 
 
 Statusode (erfolgreich): **200 (Ok)**
 
@@ -715,7 +754,7 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 
 ---
 
-> Endpunkt: GET /albums/:albums_ID/users/:users_ID
+> Endpunkt: GET /albums/:albums_ID
 
 
 Statuscode (erfolgreich) : **200 (Ok)**
@@ -771,11 +810,12 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 
 ---
 
-> Endpunkt: POST /albums/users/:users_ID
+> Endpunkt: POST /albums
+> Ein Nutzer erstellt ein Album mit einem Titel (Pflichtfeld) und optionalen Schagwörtern.
 
 Statusode (erolgreich) : 201 (Created)
 
-JSON-Anfrage:
+JSON-Anfrage 1:
 ```JSON
 {
   "album" : {
@@ -792,13 +832,13 @@ JSON-Anfrage:
 }
 ```
 
-JSON-Antwort:
+JSON-Antwort 1:
 ```JSON
 {
   "message": "Album erfolgreich angelegt",
   "album": {
     "id" : 3,
-    "title": "Noch mehr Fotos",
+    "title": "Noch mehr Fotos"
   },
   "tags" : [
     {
@@ -808,6 +848,26 @@ JSON-Antwort:
       "name" : "Fotos"
     }
   ]
+}
+```
+
+JSON-Anfrage 2:
+```JSON
+{
+  "album" : {
+    "title" : "Noch mehr Fotos"
+  }
+}
+```
+
+JSON-Antwort 2:
+```JSON
+{
+  "message": "Album erfolgreich angelegt",
+  "album": {
+    "id" : 3,
+    "title": "Noch mehr Fotos"
+  }
 }
 ```
 
@@ -842,11 +902,11 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
 
 ---
 
-> Endpunkt: PATCH /albums/:albums_ID/users/:users_ID
+> Endpunkt: PATCH /albums/:albums_ID
 
 ---
 
-> Endpunkt: DELETE /albums/:albums_ID/users/:users_ID
+> Endpunkt: DELETE /albums/:albums_ID
 
 Statuscode (erfolgreich): 204 (No Content)
 
@@ -872,5 +932,13 @@ Mögliche Fehler, inkl. entsprechender Statuscodes und JSON-Antwort
   "message" : "Ungültige Nutzer-ID. Nutzer-ID muss eine Zahl sein!"
 }
 ```
+
+---
+
+# Auflistung der erfüllten und nicht erfüllten Anforderungen
+
+---
+
+# Falls zutreffend/umgesetzt: Auflistung von erfüllten optionalen Bonusaufgaben
 
 ---

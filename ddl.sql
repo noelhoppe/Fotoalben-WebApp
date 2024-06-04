@@ -9,6 +9,9 @@ CREATE TABLE Users(
     role ENUM('ADMIN', 'USER') DEFAULT 'USER'
 );
 
+INSERT INTO Users
+VALUES (1, 'root', 'root', 'ADMIN');
+
 CREATE TABLE Photos(
     ID INTEGER AUTO_INCREMENT PRIMARY KEY,
     Users_ID INTEGER,
