@@ -38,13 +38,32 @@
   <dependencies>
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-web</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.vertx</groupId>
       <artifactId>vertx-junit5</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <!-- vertx-web -->
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web</artifactId>
+      <version>4.5.8</version>
+    </dependency>
+    <dependency>
+      <!-- vertx jdbc-client -->
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-jdbc-client</artifactId>
+      <version>4.5.8</version>
+    </dependency>
+    <!-- mariaDB jdbc Treiber -->
+    <dependency>
+      <groupId>org.mariadb.jdbc</groupId>
+      <artifactId>mariadb-java-client</artifactId>
+      <version>3.4.0</version>
+    </dependency>
+    <!-- vertx config -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-config</artifactId>
+      <version>4.5.8</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
