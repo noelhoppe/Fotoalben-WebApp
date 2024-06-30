@@ -4,11 +4,10 @@ import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.config.spi.ConfigStore;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
+import io.vertx.core.*;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -20,7 +19,8 @@ public class MainVerticle extends AbstractVerticle {
   public void start(Promise<Void> startPromise) throws Exception {
     doConfig()
               .compose(this::storeConfig)
-              .onComplete(v -> startHttpServer(startPromise));
+              .compose(this::deployOtherVerticles)
+              .onComplete(startPromise);
   }
 
   /**
@@ -42,7 +42,7 @@ public class MainVerticle extends AbstractVerticle {
               .addStore(defaultConfig);
 
     ConfigRetriever retriever = ConfigRetriever.create(vertx, opts);
-    return Future.future(retriever::getConfig);
+    return Future.future(promise -> retriever.getConfig(promise));
   }
 
   /**
@@ -55,13 +55,12 @@ public class MainVerticle extends AbstractVerticle {
     return Future.succeededFuture();
   }
 
-  void startHttpServer(Promise<Void> promise) {
-    HttpServer server = vertx.createHttpServer();
+  Future<Void> deployOtherVerticles(Void unused) {
+    DeploymentOptions opts = new DeploymentOptions().setConfig(loadedConfig);
 
-    server.requestHandler(req -> {
-      req.response().putHeader("content-type", "text/plain").end("Hello World");
-    });
+    Future<String> webVerticle = Future.future(promise -> vertx.deployVerticle(new WebVerticle(), opts, promise));
+    Future<String> dbVerticle = Future.future(promise -> vertx.deployVerticle(new DatabaseVerticle(), opts, promise));
 
-    server.listen(loadedConfig.getJsonObject("http").getInteger("port"));
+    return Future.all(webVerticle, dbVerticle).mapEmpty();
   }
 }
