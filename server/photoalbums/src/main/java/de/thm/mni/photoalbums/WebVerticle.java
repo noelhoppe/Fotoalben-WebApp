@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.SessionHandler;
+import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 
@@ -41,9 +42,15 @@ public class WebVerticle extends AbstractVerticle {
 		SessionStore sessionStore = LocalSessionStore.create(vertx); // Verticles kommunizieren zwar miteinander aber es wird keine verteilte Sitzungsverwaltung benötigt
 		router.route().handler(SessionHandler.create(sessionStore));
 
+		// Static Handler, um html, js und ts Dateien auszuliefern.
+		router.route().handler(StaticHandler.create()
+			.setCachingEnabled(false)
+			.setWebRoot("./src/main/ressources")
+			.setIndexPage("./views/login.html"));
+
 		// TODO: Implementierung der Routen!
 		// TODO: Chained Routes: Prüfe, dass ein SessionObjekt existiert!
-		router.route(HttpMethod.GET, "/").handler(this::listAllUsers);
+		// router.route(HttpMethod.GET, "/").handler(this::listAllUsers);
 
 
 
