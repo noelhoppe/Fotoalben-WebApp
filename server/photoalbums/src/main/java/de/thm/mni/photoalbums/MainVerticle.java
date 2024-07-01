@@ -12,13 +12,21 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 
+/**
+ * Die MainVerticle-Klasse ist der Haupteinstiegspunkt für die Vert.x-Anwendung.
+ * Sie konfiguriert die Anwendung, indem sie Konfigurationen lädt und andere Verticles bereitstellt.
+ */
 public class MainVerticle extends AbstractVerticle {
-  final JsonObject loadedConfig = new JsonObject();
 
+  /**
+   * Initialisiert die Konfigurations- und Bereitstellungslogik und startet die Verticles.
+   *
+   * @param startPromise ein Promise, das anzeigt, ob der Startvorgang erfolgreich oder fehlerhaft war.
+   * @throws Exception falls ein Fehler während des Startvorgangs auftritt
+   */
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
     doConfig()
-              .compose(this::storeConfig)
               .compose(this::deployOtherVerticles)
               .onComplete(startPromise);
   }
@@ -27,7 +35,7 @@ public class MainVerticle extends AbstractVerticle {
    * Liest die Konfiguration aus einer JSON-Datei aus.
    *
    * <p>Diese Methode richtet einen Konfigurationsspeicher ein, der aus einer Datei
-   * unter "./src/main/java/de/thm/mni/photoalbums/config.json" liest. Sie erstellt
+   * unter "./src/main/config.json" liest. Sie erstellt
    * dann einen Konfigurationsabruf mit diesem Speicher und gibt ein Future zurück,
    * das mit der Konfiguration als {@link JsonObject} abgeschlossen wird.
    *
@@ -36,26 +44,27 @@ public class MainVerticle extends AbstractVerticle {
   Future<JsonObject> doConfig() {
     ConfigStoreOptions defaultConfig = new ConfigStoreOptions()
               .setType("file")
-              .setConfig(new JsonObject().put("path", "./src/main/java/de/thm/mni/photoalbums/config.json"));
+              .setConfig(new JsonObject().put("path", "./src/main/config.json"));
 
     ConfigRetrieverOptions opts = new ConfigRetrieverOptions()
               .addStore(defaultConfig);
 
     ConfigRetriever retriever = ConfigRetriever.create(vertx, opts);
-    return Future.future(promise -> retriever.getConfig(promise));
+
+    return Future.future(retriever::getConfig);
   }
 
   /**
-   * Speichert die übergebene Konfiguration.
-   * @param config Die zu speichernde Konfiguration als {@link JsonObject}
-   * @return Ein {@link Future}, das signalisiert, dass die Speicherung erfolgreich war
+   * Stellt andere Verticles bereit, nachdem die Konfiguration geladen wurde.
+   *
+   * <p>Diese Methode erstellt Bereitstellungsoptionen mit der geladenen Konfiguration und
+   * stellt dann die {@link WebVerticle} und {@link DatabaseVerticle} bereit.
+   * Sie gibt ein Future zurück, das abgeschlossen wird, wenn beide Verticles erfolgreich bereitgestellt wurden.
+   *
+   * @param loadedConfig die geladene Konfiguration als {@link JsonObject}
+   * @return Ein {@link Future}, das abgeschlossen wird, wenn beide Verticles erfolgreich bereitgestellt wurden
    */
-  Future<Void> storeConfig(JsonObject config) {
-    loadedConfig.mergeIn(config);
-    return Future.succeededFuture();
-  }
-
-  Future<Void> deployOtherVerticles(Void unused) {
+  Future<Void> deployOtherVerticles(JsonObject loadedConfig) {
     DeploymentOptions opts = new DeploymentOptions().setConfig(loadedConfig);
 
     Future<String> webVerticle = Future.future(promise -> vertx.deployVerticle(new WebVerticle(), opts, promise));
