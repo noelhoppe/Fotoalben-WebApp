@@ -35,7 +35,7 @@ public class MainVerticle extends AbstractVerticle {
    * Liest die Konfiguration aus einer JSON-Datei aus.
    *
    * <p>Diese Methode richtet einen Konfigurationsspeicher ein, der aus einer Datei
-   * unter "./src/main/config.json" liest. Sie erstellt
+   * "config.json" liest. Sie erstellt
    * dann einen Konfigurationsabruf mit diesem Speicher und gibt ein Future zurück,
    * das mit der Konfiguration als {@link JsonObject} abgeschlossen wird.
    *
@@ -44,7 +44,7 @@ public class MainVerticle extends AbstractVerticle {
   Future<JsonObject> doConfig() {
     ConfigStoreOptions defaultConfig = new ConfigStoreOptions()
               .setType("file")
-              .setConfig(new JsonObject().put("path", "./src/main/config.json"));
+              .setConfig(new JsonObject().put("path", "config.json"));
 
     ConfigRetrieverOptions opts = new ConfigRetrieverOptions()
               .addStore(defaultConfig);
@@ -67,9 +67,10 @@ public class MainVerticle extends AbstractVerticle {
   Future<Void> deployOtherVerticles(JsonObject loadedConfig) {
     DeploymentOptions opts = new DeploymentOptions().setConfig(loadedConfig);
 
-    Future<String> webVerticle = Future.future(promise -> vertx.deployVerticle(new WebVerticle(), opts, promise));
     Future<String> dbVerticle = Future.future(promise -> vertx.deployVerticle(new DatabaseVerticle(), opts, promise));
+    Future<String> webVerticle = Future.future(promise -> vertx.deployVerticle(new WebVerticle(), opts, promise));
 
-    return Future.all(webVerticle, dbVerticle).mapEmpty();
+    return Future.all(dbVerticle, webVerticle).mapEmpty();
   }
+
 }

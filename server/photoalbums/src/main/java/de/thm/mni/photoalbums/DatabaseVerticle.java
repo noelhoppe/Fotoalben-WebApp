@@ -8,20 +8,17 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.SqlConnection;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class DatabaseVerticle extends AbstractVerticle {
 	JDBCPool jdbcPool;
+	public static final String JDBC_POOL_KEY = "JDBC_POOL_KEY";
 
 	// Event Buss Adressen (public, static und final, Namenskonvention)
 	public static final String LIST_ALL_USERS_ADDR = "de.thm.mni.photoalbums.list_all_users";
 
 	// SQL Queries (private, final, Namenskonvention)
 	private final String LIST_ALL_USERS = "SELECT * FROM users";
+
 
 	@Override
 	public void start(Promise<Void> startPromise) throws Exception {
@@ -34,13 +31,19 @@ public class DatabaseVerticle extends AbstractVerticle {
 		JsonObject database = config().getJsonObject("database");
 		this.jdbcPool = JDBCPool.pool(vertx, database);
 
+		vertx.getOrCreateContext().put(JDBC_POOL_KEY, this.jdbcPool);
+
 		return Future.succeededFuture();
 	}
 
 	Future<Void> configureEventBusConsumers(Void unused) {
+		// TODO: Erweitern um die Adressen, die die anderen Routen aufrufen
 		vertx.eventBus().consumer(LIST_ALL_USERS_ADDR).handler(this::listAllUsers);
+
 		return Future.succeededFuture();
 	}
+
+
 
 	void listAllUsers(Message<Object> message) {
 		jdbcPool.query(LIST_ALL_USERS)

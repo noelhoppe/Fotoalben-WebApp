@@ -59,6 +59,12 @@
       <artifactId>mariadb-java-client</artifactId>
       <version>3.4.0</version>
     </dependency>
+    <!-- SQL Client Auth Provider -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-auth-sql-client</artifactId>
+      <version>4.5.8</version>
+    </dependency>
     <!-- vertx config -->
     <dependency>
       <groupId>io.vertx</groupId>
@@ -70,6 +76,21 @@
       <groupId>org.mindrot</groupId>
       <artifactId>jbcrypt</artifactId>
       <version>0.4</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-auth-common</artifactId>
+      <version>4.5.8</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-auth-jdbc</artifactId>
+      <version>4.5.8</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>4.1.109.Final</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
