@@ -11,7 +11,7 @@
     <!-- Include individual login.js for RESTful-API and toggle Password visbility -->
     <script src="../js-build/login.js" defer></script>
 </head>
-<body>
+<body class="bg-light">
 <main class="container
     min-vh-100
     d-flex flex-column gap-5 justify-content-center align-items-center">
@@ -22,7 +22,7 @@
         </svg>
     </section>
     <!-- Rufe POST /login beim Absenden des Formulars auf -->
-    <form method="post" action="/login" class="d-flex flex-column gap-3 w-50
+    <form id="loginForm" class="d-flex flex-column gap-3 w-50
         pt-5 border-top border-secondary border-opacity-50">
         <section class="form-floating was-validated">
             <input id="username" class="form-control" type="text" placeholder="Username" required>
