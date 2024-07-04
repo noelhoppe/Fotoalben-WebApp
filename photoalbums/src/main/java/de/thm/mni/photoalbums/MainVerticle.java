@@ -1,6 +1,6 @@
 package de.thm.mni.photoalbums;
-
 import de.thm.mni.photoalbums.handler.LoginHandler;
+import de.thm.mni.photoalbums.handler.MiddlewareHandler;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -8,11 +8,11 @@ import io.vertx.core.*;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.authentication.AuthenticationProvider;
+import io.vertx.ext.auth.sqlclient.SqlAuthentication;
+import io.vertx.ext.auth.sqlclient.SqlAuthenticationOptions;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.FileSystemAccess;
-import io.vertx.ext.web.handler.SessionHandler;
-import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.ext.web.handler.*;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.jdbcclient.JDBCPool;
 
@@ -22,6 +22,8 @@ import io.vertx.jdbcclient.JDBCPool;
  * initialisiert einen JDBC Pool und stellt einen HTTP Server bereit, der Anfragen über ein Router-Objekt verarbeitet.
  */
 public class MainVerticle extends AbstractVerticle {
+  public static final String SESSION_ATTRIBUTE_USER = "user";
+  public static final String SESSION_ATTRIBUTE_ROLE = "role";
 
   private JsonObject config;
   private JDBCPool jdbcPool;
@@ -40,7 +42,15 @@ public class MainVerticle extends AbstractVerticle {
               .compose(this::configureSqlClient)
               .compose(this::configureRouter)
               .compose(this::startHttpServer)
-              .onComplete(startPromise);
+              .onComplete(ar -> {
+                if (ar.succeeded()) {
+                  System.out.println("Main verticle started successfully");
+                  startPromise.complete();
+                } else {
+                  ar.cause().printStackTrace();
+                  startPromise.fail(ar.cause());
+                }
+              });
   }
 
   /**
@@ -103,6 +113,9 @@ public class MainVerticle extends AbstractVerticle {
     // Body-Handler, um body des http-req zu parsen und an den RoutingContext weiterzugeben
     router.route().handler(BodyHandler.create());
 
+    // Request logging
+    router.route().handler(LoggerHandler.create());
+
     // Session-Handler, um sich zu merken, ob ein Nutzer eingeloggt ist
     router.route().handler(SessionHandler.create(
               LocalSessionStore.create(vertx)
@@ -114,8 +127,14 @@ public class MainVerticle extends AbstractVerticle {
               .setIndexPage("login.html")
     );
 
+    // Static Handler, um *.js auszuliefern
+    // TODO: Wie schützen?
+    router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "js-build")
+              .setCachingEnabled(false)
+    );
 
-    LoginHandler loginHandler = new LoginHandler(jdbcPool);
+
+    LoginHandler loginHandler = new LoginHandler(jdbcPool, SESSION_ATTRIBUTE_USER, SESSION_ATTRIBUTE_ROLE);
     router.route(HttpMethod.POST, "/login").handler(loginHandler::handleLogin);
 
 

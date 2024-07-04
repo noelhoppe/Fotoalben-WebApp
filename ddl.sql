@@ -5,12 +5,13 @@ USE MediaVaultDB;
 CREATE TABLE Users(
     ID INTEGER AUTO_INCREMENT PRIMARY KEY ,
     username VARCHAR(30) UNIQUE NOT NULL,
-    pasword VARCHAR(256) NOT NULL, -- Welche Länge hat das gehashte Passwort in unserere Implementierung ?
+    password VARCHAR(60) NOT NULL, -- Durch bycrypt gehaste Passwörter haben 60 Zeichen
     role ENUM('ADMIN', 'USER') DEFAULT 'USER'
 );
 
+
 INSERT INTO Users
-VALUES (1, 'root', 'root', 'ADMIN');
+VALUES (1, 'admin', '$2a$10$DqSHWaxlejgJ6RdPxRu8Iuv7NQmjK9/8ybJJ/H3lRnWRZv9r95rY6', 'ADMIN'); -- durch bycrypt gehastes Passwort mit Round 10; password für admin ist root
 
 CREATE TABLE Photos(
     ID INTEGER AUTO_INCREMENT PRIMARY KEY,

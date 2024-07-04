@@ -11,9 +11,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 const passwd = document.getElementById("password");
 const checkbox = document.getElementById("togglePasswordVisibility");
 const loginForm = document.getElementById("loginForm");
+const serverRes = document.getElementById("serverResponse");
 const serverAdress = "http://localhost:8080";
 /**
- * Wechsle die Sichtabrkeit des Passworts, wenn man den Wert der checkbox ändert.
+ * Wechsle die Sichtbarkeit des Passworts, wenn man den Wert der checkbox ändert.
  */
 checkbox.addEventListener("change", () => {
     togglePasswordVisibility();
@@ -30,17 +31,28 @@ function togglePasswordVisibility() {
     }
 }
 loginForm.addEventListener("submit", (evt) => __awaiter(void 0, void 0, void 0, function* () {
+    evt.preventDefault();
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
+    const reqData = {
+        user: {
+            username: username,
+            password: password
+        }
+    };
     const res = yield fetch(serverAdress + "/login", {
         method: "POST",
         credentials: "include",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(reqData),
     });
     const data = yield res.json();
-    console.log(data);
+    if (res.ok) {
+        serverRes.textContent = "";
+    }
+    else {
+        serverRes.textContent = data.message;
+    }
 }));
-//TODO: Wird JSON als verschachteltes Objekt übergeben??
