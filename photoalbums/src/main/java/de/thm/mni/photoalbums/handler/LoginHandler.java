@@ -75,6 +75,7 @@ public class LoginHandler {
 								)
 							);
 						} else { // Passwort falsch
+							System.out.println("Login nicht erfolgreich");
 							response(ctx.response(), 400, new JsonObject().put("message", "Nutzername oder Passwort falsch"));
 						}
 					} else {
