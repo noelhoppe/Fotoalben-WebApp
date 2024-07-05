@@ -7,6 +7,8 @@ import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.*;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.authentication.AuthenticationProvider;
 import io.vertx.ext.auth.sqlclient.SqlAuthentication;
@@ -137,6 +139,25 @@ public class MainVerticle extends AbstractVerticle {
     LoginHandler loginHandler = new LoginHandler(jdbcPool, SESSION_ATTRIBUTE_USER, SESSION_ATTRIBUTE_ROLE);
     router.route(HttpMethod.POST, "/login").handler(loginHandler::handleLogin);
 
+    router.route(HttpMethod.POST, "/logout").handler(ctx -> {
+      System.out.println("Logout request received");
+      if (ctx.session().isEmpty()) {
+        MainVerticle.response(ctx.response(), 500, new JsonObject().put("message", "Die Session ist ungültig oder abgelaufen. Bitte melden Sie sich erneut an"));
+      } else {
+        String username = ctx.session().get("user");
+        String role = ctx.session().get("role");
+        ctx.session().destroy();
+        MainVerticle.response(ctx.response(), 200, new JsonObject()
+                  .put("message", "Logout erfolgreich")
+                  .put("user", new JsonObject()
+                            .put("username", username)
+                            .put("role", role)
+                  )
+        );
+      }
+    });
+
+
 
 
     return Future.succeededFuture(router);
@@ -155,5 +176,19 @@ public class MainVerticle extends AbstractVerticle {
     HttpServer server = vertx.createHttpServer().requestHandler(router);
 
     return Future.<HttpServer>future(promise -> server.listen(httpPort, promise)).mapEmpty();
+  }
+
+  /**
+   * Hilfsmethode, um Response Overhead zu minimieren.
+   *
+   * @param response Instanz der Antwort des Servers
+   * @param statusCode Statuscode der Anfrage
+   * @param json JSON Antwort des Servers
+   */
+  public static void response(HttpServerResponse response, Integer statusCode, JsonObject json) {
+    response
+              .putHeader("content-type", "application/json")
+              .setStatusCode(statusCode)
+              .end(Json.encodePrettily(json));
   }
 }

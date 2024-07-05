@@ -1,3 +1,22 @@
+const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
+console.log(logoutBtn);
+logoutBtn.addEventListener("click", async() => {
+  console.log("clicked");
+  const res = await fetch("http://localhost:8080/logout", {
+    method : "POST",
+    credentials : "include",
+    headers : {
+      "Content-Type" : "application/json"
+    }
+  });
+  const data : string = await res.json();
+  if (res.ok) {
+    window.location.href = "/login.html";
+  } else {
+    console.log(data);
+  }
+})
+
 /*
 TODO: Schalgworte der Bilder sowie das Datum sollten im Modal angezeigt werden
  */

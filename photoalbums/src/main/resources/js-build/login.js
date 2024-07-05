@@ -40,19 +40,32 @@ loginForm.addEventListener("submit", (evt) => __awaiter(void 0, void 0, void 0, 
             password: password
         }
     };
-    const res = yield fetch(serverAdress + "/login", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(reqData),
-    });
-    const data = yield res.json();
-    if (res.ok) {
-        serverRes.textContent = "";
-    }
-    else {
-        serverRes.textContent = data.message;
-    }
+    loginForm.addEventListener("submit", (evt) => __awaiter(void 0, void 0, void 0, function* () {
+        evt.preventDefault();
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const reqData = {
+            user: {
+                username: username,
+                password: password
+            }
+        };
+        const res = yield fetch(serverAdress + "/login", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(reqData),
+        });
+        const data = yield res.json();
+        console.log(res.status);
+        if (res.ok) {
+            serverRes.textContent = "";
+            window.location.href = "/photoalbums.html";
+        }
+        else {
+            serverRes.textContent = data.message;
+        }
+    }));
 }));

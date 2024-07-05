@@ -1,5 +1,6 @@
 package de.thm.mni.photoalbums.handler;
 
+import de.thm.mni.photoalbums.MainVerticle;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -21,32 +22,42 @@ public class LoginHandler {
 		this.jdbcPool = jdbcPool;
 	}
 
-
+	// TODO: Sollte ich ein Statuscode 3xx zurückgeben bei erfolgreichen Login
+	/**
+	 * Extrahiert das JsonObject user aus dem RoutingContext und selektiert die Felder username und password des user Objekts.
+	 * Gibt Statuscode 400 mit entsprechender JSON message zurück,
+	 * wenn der Benutzername oder das Password Leerzeichen enthält,
+	 * der Benutzernamen oder das Password null oder leer ist oder
+	 * der Benutzername oder das Passwort falsch ist.
+	 * Gibt Statuscode 500 mit entsprechender JSON message zurück, wenn ein Server- oder Datenbankfehler aufgetreten ist.
+	 * Gibt Statuscode 200 mit entsprechender JSPON message zurück, wenn der Login erfolgreich war, also wenn das Paar Benutzername und Passwort existiert
+	 * @param ctx Routing Context
+	 */
 	public void handleLogin(RoutingContext ctx) {
 		JsonObject user = ctx.body().asJsonObject().getJsonObject("user");
 		String username = user.getString("username");
 		String password = user.getString("password");
 
 		if (username.contains(" ")) {
-			response(ctx.response(), 400, new JsonObject()
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Username darf keine Leerzeichen enthalten")
 			);
 		}
 
 		if (password.contains(" ")) {
-			response(ctx.response(), 400, new JsonObject()
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Das Passwort darf keine Leerzeichen enthalten")
 			);
 		}
 
 		if (username == null || username.trim().isEmpty()) {
-			response(ctx.response(), 400, new JsonObject()
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Nutzername darf nicht leer sein")
 			);
 		}
 
 		if (password == null || password.trim().isEmpty()) {
-			response(ctx.response(), 400, new JsonObject()
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Das Passwort darf nicht leer sein")
 			);
 		}
@@ -65,41 +76,24 @@ public class LoginHandler {
 							ctx.session()
 								.put(SESSION_ATTRIBUTE_USER, username)
 								.put(SESSION_ATTRIBUTE_ROLE, role);
-
-							response(ctx.response(), 200, new JsonObject()
+							MainVerticle.response(ctx.response(), 200, new JsonObject()
 								.put("message", "Login erfolgreich")
 								.put("sessionID", ctx.session().id())
 								.put("user", new JsonObject()
 									.put("username", username)
 									.put("role", role)
-								)
-							);
+								));
+
 						} else { // Passwort falsch
 							System.out.println("Login nicht erfolgreich");
-							response(ctx.response(), 400, new JsonObject().put("message", "Nutzername oder Passwort falsch"));
+							MainVerticle.response(ctx.response(), 400, new JsonObject().put("message", "Nutzername oder Passwort falsch"));
 						}
 					} else {
-						response(ctx.response(), 400, new JsonObject().put("message", "Nutzername oder Passwort falsch"));
+						MainVerticle.response(ctx.response(), 400, new JsonObject().put("message", "Nutzername oder Passwort falsch"));
 					}
 				} else {
-					response(ctx.response(), 500, new JsonObject().put("message", "Ein interner Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut."));
+					MainVerticle.response(ctx.response(), 500, new JsonObject().put("message", "Ein interner Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut."));
 				}
 			});
-
-
-
-	}
-
-	private void response(HttpServerResponse response, Integer statusCode, JsonObject json) {
-		response
-			.putHeader("content-type", "application/json")
-			.setStatusCode(statusCode)
-			.end(Json.encodePrettily(json));
 	}
 }
-
-
-
-
-
-

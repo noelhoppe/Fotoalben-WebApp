@@ -34,20 +34,37 @@ loginForm.addEventListener("submit", async (evt: SubmitEvent) => {
         }
     };
 
-    const res : Response = await fetch(serverAdress + "/login", {
-        method: "POST",
-        credentials : "include",
-        headers : {
-            "Content-Type" : "application/json"
-        },
-        body : JSON.stringify(reqData),
+    loginForm.addEventListener("submit", async (evt: SubmitEvent) => {
+        evt.preventDefault();
+        const username : string = (document.getElementById("username") as HTMLInputElement).value;
+        const password : string = (document.getElementById("password") as HTMLInputElement).value;
+
+        const reqData = {
+            user : {
+                username : username,
+                password : password
+            }
+        };
+
+        const res : Response = await fetch(serverAdress + "/login", {
+            method: "POST",
+            credentials : "include",
+            headers : {
+                "Content-Type" : "application/json"
+            },
+            body : JSON.stringify(reqData),
+        });
+
+        const data = await res.json();
+        console.log(res.status);
+        if (res.ok){
+            serverRes.textContent = "";
+            window.location.href = "/photoalbums.html";
+        }
+        else {
+            serverRes.textContent = data.message;
+        }
+
     });
 
-    const data = await res.json();
-    if (res.ok){
-        serverRes.textContent = "";
-    }
-   else {
-        serverRes.textContent = data.message;
-    }
 });
