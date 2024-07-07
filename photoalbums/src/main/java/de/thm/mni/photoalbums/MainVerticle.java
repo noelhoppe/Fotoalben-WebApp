@@ -1,6 +1,6 @@
 package de.thm.mni.photoalbums;
+import de.thm.mni.photoalbums.handler.AuthenticationHandler;
 import de.thm.mni.photoalbums.handler.LoginHandler;
-import de.thm.mni.photoalbums.handler.MiddlewareHandler;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -10,9 +10,6 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.authentication.AuthenticationProvider;
-import io.vertx.ext.auth.sqlclient.SqlAuthentication;
-import io.vertx.ext.auth.sqlclient.SqlAuthenticationOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.*;
 import io.vertx.ext.web.sstore.LocalSessionStore;
@@ -123,16 +120,24 @@ public class MainVerticle extends AbstractVerticle {
               LocalSessionStore.create(vertx)
     ));
 
-    // Static Handler, um *.html auszuliefern
+    // Static Handler, um login.html OHNE AUTHENTIFIZIERUNG auszuliefern
     router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views")
-              .setCachingEnabled(false) // während Entwicklungsprozess
+              .setCachingEnabled(false)
               .setIndexPage("login.html")
     );
 
-    // Static Handler, um *.js auszuliefern
-    // TODO: Wie schützen?
+    // Static Handler, um login.js OHNE AUTHENTIFIZIERUNG auszuliefern
     router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "js-build")
               .setCachingEnabled(false)
+    );
+
+    // AuthorizationHandler authHandler = new AuthenticationHandler();
+    // router.route("/protected/admin.html").route(authHandler::authorize).route(handler)
+
+    // Static Handler, der sicherstellt, dass protected *.html Dateien nur für angemeldete Benutzer aufgerufen werden können
+    AuthenticationHandler authenticationHandler = new AuthenticationHandler();
+    router.route("/protected/*").handler(authenticationHandler::authenticate).handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views/protected")
+              .setCachingEnabled(false) // während Entwicklungsprozess
     );
 
     LoginHandler loginHandler = new LoginHandler(jdbcPool, SESSION_ATTRIBUTE_USER, SESSION_ATTRIBUTE_ROLE);
@@ -146,7 +151,7 @@ public class MainVerticle extends AbstractVerticle {
         String username = ctx.session().get("user");
         String role = ctx.session().get("role");
         ctx.session().destroy();
-        MainVerticle.response(ctx.response(), 200, new JsonObject()
+        MainVerticle.response(ctx.response(), 200, new JsonObject() // TODO: redirect und anderer Statuscode, serverseitige Weiterleitung
                   .put("message", "Logout erfolgreich")
                   .put("user", new JsonObject()
                             .put("username", username)

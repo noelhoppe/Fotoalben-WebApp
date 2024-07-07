@@ -78,7 +78,7 @@ public class LoginHandler {
 								.put(SESSION_ATTRIBUTE_ROLE, role);
 							ctx.response()
 								.setStatusCode(303)
-								.putHeader("Location", "/photoalbums.html")
+								.putHeader("Location", "/protected/photoalbums.html")
 								.end();
 							/*
 							MainVerticle.response(ctx.response(), 200, new JsonObject()
