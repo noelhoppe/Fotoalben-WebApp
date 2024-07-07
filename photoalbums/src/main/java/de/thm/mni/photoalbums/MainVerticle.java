@@ -23,6 +23,7 @@ import io.vertx.jdbcclient.JDBCPool;
 public class MainVerticle extends AbstractVerticle {
   public static final String SESSION_ATTRIBUTE_USER = "user";
   public static final String SESSION_ATTRIBUTE_ROLE = "role";
+  public static final String SESSION_ATTRIBUTE_ID = "id";
 
   private JsonObject config;
   private JDBCPool jdbcPool;
@@ -120,17 +121,6 @@ public class MainVerticle extends AbstractVerticle {
               LocalSessionStore.create(vertx)
     ));
 
-    // Static Handler, um login.html OHNE AUTHENTIFIZIERUNG auszuliefern
-    router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views")
-              .setCachingEnabled(false)
-              .setIndexPage("login.html")
-    );
-
-    // Static Handler, um login.js OHNE AUTHENTIFIZIERUNG auszuliefern
-    router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "js-build")
-              .setCachingEnabled(false)
-    );
-
     // AuthorizationHandler authHandler = new AuthenticationHandler();
     // router.route("/protected/admin.html").route(authHandler::authorize).route(handler)
 
@@ -140,7 +130,21 @@ public class MainVerticle extends AbstractVerticle {
               .setCachingEnabled(false) // während Entwicklungsprozess
     );
 
-    LoginHandler loginHandler = new LoginHandler(jdbcPool, SESSION_ATTRIBUTE_USER, SESSION_ATTRIBUTE_ROLE);
+    // Static Handler, um login.html OHNE AUTHENTIFIZIERUNG auszuliefern
+    router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views")
+              .setCachingEnabled(false)
+              .setIndexPage("login.html")
+    );
+
+    router.route(HttpMethod.GET, "/img/*").handler(StaticHandler.create(FileSystemAccess.ROOT, "img"));
+
+
+    // Static Handler, um login.js OHNE AUTHENTIFIZIERUNG auszuliefern
+    router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "js-build")
+              .setCachingEnabled(false)
+    );
+
+    LoginHandler loginHandler = new LoginHandler(jdbcPool, SESSION_ATTRIBUTE_USER, SESSION_ATTRIBUTE_ROLE, SESSION_ATTRIBUTE_ID);
     router.route(HttpMethod.POST, "/login").handler(loginHandler::handleLogin);
 
     router.route(HttpMethod.POST, "/logout").handler(ctx -> {
@@ -151,13 +155,10 @@ public class MainVerticle extends AbstractVerticle {
         String username = ctx.session().get("user");
         String role = ctx.session().get("role");
         ctx.session().destroy();
-        MainVerticle.response(ctx.response(), 200, new JsonObject() // TODO: redirect und anderer Statuscode, serverseitige Weiterleitung
-                  .put("message", "Logout erfolgreich")
-                  .put("user", new JsonObject()
-                            .put("username", username)
-                            .put("role", role)
-                  )
-        );
+        ctx.response()
+                  .setStatusCode(303)
+                  .putHeader("Location", "/login.html")
+                  .end();
       }
     });
 

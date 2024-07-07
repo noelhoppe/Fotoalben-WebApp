@@ -15,10 +15,12 @@ public class LoginHandler {
 	private JDBCPool jdbcPool;
 	private String SESSION_ATTRIBUTE_USER;
 	private String SESSION_ATTRIBUTE_ROLE;
+	private String SESSION_ATTRIBUTE_ID;
 
-	public LoginHandler(JDBCPool jdbcPool, String sessionAttributeUser, String sessionAttributeRole) {
+	public LoginHandler(JDBCPool jdbcPool, String sessionAttributeUser, String sessionAttributeRole, String sessionAttributeId) {
 		this.SESSION_ATTRIBUTE_USER = sessionAttributeUser;
 		this.SESSION_ATTRIBUTE_ROLE = sessionAttributeRole;
+		this.SESSION_ATTRIBUTE_ID = sessionAttributeId;
 		this.jdbcPool = jdbcPool;
 	}
 
@@ -71,9 +73,11 @@ public class LoginHandler {
 						Row row = rows.iterator().next();
 						String storedPasswordHash = row.getString("password");
 						String role = row.getString("role");
+						String id = row.getString("ID");
 						if (BCrypt.checkpw(password, storedPasswordHash)) {
 							System.out.println("Login erfolgreich");
 							ctx.session()
+								.put("ID", id)
 								.put(SESSION_ATTRIBUTE_USER, username)
 								.put(SESSION_ATTRIBUTE_ROLE, role);
 							ctx.response()

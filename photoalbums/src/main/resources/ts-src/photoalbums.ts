@@ -1,18 +1,22 @@
 const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
-console.log(logoutBtn);
+
+/**
+ * POST /logout, wenn der Logout Button geklickt wird
+ * Verarbeitet serverseitigen redirect bei erfolgreichem Logout
+ */
 logoutBtn.addEventListener("click", async() => {
-  console.log("clicked");
   const res = await fetch("http://localhost:8080/logout", {
     method : "POST",
+    redirect : "follow",
     credentials : "include",
     headers : {
       "Content-Type" : "application/json"
     }
   });
-  const data : string = await res.json();
-  if (res.ok) {
-    window.location.href = "/login.html";
+  if (res.redirected) {
+    window.location.href = res.url; // // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
   } else {
+    const data : string = await res.json();
     console.log(data);
   }
 })
@@ -43,3 +47,19 @@ document.addEventListener('click', (e: MouseEvent) => {
     modalEditTitle.value = ""; // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
   }
 });
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const res : Response=  await fetch("http://localhost:8080/img/1.jpg", {
+    method : "GET",
+    credentials : "include"
+  })
+
+  const data =  await res.blob();
+  const imgUrl = URL.createObjectURL(data);
+  const imgElement = document.createElement("img");
+  console.log(imgElement);
+  imgElement.src = imgUrl;
+  document.body.appendChild(imgElement);
+
+})

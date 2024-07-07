@@ -22,6 +22,8 @@ function togglePasswordVisibility() : void {
     }
 }
 
+
+
 loginForm.addEventListener("submit", async (evt: SubmitEvent) => {
     evt.preventDefault();
     const username : string = (document.getElementById("username") as HTMLInputElement).value;
@@ -43,7 +45,7 @@ loginForm.addEventListener("submit", async (evt: SubmitEvent) => {
         },
         body : JSON.stringify(reqData),
     });
-    console.log(res.status);
+    // console.log(res.status);
     if (res.redirected){
         window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
         serverRes.textContent = "";

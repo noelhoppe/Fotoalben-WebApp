@@ -49,7 +49,7 @@ loginForm.addEventListener("submit", (evt) => __awaiter(void 0, void 0, void 0, 
         },
         body: JSON.stringify(reqData),
     });
-    console.log(res.status);
+    // console.log(res.status);
     if (res.redirected) {
         window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
         serverRes.textContent = "";
