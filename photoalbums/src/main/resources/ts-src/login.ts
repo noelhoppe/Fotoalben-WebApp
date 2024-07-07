@@ -34,37 +34,23 @@ loginForm.addEventListener("submit", async (evt: SubmitEvent) => {
         }
     };
 
-    loginForm.addEventListener("submit", async (evt: SubmitEvent) => {
-        evt.preventDefault();
-        const username : string = (document.getElementById("username") as HTMLInputElement).value;
-        const password : string = (document.getElementById("password") as HTMLInputElement).value;
-
-        const reqData = {
-            user : {
-                username : username,
-                password : password
-            }
-        };
-
-        const res : Response = await fetch(serverAdress + "/login", {
-            method: "POST",
-            credentials : "include",
-            headers : {
-                "Content-Type" : "application/json"
-            },
-            body : JSON.stringify(reqData),
-        });
-
-        const data = await res.json();
-        console.log(res.status);
-        if (res.ok){
-            serverRes.textContent = "";
-            window.location.href = "/photoalbums.html";
-        }
-        else {
-            serverRes.textContent = data.message;
-        }
-
+    const res : Response = await fetch(serverAdress + "/login", {
+        method: "POST",
+        redirect : "follow", // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
+        credentials : "include",
+        headers : {
+            "Content-Type" : "application/json"
+        },
+        body : JSON.stringify(reqData),
     });
-
+    console.log(res.status);
+    if (res.redirected){
+        window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
+        serverRes.textContent = "";
+        // window.location.href = "/photoalbums.html"; => Vermeide clientseitiges redirecting
+    }
+    else {
+        const data = await res.json();
+        serverRes.textContent = data.message;
+    }
 });

@@ -135,7 +135,6 @@ public class MainVerticle extends AbstractVerticle {
               .setCachingEnabled(false)
     );
 
-
     LoginHandler loginHandler = new LoginHandler(jdbcPool, SESSION_ATTRIBUTE_USER, SESSION_ATTRIBUTE_ROLE);
     router.route(HttpMethod.POST, "/login").handler(loginHandler::handleLogin);
 
