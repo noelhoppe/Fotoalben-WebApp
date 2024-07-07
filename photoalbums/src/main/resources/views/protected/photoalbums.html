@@ -68,8 +68,8 @@
       </svg>
     </button>
     <ul class="dropdown-menu">
-      <li><a class="dropdown-item" href="#">Foto in ausgewähltes Album hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
-      <li><a class="dropdown-item" href="#">Album hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
+      <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addPhotoModal">Foto in ausgewähltes Album hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
+      <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addAlbumModal">Album hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
     </ul>
   </div>
 
@@ -81,11 +81,85 @@
 </div>
 <!-- SEARCH PHOTOS IN ALBUM, DROPDOWN ADD PHOTOS/ALBUMS, OFFCAN TOGGLE ALBUMS ENDE -->
 
-<!-- TODO: MODALFENSTER ADD PHOTO -->
+<!--MODALFENSTER ADD PHOTO -->
+<div class="modal fade" id = "addPhotoModal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+  <div class ="modal-dialog modal-dialog-centered">
+    <div class ="modal-content">
+      <!-- Title -->
+      <div class="modal-header">
+        <h1 class="modal-title">Foto hinzufügen</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Add Photo -->
+      <div class="modal-body w-100">
+        <div class="d-flex flex-column gap-3">
+          <!-- Name -->
+          <div>
+            <h2>Name</h2>
+            <label for="addPhotoName"></label>
+            <input id="addPhotoName" class="w-100" type="text" placeholder="Name des Fotos">
+          </div>
+          <!-- Tags -->
+          <div>
+            <h2>Hier Platz für Tags implementieren</h2> <!-- TODO:Tags implementieren -->
+          </div>
+          <!-- Upload -->
+          <div>
+            <h2>Datei hochladen</h2> <!-- TODO:evtl Design -->
+          </div>
+          <div>
+            <input type="file" id="photoUploadBtn" accept="image/png, image/jpeg"/>
+            <!-- <label for="photoUploadBtn">Datei auswählen</label> --> <!-- TODO: evtl. label -->
+
+          </div>
+        </div>
+      </div>
+      <!-- Save Button -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Änderungen speichern</button>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 
+<!--MODALFENSTER ADD ALBUM -->
 
-<!-- TODO: MODALFENSTER ADD ALBUM -->
+<div class="modal fade" id = "addAlbumModal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+  <div class ="modal-dialog modal-dialog-centered">
+    <div class ="modal-content">
+      <!-- Title -->
+      <div class="modal-header">
+        <h1 class="modal-title">Album erstellen</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Create Album -->
+      <div class="modal-body w-100">
+        <div class="d-flex flex-column gap-3">
+          <!-- Name -->
+          <div>
+            <h2>Name</h2>
+            <label for="addAlbumName"></label>
+            <input id="addAlbumName" class="w-100" type="text" placeholder="Name des Fotos">
+          </div>
+          <!-- Tags -->
+          <div>
+            <h2>Hier Platz für Tags implementieren</h2> <!-- TODO:Tags implementieren -->
+          </div>
+        </div>
+      </div>
+      <!-- TODO: FOTOS beim erstellen hinzufügen?? -->
+      <!-- Save Button -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Änderungen speichern</button>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 
 <!-- Left offcan for dealing with albums -->
