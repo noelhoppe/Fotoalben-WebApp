@@ -42,39 +42,37 @@ TODO: Schalgworte der Bilder sowie das Datum sollten im Modal angezeigt werden
 document.addEventListener('click', (e) => {
     const target = e.target;
     if (target.classList.contains('gallery-item')) { // KONVENTION: Jedes Bild besitzt die Klasse '.gallery-item'
-        console.log(target);
         const src = target.getAttribute('src');
         const title = target.getAttribute('title'); // KONVENTION: In dem 'title' Attribut steht der Titel des Bildes
+        const taken = target.getAttribute("data-date");
+        console.log(taken);
         const imageTitle = document.querySelector('#image-title');
         const modalImg = document.querySelector('#modal-img');
+        const modalTaken = document.querySelector("#taken");
         const modalEditTitle = document.querySelector('#edit-name');
-        console.log(imageTitle);
-        console.log(modalImg);
-        console.log(modalEditTitle);
         imageTitle.textContent = title;
         modalImg.setAttribute('src', src);
+        modalTaken.textContent = `Aufnahmedatum: ${taken}`;
         modalEditTitle.value = ""; // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
     }
 });
 document.addEventListener("DOMContentLoaded", () => __awaiter(void 0, void 0, void 0, function* () {
-    const res = yield fetch("http://localhost:8080/img/1.jpg", {
+    const res = yield fetch("/photos", {
         method: "GET",
-        credentials: "include"
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        }
     });
-    const data = yield res.blob();
-    insertPhotos("test", "2022-12-12", URL.createObjectURL(data));
-    /*
-    const imgUrl = URL.createObjectURL(data);
-    const imgElement = document.createElement("img");
-    console.log(imgElement);
-    imgElement.src = imgUrl;
-    document.body.appendChild(imgElement);
-     */
+    const data = yield res.json();
+    // console.log(data);
+    data.photos.forEach(photo => insertPhotos(photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`));
 }));
 /**
- * Fügt ein Bild in den DOM ein. Dabei werden die Attribute src, title, dataset.taken und dataset.tags
- * img.src = url;
+ * Fügt ein Bild in den DOM ein.
+ * Dabei werden die Attribute src, title, date-date und data-tags gesetzt
  * https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
+ * Des Weiteren werden die für Bootstrap erforderlichen Attribute dem <img> Tag hinzugefügt
  * @param title Titel des Bildes
  * @param taken Aufnahmedatum des Bildes
  * @param url Pfad URL des Bildes
@@ -83,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => __awaiter(void 0, void 0, vo
 function insertPhotos(title, taken, url, tags) {
     // Hauptcontainer auswählen
     const mainContainer = document.querySelector("#main-photos-container .row");
+    // Prüfen, ob das Element existiert
     if (!mainContainer) {
         console.log("Container not found");
         return;
@@ -99,6 +98,9 @@ function insertPhotos(title, taken, url, tags) {
     if (tags) {
         img.dataset.tags = tags.join(",");
     }
+    // Für das Bootstrap modal erforderliche Attribute setzen
+    img.setAttribute("data-bs-toggle", "modal");
+    img.setAttribute("data-bs-target", "#gallery-modal");
     // Bild in den Bild Container einfügen
     colDiv.appendChild(img);
     // Bild-Container in den Hauptcontainer einfügen

@@ -13,9 +13,9 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class LoginHandler {
 	private JDBCPool jdbcPool;
-	private String SESSION_ATTRIBUTE_USER;
-	private String SESSION_ATTRIBUTE_ROLE;
-	private String SESSION_ATTRIBUTE_ID;
+	private final String SESSION_ATTRIBUTE_USER;
+	private final String SESSION_ATTRIBUTE_ROLE;
+	private final String SESSION_ATTRIBUTE_ID;
 
 	public LoginHandler(JDBCPool jdbcPool, String sessionAttributeUser, String sessionAttributeRole, String sessionAttributeId) {
 		this.SESSION_ATTRIBUTE_USER = sessionAttributeUser;

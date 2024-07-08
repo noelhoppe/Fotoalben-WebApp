@@ -248,26 +248,7 @@
 <!-- https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes -->
 <main id="main-photos-container" class="container-lg mt-4">
   <div class="row gy-4">
-    <div class="col-sm-6 col-md-4 col-lg-3">
-      <!-- TODO: Wie speichere ich das Datum der Bilder sowie die Schlagworte der Bilder im HTML? -->
-      <img src="1.jpg" title="Titel 1" class="img-fluid gallery-item" alt="gallery" data-bs-toggle="modal" data-bs-target="#gallery-modal">
-    </div>
-    <div class="col-sm-6 col-md-4 col-lg-3">
-      <img src="img/2.jpg" title="Titel 2" class="img-fluid gallery-item" alt="gallery" data-bs-toggle="modal" data-bs-target="#gallery-modal" >
-    </div>
-    <div class="col-sm-6 col-md-4 col-lg-3">
-      <img src="img/3.jpg" title="Titel 3" class="img-fluid gallery-item" alt="gallery" data-bs-toggle="modal" data-bs-target="#gallery-modal">
-    </div>
-    <div class="col-sm-6 col-md-4 col-lg-3">
-      <img src="img/4.jpg" title="Titel 4" class="img-fluid gallery-item" alt="gallery" data-bs-toggle="modal" data-bs-target="#gallery-modal">
-    </div>
-    <div class="col-sm-6 col-md-4 col-lg-3">
-      <img src="img/5.jpg" title="Titel 5" class="img-fluid gallery-item" alt="gallery" data-bs-toggle="modal" data-bs-target="#gallery-modal">
-    </div>
-    <div class="col-sm-6 col-md-4 col-lg-3">
-      <img src="img/6.jpg" title="Titel 6" class="img-fluid gallery-item" alt="gallery" data-bs-toggle="modal" data-bs-target="#gallery-modal">
-    </div>
-    <!-- TODO: Insert photos here -->
+    <!-- Insert photos here -->
   </div>
 </main>
 
@@ -275,7 +256,7 @@
 <!--
 TODO: Schlagworte der Bilder sowie das Datum sollten angezeigt werden
 -->
-<!-- Modal for displaying Photos in detail, editing Photos and delte Photos -->
+<!-- Modal for displaying Photos in detail, editing Photos and delete Photos -->
 <div class="modal fade" id="gallery-modal" tabindex="-1" aria-labelledby="gallery-modal" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -292,6 +273,9 @@ TODO: Schlagworte der Bilder sowie das Datum sollten angezeigt werden
           <!-- Display Photo -->
           <div>
             <img id="modal-img" src="" class="w-100" alt="modal img"> <!-- *.js/*.ts inserts image here -->
+          </div>
+          <div>
+            <p id="taken"></p> <!-- insert taken date here -->
           </div>
           <!-- Edit Photo-->
           <div>

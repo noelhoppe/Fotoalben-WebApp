@@ -1,6 +1,7 @@
 package de.thm.mni.photoalbums;
 import de.thm.mni.photoalbums.handler.AuthenticationHandler;
 import de.thm.mni.photoalbums.handler.LoginHandler;
+import de.thm.mni.photoalbums.handler.PhotoHandler;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -162,6 +163,8 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
 
+    PhotoHandler photoHandler = new PhotoHandler(jdbcPool);
+    router.route(HttpMethod.GET, "/photos").handler(photoHandler::getAllPhotosFromUser);
 
 
 
