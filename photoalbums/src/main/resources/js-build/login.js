@@ -42,7 +42,7 @@ loginForm.addEventListener("submit", (evt) => __awaiter(void 0, void 0, void 0, 
     };
     const res = yield fetch(serverAdress + "/login", {
         method: "POST",
-        redirect: "follow",
+        redirect: "follow", // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
         credentials: "include",
         headers: {
             "Content-Type": "application/json"

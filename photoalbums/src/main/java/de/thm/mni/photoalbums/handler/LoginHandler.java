@@ -73,11 +73,11 @@ public class LoginHandler {
 						Row row = rows.iterator().next();
 						String storedPasswordHash = row.getString("password");
 						String role = row.getString("role");
-						String id = row.getString("ID");
+						Integer id = row.getInteger("ID");
 						if (BCrypt.checkpw(password, storedPasswordHash)) {
 							System.out.println("Login erfolgreich");
 							ctx.session()
-								.put("ID", id)
+								.put(SESSION_ATTRIBUTE_ID, id)
 								.put(SESSION_ATTRIBUTE_USER, username)
 								.put(SESSION_ATTRIBUTE_ROLE, role);
 							ctx.response()
