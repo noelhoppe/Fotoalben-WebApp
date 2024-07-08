@@ -166,6 +166,10 @@ public class MainVerticle extends AbstractVerticle {
     PhotoHandler photoHandler = new PhotoHandler(jdbcPool);
     router.route(HttpMethod.GET, "/photos").handler(photoHandler::getAllPhotosFromUser);
 
+    router.route(HttpMethod.GET, "/username").handler(authenticationHandler::authenticate).handler(ctx -> {
+      MainVerticle.response(ctx.response(), 200, new JsonObject().put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER)));
+    });
+
 
 
     return Future.succeededFuture(router);

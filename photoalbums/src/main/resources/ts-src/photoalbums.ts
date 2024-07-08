@@ -27,7 +27,7 @@ logoutBtn.addEventListener("click", async() => {
 })
 
 /*
-TODO: Schalgworte der Bilder sowie das Datum sollten im Modal angezeigt werden
+TODO: Schlagworte sollten im Modal angezeigt werden
  */
 /**
  * Öffnet ein Bootstrap Mdoalfenster
@@ -56,8 +56,20 @@ document.addEventListener('click', (e: MouseEvent) => {
   }
 });
 
+const usernameField = document.querySelector("#username") as HTMLParagraphElement;
 document.addEventListener("DOMContentLoaded", async () => {
-  const res : Response = await fetch("/photos", {
+  const resGetUsername : Response = await fetch("/username", {
+    method : "GET",
+    credentials : "include",
+    headers : {
+      "Content-Type" : "application/json"
+    },
+  });
+
+  const dataGetUsername = await resGetUsername.json();
+  usernameField.textContent = dataGetUsername.username;
+
+  const resGetPhotos : Response = await fetch("/photos", {
     method : "GET",
     credentials : "include",
     headers : {
@@ -65,10 +77,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   })
 
-  const data : { photos : Photo[] } = await res.json();
-  // console.log(data);
+  const dataGetPhotos : { photos : Photo[] } = await resGetPhotos.json();
+  // console.log(dataGetPhotos);
 
-  data.photos.forEach(photo  => insertPhotos(photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`));
+  dataGetPhotos.photos.forEach(photo  => insertPhotos(photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`));
 })
 
 /**

@@ -31,7 +31,7 @@ logoutBtn.addEventListener("click", () => __awaiter(void 0, void 0, void 0, func
     }
 }));
 /*
-TODO: Schalgworte der Bilder sowie das Datum sollten im Modal angezeigt werden
+TODO: Schlagworte sollten im Modal angezeigt werden
  */
 /**
  * Öffnet ein Bootstrap Mdoalfenster
@@ -56,17 +56,27 @@ document.addEventListener('click', (e) => {
         modalEditTitle.value = ""; // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
     }
 });
+const usernameField = document.querySelector("#username");
 document.addEventListener("DOMContentLoaded", () => __awaiter(void 0, void 0, void 0, function* () {
-    const res = yield fetch("/photos", {
+    const resGetUsername = yield fetch("/username", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+    });
+    const dataGetUsername = yield resGetUsername.json();
+    usernameField.textContent = dataGetUsername.username;
+    const resGetPhotos = yield fetch("/photos", {
         method: "GET",
         credentials: "include",
         headers: {
             "Content-Type": "application/json"
         }
     });
-    const data = yield res.json();
-    // console.log(data);
-    data.photos.forEach(photo => insertPhotos(photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`));
+    const dataGetPhotos = yield resGetPhotos.json();
+    // console.log(dataGetPhotos);
+    dataGetPhotos.photos.forEach(photo => insertPhotos(photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`));
 }));
 /**
  * Fügt ein Bild in den DOM ein.
