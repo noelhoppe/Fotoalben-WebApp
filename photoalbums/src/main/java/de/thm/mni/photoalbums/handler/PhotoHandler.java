@@ -29,7 +29,7 @@ public class PhotoHandler {
 		Integer userIdStr = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
 
 		jdbcPool.preparedQuery("""
-				SELECT p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
+				SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
     				FROM Photos p
     				LEFT JOIN PhotosTags pt
         					ON pt.Photos_ID = p.ID
@@ -44,6 +44,7 @@ public class PhotoHandler {
 					JsonArray photos = new JsonArray();
 					for (Row row : rows) {
 						JsonObject photo = new JsonObject();
+						photo.put("id", row.getLong("ID"));
 						photo.put("title", row.getString("title"));
 						photo.put("taken", row.getLocalDate("taken").toString());
 						photo.put("url", row.getString("url"));
@@ -95,6 +96,14 @@ public class PhotoHandler {
 				}
 			});
 	}
+
+	/*
+	public void deleteTag(RoutingContext ctx) {
+		String tagName = ctx.body().asJsonObject().getString("tagName");
+		jdbcPool.preparedQuery("")
+	}
+
+	 */
 
 
 }

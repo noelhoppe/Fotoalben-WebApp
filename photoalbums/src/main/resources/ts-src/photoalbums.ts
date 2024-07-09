@@ -2,6 +2,7 @@
  * Datentyp eines Fotos. Welche Attribute hat ein Foto?
  */
 interface Photo {
+  id : string,
   title: string;
   taken: string;
   url: string;
@@ -120,7 +121,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const dataGetPhotos : { photos : Photo[] } = await resGetPhotos.json();
   // console.log(dataGetPhotos);
 
-  dataGetPhotos.photos.forEach(photo  => insertPhotos(photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`, photo.tags == null ? "" : photo.tags));
+  dataGetPhotos.photos.forEach(photo  => insertPhotos(photo.id, photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`, photo.tags == null ? "" : photo.tags));
 })
 
 /**
@@ -128,12 +129,13 @@ document.addEventListener("DOMContentLoaded", async () => {
  * Dabei werden die Attribute src, title, date-date und data-tags gesetzt
  * https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
  * Des Weiteren werden die für Bootstrap erforderlichen Attribute dem <img> Tag hinzugefügt
+ * @param id Eindeutige id des Fotos
  * @param title Titel des Bildes
  * @param taken Aufnahmedatum des Bildes
  * @param url Pfad URL des Bildes
  * @param tags Tags des Bildes, getrennt mit Schlagworten
  */
-function insertPhotos(title : string, taken : string, url : string, tags:string) : void {
+function insertPhotos(id:string, title : string, taken : string, url : string, tags:string) : void {
   // Hauptcontainer auswählen
   const mainContainer = document.querySelector("#main-photos-container .row") as HTMLDivElement;
 
@@ -152,6 +154,7 @@ function insertPhotos(title : string, taken : string, url : string, tags:string)
   img.classList.add("img-fluid", "gallery-item");
   img.title = title;
   img.dataset.date = taken;
+  img.dataset.id = id;
   img.src = url;
   if (tags) {
     img.dataset.tags = tags;

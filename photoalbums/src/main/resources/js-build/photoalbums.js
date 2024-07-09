@@ -105,19 +105,20 @@ document.addEventListener("DOMContentLoaded", () => __awaiter(void 0, void 0, vo
     });
     const dataGetPhotos = yield resGetPhotos.json();
     // console.log(dataGetPhotos);
-    dataGetPhotos.photos.forEach(photo => insertPhotos(photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`, photo.tags == null ? "" : photo.tags));
+    dataGetPhotos.photos.forEach(photo => insertPhotos(photo.id, photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`, photo.tags == null ? "" : photo.tags));
 }));
 /**
  * Fügt ein Bild in den DOM ein.
  * Dabei werden die Attribute src, title, date-date und data-tags gesetzt
  * https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
  * Des Weiteren werden die für Bootstrap erforderlichen Attribute dem <img> Tag hinzugefügt
+ * @param id Eindeutige id des Fotos
  * @param title Titel des Bildes
  * @param taken Aufnahmedatum des Bildes
  * @param url Pfad URL des Bildes
  * @param tags Tags des Bildes, getrennt mit Schlagworten
  */
-function insertPhotos(title, taken, url, tags) {
+function insertPhotos(id, title, taken, url, tags) {
     // Hauptcontainer auswählen
     const mainContainer = document.querySelector("#main-photos-container .row");
     // Prüfen, ob das Element existiert
@@ -133,6 +134,7 @@ function insertPhotos(title, taken, url, tags) {
     img.classList.add("img-fluid", "gallery-item");
     img.title = title;
     img.dataset.date = taken;
+    img.dataset.id = id;
     img.src = url;
     if (tags) {
         img.dataset.tags = tags;
