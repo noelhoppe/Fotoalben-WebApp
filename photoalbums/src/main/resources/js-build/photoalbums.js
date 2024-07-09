@@ -42,6 +42,7 @@ document.addEventListener('click', (e) => {
     if (target.classList.contains('gallery-item')) { // KONVENTION: Jedes Bild besitzt die Klasse '.gallery-item'
         // Selektiere die Attribute aus dem Bild
         const title = target.getAttribute('title'); // KONVENTION: In dem 'title' Attribut steht der Titel des Bildes
+        const id = target.getAttribute("data-id");
         const src = target.getAttribute('src');
         const taken = target.getAttribute("data-date"); // https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
         const tags = target.getAttribute("data-tags"); // https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes; tags sind kommasepariert abgespeichert
@@ -53,6 +54,7 @@ document.addEventListener('click', (e) => {
         console.log(modalTags);
         // Setze Titel, Bild und Aufnahmedatum
         imageTitle.textContent = title;
+        modalImg.setAttribute("data-id", id);
         modalImg.setAttribute('src', src);
         modalTaken.textContent = `Aufnahmedatum: ${taken}`;
         // Setze die tags
@@ -68,10 +70,36 @@ document.addEventListener('click', (e) => {
             const delBtn = document.createElement("button");
             delBtn.classList.add("btn", "btn-close");
             delBtn.setAttribute("aria-label", "Tag entfernen");
+            delBtn.setAttribute("id", "deleteTag");
             tagElement.appendChild(delBtn);
             colDiv.appendChild(tagElement);
             modalTags.appendChild(colDiv);
         });
+        const delTagBtn = document.querySelector("#deleteTag");
+        delTagBtn.addEventListener("click", () => __awaiter(void 0, void 0, void 0, function* () {
+            console.log("clicked");
+            const img = document.querySelector("#modal-img");
+            const imgId = img.dataset.id;
+            console.log(imgId);
+            const span = delTagBtn.parentElement;
+            const tag = span.textContent;
+            const reqData = {
+                imgId: imgId,
+                tag: tag
+            };
+            const res = yield fetch("http://localhost:8080/tag", {
+                method: "DELETE",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(reqData)
+            });
+            console.log(res.status); // Logge, ob das Löschen erfolgreich war
+            if (res.status == 204) {
+                window.location.reload();
+            }
+        }));
     }
     // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
     const modalEditTitle = document.querySelector('#edit-name');
@@ -155,7 +183,7 @@ addAlbumSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void
             title: albumName
         }
     };
-    const res = yield fetch(serverAdress + "/albums", {
+    const res = yield fetch("http://localhost:8080/albums", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -163,8 +191,9 @@ addAlbumSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void
         },
         body: JSON.stringify(reqData),
     });
-    const data = yield res.json();
+    // const data = await res.json(-);
 }));
+//Don't allow Dates that are in the future for Image Date of creation
 const addPhotoDate = document.getElementById("addPhotoDate");
 let today = new Date().toISOString().split("T")[0];
 addPhotoDate.setAttribute("max", today);
@@ -177,7 +206,7 @@ addPhotoSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void
     formData.append("title", photoName);
     formData.append("taken", photoDate);
     formData.append("photo", photoData[0]);
-    const res = yield fetch(serverAdress + "/photos", {
+    const res = yield fetch("http://localhost:8080/photos", {
         method: "POST",
         credentials: "include",
         headers: {

@@ -97,13 +97,27 @@ public class PhotoHandler {
 			});
 	}
 
-	/*
+	// TODO: Fehlermeldung parsen
 	public void deleteTag(RoutingContext ctx) {
-		String tagName = ctx.body().asJsonObject().getString("tagName");
-		jdbcPool.preparedQuery("")
+		String tagName = ctx.body().asJsonObject().getString("tag");
+		String photoId = ctx.body().asJsonObject().getString("imgId");
+		System.out.println(tagName);
+		System.out.println(photoId);
+
+		jdbcPool.preparedQuery("""
+			DELETE pt
+   			FROM PhotosTags pt
+   			LEFT JOIN Tags t
+       				ON pt.TAGS_ID = t.ID
+   			WHERE t.name = ? AND pt.Photos_ID = ?
+			"""
+		).execute(Tuple.of(tagName, photoId), res -> {
+			if (res.succeeded() && res.result().size() > 0) {
+				ctx.response().setStatusCode(204).end();
+			}
+		});
 	}
 
-	 */
 
 
 }

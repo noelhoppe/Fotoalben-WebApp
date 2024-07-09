@@ -44,6 +44,7 @@ document.addEventListener('click', (e: MouseEvent) => {
 
     // Selektiere die Attribute aus dem Bild
     const title : string = target.getAttribute('title') as string; // KONVENTION: In dem 'title' Attribut steht der Titel des Bildes
+    const id : string = target.getAttribute("data-id") as string;
     const src : string = target.getAttribute('src') as string;
     const taken : string = target.getAttribute("data-date") as string; // https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
     const tags : string = target.getAttribute("data-tags") as string; // https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes; tags sind kommasepariert abgespeichert
@@ -57,6 +58,7 @@ document.addEventListener('click', (e: MouseEvent) => {
 
     // Setze Titel, Bild und Aufnahmedatum
     imageTitle.textContent = title;
+    modalImg.setAttribute("data-id", id);
     modalImg.setAttribute('src', src);
     modalTaken.textContent = `Aufnahmedatum: ${taken}`;
 
@@ -75,6 +77,7 @@ document.addEventListener('click', (e: MouseEvent) => {
       const delBtn = document.createElement("button") as HTMLButtonElement;
       delBtn.classList.add("btn", "btn-close");
       delBtn.setAttribute("aria-label", "Tag entfernen");
+      delBtn.setAttribute("id", "deleteTag");
 
       tagElement.appendChild(delBtn);
 
@@ -82,6 +85,37 @@ document.addEventListener('click', (e: MouseEvent) => {
 
       modalTags.appendChild(colDiv);
     })
+
+    const delTagBtn = document.querySelector("#deleteTag") as HTMLButtonElement;
+    delTagBtn.addEventListener("click", async() => {
+      console.log("clicked");
+      const img = document.querySelector("#modal-img") as HTMLImageElement;
+      const imgId = img.dataset.id as string;
+      console.log(imgId);
+      const span = delTagBtn.parentElement as HTMLSpanElement;
+      const tag = span.textContent as string;
+
+      const reqData = {
+        imgId : imgId,
+        tag : tag
+      }
+
+
+      const res = await fetch("http://localhost:8080/tag", {
+        method : "DELETE",
+        credentials : "include",
+        headers : {
+          "Content-Type" : "application/json"
+        },
+        body : JSON.stringify(reqData)
+      });
+
+      console.log(res.status); // Logge, ob das Löschen erfolgreich war
+
+      if (res.status == 204) {
+        window.location.reload();
+      }
+    });
   }
 
   // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
@@ -173,6 +207,8 @@ function insertPhotos(id:string, title : string, taken : string, url : string, t
 
 
 
+
+
 const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;
 addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
   const albumName = (document.getElementById("addAlbumName")as HTMLInputElement).value;
@@ -183,7 +219,7 @@ addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
     }
   };
 
-  const res : Response = await fetch(serverAdress + "/albums", {
+  const res : Response = await fetch( "http://localhost:8080/albums", {
     method: "POST",
     credentials : "include",
     headers : {
@@ -191,14 +227,13 @@ addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
     },
     body : JSON.stringify(reqData),
   });
-  const data = await res.json();
-
-
+  // const data = await res.json(-);
 });
 
+//Don't allow Dates that are in the future for Image Date of creation
 const addPhotoDate = document.getElementById("addPhotoDate") as HTMLInputElement;
 let today = new Date().toISOString().split("T")[0];
-addPhotoDate.setAttribute("max", today)
+addPhotoDate.setAttribute("max", today);
 
   const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
 addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
@@ -212,7 +247,7 @@ addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
   formData.append("photo", photoData[0]);
 
 
-  const res : Response = await fetch(serverAdress + "/photos", {
+  const res : Response = await fetch("http://localhost:8080/photos", {
     method: "POST",
     credentials : "include",
     headers : {
@@ -221,6 +256,4 @@ addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
     body : formData
   });
   const data = await res.json();
-
-
 });

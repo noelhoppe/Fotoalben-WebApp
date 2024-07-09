@@ -95,31 +95,32 @@
       <!-- Add Photo -->
       <div class="modal-body w-100">
         <div class="d-flex flex-column gap-3">
-          <!-- Name -->
-          <div>
-            <h2>Name</h2>
-            <label for="addPhotoName"></label>
-            <input id="addPhotoName" class="w-100" type="text" placeholder="Name des Fotos">
-          </div>
-          <!-- Date of creation -->
-          <div>
-            <h2>Erstellungsdatum</h2>
-            <label for="addPhotoDate"></label>
-            <input id="addPhotoDate" class="w-100" type="date" max="">
-          </div>
-          <!-- Tags -->
-          <div>
-            <h2>Hier Platz für Tags implementieren</h2> <!-- TODO:Tags implementieren -->
-          </div>
-          <!-- Upload -->
-          <div>
-            <h2>Datei hochladen</h2> <!-- TODO:evtl Design -->
-          </div>
-          <div>
-            <input type="file" id="photoUploadBtn" accept="image/png, image/jpeg"/>
-            <!-- <label for="photoUploadBtn">Datei auswählen</label> --> <!-- TODO: evtl. label -->
-
-          </div>
+          <form action="">
+            <!-- Name -->
+            <div>
+              <h2>Name</h2>
+              <label for="addPhotoName"></label>
+              <input id="addPhotoName" class="w-100" type="text" placeholder="Name des Fotos">
+            </div>
+            <!-- Date of creation -->
+            <div>
+              <h2>Erstellungsdatum</h2>
+              <label for="addPhotoDate"></label>
+              <input id="addPhotoDate" class="w-100" type="date" max="">
+            </div>
+            <!-- Tags -->
+            <div>
+              <h2>Hier Platz für Tags implementieren</h2> <!-- TODO:Tags implementieren -->
+            </div>
+            <!-- Upload -->
+            <div>
+              <h2>Datei hochladen</h2> <!-- TODO:evtl Design -->
+            </div>
+            <div>
+              <input type="file" id="photoUploadBtn" accept="image/png, image/jpeg"/>
+              <!-- <label for="photoUploadBtn">Datei auswählen</label> --> <!-- TODO: evtl. label -->
+            </div>
+          </form>
         </div>
       </div>
       <!-- Save Button -->
@@ -248,8 +249,6 @@
 
 
 
-
-
 <!-- MAIN CONTEMT SHOWS PHOTOS IN THE SPECIFIED ALBUM -->
 <!-- https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes -->
 <main id="main-photos-container" class="container-lg mt-4">
@@ -274,8 +273,8 @@
     <div class="col-sm-6 col-md-4 col-lg-3">
       <img src="1.jpg" alt="" class="img-fluid gallery-item" data-bs-target="#gallery-modal" data-bs-toggle="modal">
     </div>
+    -->
   </div>
-  -->
 </main>
 
 

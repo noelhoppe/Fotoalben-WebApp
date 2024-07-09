@@ -169,6 +169,8 @@ public class MainVerticle extends AbstractVerticle {
       MainVerticle.response(ctx.response(), 200, new JsonObject().put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER)));
     });
 
+    router.route(HttpMethod.DELETE, "/tag").handler(photoHandler::deleteTag);
+
 
 
     return Future.succeededFuture(router);
