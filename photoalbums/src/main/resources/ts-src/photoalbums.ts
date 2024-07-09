@@ -1,15 +1,18 @@
+/**
+ * Datentyp eines Fotos. Welche Attribute hat ein Foto?
+ */
 interface Photo {
   title: string;
   taken: string;
   url: string;
-  // tags?:string
+  tags?:string; // tags als kommaseparierter String
 }
 
-const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
 /**
  * POST /logout, wenn der Logout Button geklickt wird
- * Verarbeitet serverseitigen redirect bei erfolgreichem Logout
+ * Verarbeitet serverseitigen redirect bei erfolgreichem Logout und löscht die Session
  */
+const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
 logoutBtn.addEventListener("click", async() => {
   const res = await fetch("http://localhost:8080/logout", {
     method : "POST",
@@ -27,36 +30,73 @@ logoutBtn.addEventListener("click", async() => {
   }
 })
 
-/*
-TODO: Schlagworte sollten im Modal angezeigt werden
- */
 /**
- * Öffnet ein Bootstrap Mdoalfenster
- * Modalheader: Hier steht der Bildtitel des entsprechend angeklickten Bildes.
- * Modalbody: Hier wird das entsprechend angeklickte Bild vergrößert angezeigt. Des Weiteren befindet sich hier ein Eingabefeld, um den Titel des Bildes zu ändern.
- * Modalfooter: Hier gibt es einen Button, um die Änderungen zu speichern, sowie einen weiteren Button, um das Bild zu entfernen.
+ * Öffnet ein Bootstrap Modalfenster
+ * MODALHEADER: Hier steht der Bildtitel des entsprechend angeklickten Bildes.
+ * MODALBODY: Hier wird das entsprechend angeklickte Bild vergrößert angezeigt. Außerdem wird das Aufnahmedatum und die Schlagworte angezeigt.
+ * Des Weiteren befindet sich hier ein Eingabefeld, um den Titel des Bildes zu ändern sowie ein Eingabefeld, um Schlagworte hinzuzufügen
+ * MODALFOOTER: Hier gibt es einen Button, um die Änderungen zu speichern, d.h Tags hinzuzufügen oder den Titel zu ändern sowie einen weiteren Button, um das Bild zu entfernen.
  */
 document.addEventListener('click', (e: MouseEvent) => {
   const target : HTMLElement = e.target as HTMLElement;
   if (target.classList.contains('gallery-item')) { // KONVENTION: Jedes Bild besitzt die Klasse '.gallery-item'
 
-    const src : string = target.getAttribute('src') as string;
+    // Selektiere die Attribute aus dem Bild
     const title : string = target.getAttribute('title') as string; // KONVENTION: In dem 'title' Attribut steht der Titel des Bildes
-    const taken : string = target.getAttribute("data-date") as string;
-    console.log(taken);
+    const src : string = target.getAttribute('src') as string;
+    const taken : string = target.getAttribute("data-date") as string; // https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
+    const tags : string = target.getAttribute("data-tags") as string; // https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes; tags sind kommasepariert abgespeichert
 
+    // Selektiere die Elemente des Modalfensters
     const imageTitle : HTMLElement = document.querySelector('#image-title') as HTMLElement;
     const modalImg : HTMLImageElement = document.querySelector('#modal-img') as HTMLImageElement;
     const modalTaken : HTMLParagraphElement = document.querySelector("#taken") as HTMLParagraphElement;
-    const modalEditTitle : HTMLInputElement = document.querySelector('#edit-name') as HTMLInputElement;
+    const modalTags = document.querySelector("#tags .row") as HTMLParagraphElement;
+    console.log(modalTags);
 
+    // Setze Titel, Bild und Aufnahmedatum
     imageTitle.textContent = title;
     modalImg.setAttribute('src', src);
     modalTaken.textContent = `Aufnahmedatum: ${taken}`;
-    modalEditTitle.value = ""; // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
+
+    // Setze die tags
+    modalTags.innerHTML = "";
+    tags.split(", ").forEach(tag => {
+      console.log("called");
+      console.log(tag);
+      const colDiv = document.createElement("div") as HTMLDivElement;
+      colDiv.classList.add("col");
+
+      const tagElement = document.createElement("p") as HTMLParagraphElement;
+      tagElement.classList.add("badge", "bg-light", "text-dark");
+      tagElement.textContent = tag;
+
+      const delBtn = document.createElement("button") as HTMLButtonElement;
+      delBtn.classList.add("btn", "btn-close");
+      delBtn.setAttribute("aria-label", "Tag entfernen");
+
+      tagElement.appendChild(delBtn);
+
+      colDiv.appendChild(tagElement);
+
+      modalTags.appendChild(colDiv);
+    })
   }
+
+  // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
+  const modalEditTitle : HTMLInputElement = document.querySelector('#edit-name') as HTMLInputElement;
+  modalEditTitle.value = "";
+
+  // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
+  const addTagInput  = document.querySelector("#addTagInput") as HTMLInputElement;
+  addTagInput.value = "";
 });
 
+/**
+ * Wenn die Seite geladen wird:
+ * GET /username
+ * GET /photos
+ */
 const usernameField = document.querySelector("#username") as HTMLParagraphElement;
 document.addEventListener("DOMContentLoaded", async () => {
   const resGetUsername : Response = await fetch("/username", {
@@ -80,7 +120,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const dataGetPhotos : { photos : Photo[] } = await resGetPhotos.json();
   // console.log(dataGetPhotos);
 
-  dataGetPhotos.photos.forEach(photo  => insertPhotos(photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`));
+  dataGetPhotos.photos.forEach(photo  => insertPhotos(photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`, photo.tags == null ? "" : photo.tags));
 })
 
 /**
@@ -93,7 +133,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  * @param url Pfad URL des Bildes
  * @param tags Tags des Bildes, getrennt mit Schlagworten
  */
-function insertPhotos(title : string, taken : string, url : string, tags?:string[]) : void {
+function insertPhotos(title : string, taken : string, url : string, tags:string) : void {
   // Hauptcontainer auswählen
   const mainContainer = document.querySelector("#main-photos-container .row") as HTMLDivElement;
 
@@ -114,7 +154,7 @@ function insertPhotos(title : string, taken : string, url : string, tags?:string
   img.dataset.date = taken;
   img.src = url;
   if (tags) {
-    img.dataset.tags = tags.join(",")
+    img.dataset.tags = tags;
   }
 
   // Für das Bootstrap modal erforderliche Attribute setzen

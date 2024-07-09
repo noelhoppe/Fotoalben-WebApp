@@ -28,7 +28,16 @@ public class PhotoHandler {
 	public void getAllPhotosFromUser(RoutingContext ctx) {
 		Integer userIdStr = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
 
-		jdbcPool.preparedQuery("SELECT * FROM Photos WHERE Users_ID = ?")
+		jdbcPool.preparedQuery("""
+				SELECT p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
+    				FROM Photos p
+    				LEFT JOIN PhotosTags pt
+        					ON pt.Photos_ID = p.ID
+    				LEFT JOIN Tags t
+        					ON pt.TAGS_ID = t.ID
+    				WHERE p.Users_ID = ?
+    				GROUP BY p.ID, p.title, p.taken, p.url
+				""")
 			.execute(Tuple.of(userIdStr), res -> {
 				if (res.succeeded()) {
 					RowSet<Row> rows = res.result();
@@ -38,6 +47,7 @@ public class PhotoHandler {
 						photo.put("title", row.getString("title"));
 						photo.put("taken", row.getLocalDate("taken").toString());
 						photo.put("url", row.getString("url"));
+						photo.put("tags", row.getString("tags"));
 						photos.add(photo);
 					}
 					MainVerticle.response(ctx.response(), 200, new JsonObject().put("photos", photos));
@@ -69,7 +79,7 @@ public class PhotoHandler {
 			return;
 		}
 
-		jdbcPool.preparedQuery("SELECT * FROM Photos WHERE url = ? AND Users_ID = ?")
+		jdbcPool.preparedQuery("SELECT url FROM Photos WHERE url = ? AND Users_ID = ?")
 			.execute(Tuple.of(imageId, userId), res -> {
 				if (res.succeeded() && res.result().size() > 0) {
 					String imagePath = "img/" + imageId;
