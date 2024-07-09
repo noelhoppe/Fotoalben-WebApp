@@ -84,16 +84,6 @@ public class LoginHandler {
 								.setStatusCode(303)
 								.putHeader("Location", "/protected/photoalbums.html")
 								.end();
-							/*
-							MainVerticle.response(ctx.response(), 200, new JsonObject()
-								.put("message", "Login erfolgreich")
-								.put("sessionID", ctx.session().id())
-								.put("user", new JsonObject()
-									.put("username", username)
-									.put("role", role)
-								));
-							 */
-
 						} else { // Passwort falsch
 							System.out.println("Login nicht erfolgreich");
 							MainVerticle.response(ctx.response(), 400, new JsonObject().put("message", "Nutzername oder Passwort falsch"));

@@ -137,9 +137,6 @@ public class MainVerticle extends AbstractVerticle {
               .setIndexPage("login.html")
     );
 
-    router.route(HttpMethod.GET, "/img/*").handler(StaticHandler.create(FileSystemAccess.ROOT, "img"));
-
-
     // Static Handler, um login.js OHNE AUTHENTIFIZIERUNG auszuliefern
     router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "js-build")
               .setCachingEnabled(false)
@@ -165,6 +162,8 @@ public class MainVerticle extends AbstractVerticle {
 
     PhotoHandler photoHandler = new PhotoHandler(jdbcPool);
     router.route(HttpMethod.GET, "/photos").handler(photoHandler::getAllPhotosFromUser);
+    router.route(HttpMethod.GET, "/img/:imageId").handler(photoHandler::servePhotos);
+
 
     router.route(HttpMethod.GET, "/username").handler(authenticationHandler::authenticate).handler(ctx -> {
       MainVerticle.response(ctx.response(), 200, new JsonObject().put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER)));

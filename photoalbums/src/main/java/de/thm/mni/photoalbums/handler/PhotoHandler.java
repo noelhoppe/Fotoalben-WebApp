@@ -14,13 +14,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PhotoHandler {
-	private static final Logger log = LoggerFactory.getLogger(PhotoHandler.class);
 	JDBCPool jdbcPool;
 
 	public PhotoHandler(JDBCPool jdbcPool) {
 		this.jdbcPool = jdbcPool;
 	}
 
+	/**
+	 * Ein Nutzer fragt seine gesamten Fotos an.
+	 * Selektiert alle Felder der Tabelle Photos, wo Photos.Users_ID der user id des Session Objektes entspricht.
+	 * @param ctx Routing Context
+	 */
 	public void getAllPhotosFromUser(RoutingContext ctx) {
 		Integer userIdStr = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
 
@@ -32,7 +36,7 @@ public class PhotoHandler {
 					for (Row row : rows) {
 						JsonObject photo = new JsonObject();
 						photo.put("title", row.getString("title"));
-						photo.put("taken", row.getLocalDate("taken").toString()); // FIXME: Mapping von date typ in sql zu java, typescript, javascript
+						photo.put("taken", row.getLocalDate("taken").toString());
 						photo.put("url", row.getString("url"));
 						photos.add(photo);
 					}
@@ -40,6 +44,43 @@ public class PhotoHandler {
 				} else {
 					MainVerticle.response(ctx.response(), 500, new JsonObject()
 						.put("message", "Ein interner Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut")
+					);
+				}
+			});
+	}
+
+	/**
+	 * Sendet das Bild und prüft, ob der Nutzer das Bild anfragen darf.
+	 * http://localhost:8080/img/1.jpg wird verhindert für nicht angemeldeten Benutzer
+	 *
+	 * @param ctx Routing Context
+	 */
+	public void servePhotos(RoutingContext ctx) {
+		String imageId = ctx.pathParam("imageId");
+		Integer userId = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
+		// System.out.println("userId: " + userId);
+		// System.out.println("imageId: " + imageId);
+
+		// Überprüfung der userId auf null
+		if (userId == null) {
+			MainVerticle.response(ctx.response(), 403, new JsonObject()
+				.put("message", "Unautorisierter Zugriff auf das Bild")
+			);
+			return;
+		}
+
+		jdbcPool.preparedQuery("SELECT * FROM Photos WHERE url = ? AND Users_ID = ?")
+			.execute(Tuple.of(imageId, userId), res -> {
+				if (res.succeeded() && res.result().size() > 0) {
+					String imagePath = "img/" + imageId;
+					ctx.response().sendFile(imagePath).onFailure(err -> {
+						MainVerticle.response(ctx.response(), 500, new JsonObject()
+							.put("message", "Ein interner Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut")
+						);
+					});
+				} else {
+					MainVerticle.response(ctx.response(), 403, new JsonObject()
+						.put("message", "Unautorisierter Zugriff auf das Bild")
 					);
 				}
 			});

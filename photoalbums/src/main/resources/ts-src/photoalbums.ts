@@ -2,6 +2,7 @@ interface Photo {
   title: string;
   taken: string;
   url: string;
+  // tags?:string
 }
 
 const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
@@ -65,7 +66,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       "Content-Type" : "application/json"
     },
   });
-
   const dataGetUsername = await resGetUsername.json();
   usernameField.textContent = dataGetUsername.username;
 
