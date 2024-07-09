@@ -116,3 +116,43 @@ function insertPhotos(title, taken, url, tags) {
     // Bild-Container in den Hauptcontainer einfügen
     mainContainer.appendChild(colDiv);
 }
+const addAlbumSubmit = document.getElementById("addAlbumSubmit");
+addAlbumSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void 0, function* () {
+    const albumName = document.getElementById("addAlbumName").value;
+    const reqData = {
+        album: {
+            title: albumName
+        }
+    };
+    const res = yield fetch(serverAdress + "/albums", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(reqData),
+    });
+    const data = yield res.json();
+}));
+const addPhotoDate = document.getElementById("addPhotoDate");
+let today = new Date().toISOString().split("T")[0];
+addPhotoDate.setAttribute("max", today);
+const addPhotoSubmit = document.getElementById("addPhotoSubmit");
+addPhotoSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void 0, function* () {
+    const photoName = document.getElementById("addPhotoName").value;
+    const photoDate = document.getElementById("addPhotoDate").value;
+    const photoData = document.getElementById("photoUploadBtn").files;
+    const formData = new FormData();
+    formData.append("title", photoName);
+    formData.append("taken", photoDate);
+    formData.append("photo", photoData[0]);
+    const res = yield fetch(serverAdress + "/photos", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "multipart/form-data"
+        },
+        body: formData
+    });
+    const data = yield res.json();
+}));
