@@ -249,6 +249,26 @@
 <main id="main-photos-container" class="container-lg mt-4">
   <div class="row gy-4">
     <!-- Insert photos here -->
+    <!--
+    <div class="col-sm-6 col-md-4 col-lg-3">
+      <img src="1.jpg" alt="" class="img-fluid gallery-item" data-bs-target="#gallery-modal" data-bs-toggle="modal">
+    </div>
+    <div class="col-sm-6 col-md-4 col-lg-3">
+      <img src="1.jpg" alt="" class="img-fluid gallery-item" data-bs-target="#gallery-modal" data-bs-toggle="modal">
+    </div>
+    <div class="col-sm-6 col-md-4 col-lg-3">
+      <img src="1.jpg" alt="" class="img-fluid gallery-item" data-bs-target="#gallery-modal" data-bs-toggle="modal">
+    </div>
+    <div class="col-sm-6 col-md-4 col-lg-3">
+      <img src="1.jpg" alt="" class="img-fluid gallery-item" data-bs-target="#gallery-modal" data-bs-toggle="modal">
+    </div>
+    <div class="col-sm-6 col-md-4 col-lg-3">
+      <img src="1.jpg" alt="" class="img-fluid gallery-item" data-bs-target="#gallery-modal" data-bs-toggle="modal">
+    </div>
+    <div class="col-sm-6 col-md-4 col-lg-3">
+      <img src="1.jpg" alt="" class="img-fluid gallery-item" data-bs-target="#gallery-modal" data-bs-toggle="modal">
+    </div>
+    -->
   </div>
 </main>
 
@@ -267,30 +287,51 @@ TODO: Schlagworte der Bilder sowie das Datum sollten angezeigt werden
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <!-- Display, Edit and Delete Photo -->
+      <!-- Display and Edit Photo -->
       <div class="modal-body w-100">
         <div class="d-flex flex-column gap-3">
-          <!-- Display Photo -->
-          <div>
+
+          <div> <!-- display Photo -->
             <img id="modal-img" src="" class="w-100" alt="modal img"> <!-- *.js/*.ts inserts image here -->
           </div>
-          <div>
-            <p id="taken"></p> <!-- insert taken date here -->
+
+          <div> <!-- taken date -->
+            <p id="taken" class="fw-bold"></p>  <!-- *.js/*.ts inserts taken date here -->
           </div>
-          <!-- Edit Photo-->
-          <div>
-            <label for="edit-name"></label>
-            <input id="edit-name" class="w-100" type="text" placeholder="Neuer Fotoname">
+
+          <div id="tags"> <!-- display tags -->
+            <p class="fw-bold">Schlagworte</p>
+            <div class="row gy-2">
+              <!-- Insert tags -->
+            </div>
           </div>
+
+          <!-- EDIT PHOTO -->
+          <div class="row"> <!-- Schlagworte hinzufügen -->
+            <div class="col">
+              <input id="addTagInput" type="search" class="form-control me-2" placeholder="Schlagwort hinzufügen" aria-label="Schlagwort hinzufügen">
+            </div>
+            <div class="col">
+              <button class="btn btn-primary" type="submit">Speichern</button>
+            </div>
+          </div>
+
+          <div class="row"> <!-- Fototitel ändern -->
+            <div class="col">
+              <input id="edit-name" type="search" class="form-control me-2" placeholder="Fototitel ändern" aria-label="Search in this album">
+            </div><!-- Edit Photo-->
+            <div class="col">
+              <button class="btn btn-primary" type="submit">Speichern</button>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- Änderungen speichern, Foto löschen -->
+      <!-- Foto löschen -->
       <div class="modal-footer">
         <button type="button" class="btn btn-danger">Foto löschen</button>
-        <button type="button" class="btn btn-primary">Änderungen speichern</button>
       </div>
-
     </div>
   </div>
 </div>
