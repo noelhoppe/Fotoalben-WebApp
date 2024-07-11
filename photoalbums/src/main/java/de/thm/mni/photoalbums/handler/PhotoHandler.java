@@ -112,7 +112,7 @@ public class PhotoHandler {
    			WHERE t.name = ? AND pt.Photos_ID = ?
 			"""
 		).execute(Tuple.of(tagName, photoId), res -> {
-			if (res.succeeded() && res.result().size() > 0) {
+			if (res.succeeded()) {
 				ctx.response().setStatusCode(204).end();
 			}
 		});

@@ -71,35 +71,34 @@ document.addEventListener('click', (e) => {
             delBtn.classList.add("btn", "btn-close");
             delBtn.setAttribute("aria-label", "Tag entfernen");
             delBtn.setAttribute("id", "deleteTag");
+            delBtn.addEventListener("click", () => __awaiter(void 0, void 0, void 0, function* () {
+                console.log("clicked");
+                const img = document.querySelector("#modal-img");
+                const imgId = img.dataset.id;
+                console.log(imgId);
+                const span = delBtn.parentElement;
+                const tag = span.textContent;
+                const reqData = {
+                    imgId: imgId,
+                    tag: tag
+                };
+                const res = yield fetch("http://localhost:8080/tag", {
+                    method: "DELETE",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(reqData)
+                });
+                console.log(res.status); // Logge, ob das Löschen erfolgreich war
+                if (res.status == 204) {
+                    window.location.reload();
+                }
+            }));
             tagElement.appendChild(delBtn);
             colDiv.appendChild(tagElement);
             modalTags.appendChild(colDiv);
         });
-        const delTagBtn = document.querySelector("#deleteTag");
-        delTagBtn.addEventListener("click", () => __awaiter(void 0, void 0, void 0, function* () {
-            console.log("clicked");
-            const img = document.querySelector("#modal-img");
-            const imgId = img.dataset.id;
-            console.log(imgId);
-            const span = delTagBtn.parentElement;
-            const tag = span.textContent;
-            const reqData = {
-                imgId: imgId,
-                tag: tag
-            };
-            const res = yield fetch("http://localhost:8080/tag", {
-                method: "DELETE",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(reqData)
-            });
-            console.log(res.status); // Logge, ob das Löschen erfolgreich war
-            if (res.status == 204) {
-                window.location.reload();
-            }
-        }));
     }
     // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
     const modalEditTitle = document.querySelector('#edit-name');

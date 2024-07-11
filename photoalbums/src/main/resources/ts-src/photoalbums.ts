@@ -79,43 +79,42 @@ document.addEventListener('click', (e: MouseEvent) => {
       delBtn.setAttribute("aria-label", "Tag entfernen");
       delBtn.setAttribute("id", "deleteTag");
 
+      delBtn.addEventListener("click", async() => {
+        console.log("clicked");
+        const img = document.querySelector("#modal-img") as HTMLImageElement;
+        const imgId = img.dataset.id as string;
+        console.log(imgId);
+        const span = delBtn.parentElement as HTMLSpanElement;
+        const tag = span.textContent as string;
+
+        const reqData = {
+          imgId : imgId,
+          tag : tag
+        }
+
+
+        const res = await fetch("http://localhost:8080/tag", {
+          method : "DELETE",
+          credentials : "include",
+          headers : {
+            "Content-Type" : "application/json"
+          },
+          body : JSON.stringify(reqData)
+        });
+
+        console.log(res.status); // Logge, ob das Löschen erfolgreich war
+
+        if (res.status == 204) {
+          window.location.reload();
+        }
+      });
+
       tagElement.appendChild(delBtn);
 
       colDiv.appendChild(tagElement);
 
       modalTags.appendChild(colDiv);
     })
-
-    const delTagBtn = document.querySelector("#deleteTag") as HTMLButtonElement;
-    delTagBtn.addEventListener("click", async() => {
-      console.log("clicked");
-      const img = document.querySelector("#modal-img") as HTMLImageElement;
-      const imgId = img.dataset.id as string;
-      console.log(imgId);
-      const span = delTagBtn.parentElement as HTMLSpanElement;
-      const tag = span.textContent as string;
-
-      const reqData = {
-        imgId : imgId,
-        tag : tag
-      }
-
-
-      const res = await fetch("http://localhost:8080/tag", {
-        method : "DELETE",
-        credentials : "include",
-        headers : {
-          "Content-Type" : "application/json"
-        },
-        body : JSON.stringify(reqData)
-      });
-
-      console.log(res.status); // Logge, ob das Löschen erfolgreich war
-
-      if (res.status == 204) {
-        window.location.reload();
-      }
-    });
   }
 
   // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
