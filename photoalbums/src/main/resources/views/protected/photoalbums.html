@@ -298,7 +298,7 @@
             <img id="modal-img" src="" class="w-100" alt="modal img"> <!-- *.js/*.ts inserts image here -->
           </div>
 
-          <div> <!-- taken date -->
+          <div> <!-- display taken date -->
             <p id="taken" class="fw-bold"></p>  <!-- *.js/*.ts inserts taken date here -->
           </div>
 
@@ -310,10 +310,10 @@
           </div>
 
           <!-- EDIT PHOTO -->
-          <div class="row"> <!-- Schlagworte hinzufügen -->
+          <div class="row"> <!-- Fototitel ändern -->
             <div class="col">
-              <input id="addTagInput" type="search" class="form-control me-2" placeholder="Schlagwort hinzufügen" aria-label="Schlagwort hinzufügen">
-            </div>
+              <input id="edit-name" type="text" class="form-control me-2" placeholder="Fototitel ändern" aria-label="Search in this album">
+            </div><!-- Edit Photo-->
             <div class="col">
               <button class="btn btn-primary" type="submit">Speichern</button>
             </div>
@@ -321,13 +321,21 @@
 
           <div class="row"> <!-- Fototitel ändern -->
             <div class="col">
-              <input id="edit-name" type="search" class="form-control me-2" placeholder="Fototitel ändern" aria-label="Search in this album">
+              <input id="edit-date" type="date" class="form-control me-2" aria-label="Aufnahmedatum ändern">
             </div><!-- Edit Photo-->
             <div class="col">
               <button class="btn btn-primary" type="submit">Speichern</button>
             </div>
           </div>
 
+          <div class="row"> <!-- Schlagworte hinzufügen -->
+            <div class="col">
+              <input id="addTagInput" type="text" class="form-control me-2" placeholder="Schlagwort hinzufügen" aria-label="Schlagwort hinzufügen">
+            </div>
+            <div class="col">
+              <button class="btn btn-primary" type="submit">Speichern</button>
+            </div>
+          </div>
         </div>
       </div>
 

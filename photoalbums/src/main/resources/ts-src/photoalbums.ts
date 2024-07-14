@@ -1,72 +1,104 @@
-/**
- * Datentyp eines Fotos. Welche Attribute hat ein Foto?
- */
 interface Photo {
   id : string,
   title: string;
   taken: string;
-  url: string;
+  imgUrl: string;
   tags?:string; // tags als kommaseparierter String
 }
 
 /**
- * POST /logout, wenn der Logout Button geklickt wird
- * Verarbeitet serverseitigen redirect bei erfolgreichem Logout und löscht die Session
+ * Funktion zum Abmelden des Benutzers
  */
-const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
-logoutBtn.addEventListener("click", async() => {
-  const res = await fetch("http://localhost:8080/logout", {
-    method : "POST",
-    redirect : "follow",
-    credentials : "include",
-    headers : {
-      "Content-Type" : "application/json"
+function logout() {
+  const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
+  logoutBtn.addEventListener("click", async () => {
+    const res : Response = await fetch("http://localhost:8080/logout", {
+      method : "POST",
+      redirect : "follow",
+      credentials : "include"
+    });
+
+    if (res.redirected) {
+      window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
+    } else {
+      const data : string = await res.json();
+      console.log(data);
     }
   });
-  if (res.redirected) {
-    window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
-  } else {
-    const data : string = await res.json();
-    console.log(data);
-  }
-})
+}
+logout();
 
 /**
- * Öffnet ein Bootstrap Modalfenster
- * MODALHEADER: Hier steht der Bildtitel des entsprechend angeklickten Bildes.
- * MODALBODY: Hier wird das entsprechend angeklickte Bild vergrößert angezeigt. Außerdem wird das Aufnahmedatum und die Schlagworte angezeigt.
- * Des Weiteren befindet sich hier ein Eingabefeld, um den Titel des Bildes zu ändern sowie ein Eingabefeld, um Schlagworte hinzuzufügen
- * MODALFOOTER: Hier gibt es einen Button, um die Änderungen zu speichern, d.h Tags hinzuzufügen oder den Titel zu ändern sowie einen weiteren Button, um das Bild zu entfernen.
+ * Fügt einen Klick-Event-Listener zu Galerie-Elementen hinzu.
  */
-document.addEventListener('click', (e: MouseEvent) => {
-  const target : HTMLElement = e.target as HTMLElement;
-  if (target.classList.contains('gallery-item')) { // KONVENTION: Jedes Bild besitzt die Klasse '.gallery-item'
+function attachGalleryItemClickListener() {
+  document.addEventListener('click', handleGalleryItemClick);
+}
+attachGalleryItemClickListener();
 
-    // Selektiere die Attribute aus dem Bild
-    const title : string = target.getAttribute('title') as string; // KONVENTION: In dem 'title' Attribut steht der Titel des Bildes
-    const id : string = target.getAttribute("data-id") as string;
-    const src : string = target.getAttribute('src') as string;
-    const taken : string = target.getAttribute("data-date") as string; // https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
-    const tags : string = target.getAttribute("data-tags") as string; // https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes; tags sind kommasepariert abgespeichert
+/**
+ * Behandelt das Klick-Ereignis auf ein Galerie-Element.
+ * @param e MouseEvent
+ */
+function handleGalleryItemClick(e : MouseEvent) {
+  const target = e.target as HTMLElement;
+  if (target.classList.contains('gallery-item')) { // KONVENTION: Alle Bilder besitzen die Klasse '.gallery-item'
+    const photoData = extractPhotoData(target);
+    updateModalUI(photoData);
+  }
+}
 
-    // Selektiere die Elemente des Modalfensters
-    const imageTitle : HTMLElement = document.querySelector('#image-title') as HTMLElement;
-    const modalImg : HTMLImageElement = document.querySelector('#modal-img') as HTMLImageElement;
-    const modalTaken : HTMLParagraphElement = document.querySelector("#taken") as HTMLParagraphElement;
-    const modalTags = document.querySelector("#tags .row") as HTMLParagraphElement;
-    console.log(modalTags);
+/**
+ * Extrahiert die Fotodatenattribute vom angeklickten Galerie-Element.
+ * @param target HTMLElement
+ * @returns Ein Objekt, das die Fotodaten enthält.
+ */
+function extractPhotoData(target: HTMLElement) : Photo {
+  const title = target.getAttribute('title') as string;
+  const id = target.getAttribute('data-id') as string;
+  const imgUrl = target.getAttribute('src') as string;
+  const taken = target.getAttribute('data-date') as string;
+  const tags = target.getAttribute('data-tags') as string;
+  return { id, title, taken, imgUrl, tags };
+}
 
-    // Setze Titel, Bild und Aufnahmedatum
-    imageTitle.textContent = title;
-    modalImg.setAttribute("data-id", id);
-    modalImg.setAttribute('src', src);
-    modalTaken.textContent = `Aufnahmedatum: ${taken}`;
+/**
+ * Updates the modal UI with the extracted photo data.
+ * @param photoData A Photo object containing the photo data.
+ */
+function updateModalUI(photoData: Photo) {
+  const { id, title, taken, imgUrl, tags } = photoData;
 
-    // Setze die tags
-    modalTags.innerHTML = "";
+  // Aktualisiere die Modal Elemente
+  const imageTitle = document.querySelector("#image-title") as HTMLElement;
+  const modalImg = document.querySelector("#modal-img") as HTMLImageElement;
+  const modalTaken = document.querySelector("#taken") as HTMLParagraphElement;
+  const modalTags = document.querySelector("#tags .row") as HTMLDivElement;
+
+  imageTitle.textContent = title;
+  modalImg.setAttribute("data-id", id);
+  modalImg.setAttribute("title", title);
+  modalImg.setAttribute("src", imgUrl);
+  modalImg.setAttribute("data-taken", taken);
+  modalTaken.textContent = `Aufnahmedatum: ${taken}`;
+  modalImg.setAttribute("data-tags", tags || "");
+
+  // Aktualisiere die Tags
+  updateModalTags(modalTags, tags || "");
+
+  // Setze die Eingabefelder zurück
+  resetModalInputs();
+}
+
+/**
+ * Aktualisiert die Modal-Tags-UI.
+ * @param modalTags HTMLElement
+ * @param tags string
+ */
+function updateModalTags(modalTags: HTMLDivElement, tags: string) {
+  modalTags.innerHTML = "";
+  if (tags.length > 0) {
     tags.split(", ").forEach(tag => {
-      console.log("called");
-      console.log(tag);
       const colDiv = document.createElement("div") as HTMLDivElement;
       colDiv.classList.add("col");
 
@@ -79,102 +111,145 @@ document.addEventListener('click', (e: MouseEvent) => {
       delBtn.setAttribute("aria-label", "Tag entfernen");
       delBtn.setAttribute("id", "deleteTag");
 
-      delBtn.addEventListener("click", async() => {
-        console.log("clicked");
-        const img = document.querySelector("#modal-img") as HTMLImageElement;
-        const imgId = img.dataset.id as string;
-        console.log(imgId);
-        const span = delBtn.parentElement as HTMLSpanElement;
-        const tag = span.textContent as string;
-
-        const reqData = {
-          imgId : imgId,
-          tag : tag
-        }
-
-
-        const res = await fetch("http://localhost:8080/tag", {
-          method : "DELETE",
-          credentials : "include",
-          headers : {
-            "Content-Type" : "application/json"
-          },
-          body : JSON.stringify(reqData)
-        });
-
-        console.log(res.status); // Logge, ob das Löschen erfolgreich war
-
-        if (res.status == 204) {
-          window.location.reload();
-        }
-      });
+      delBtn.addEventListener("click", () => handleTagDelete(delBtn, tag, colDiv));
 
       tagElement.appendChild(delBtn);
-
       colDiv.appendChild(tagElement);
-
       modalTags.appendChild(colDiv);
-    })
+    });
   }
-
-  // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
-  const modalEditTitle : HTMLInputElement = document.querySelector('#edit-name') as HTMLInputElement;
-  modalEditTitle.value = "";
-
-  // Setze den Wert des Input-Feldes zurück, wenn das Modal geöffnet wird
-  const addTagInput  = document.querySelector("#addTagInput") as HTMLInputElement;
-  addTagInput.value = "";
-});
+}
 
 /**
- * Wenn die Seite geladen wird:
- * GET /username
- * GET /photos
+ * Behandelt das Löschen eines Tags.
+ * @param delBtn HTMLButtonElement
+ * @param tag string
+ * @param colDiv HTMLDivElement
  */
-const usernameField = document.querySelector("#username") as HTMLParagraphElement;
-document.addEventListener("DOMContentLoaded", async () => {
-  const resGetUsername : Response = await fetch("/username", {
-    method : "GET",
-    credentials : "include",
-    headers : {
-      "Content-Type" : "application/json"
+async function handleTagDelete(delBtn: HTMLButtonElement, tag: string, colDiv: HTMLDivElement) {
+  const img = document.querySelector("#modal-img") as HTMLImageElement;
+  const imgId = img.dataset.id as string;
+
+  const reqData = {
+    imgId: imgId,
+    tag: tag
+  };
+
+  const res = await fetch("http://localhost:8080/tag", {
+    method: "DELETE",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
     },
+    body: JSON.stringify(reqData)
   });
-  const dataGetUsername = await resGetUsername.json();
-  usernameField.textContent = dataGetUsername.username;
 
-  const resGetPhotos : Response = await fetch("/photos", {
-    method : "GET",
-    credentials : "include",
-    headers : {
-      "Content-Type" : "application/json"
+  if (res.status == 204) {
+    // Remove Element from DOM
+    colDiv.remove();
+
+    // Aktualisiere die Tags des Bildes
+    const imgElement = document.querySelector(`img[data-id='${imgId}']`) as HTMLImageElement;
+    if (imgElement) {
+      const currentTags = imgElement.getAttribute("data-tags");
+      if (currentTags) {
+        const updatedTags = currentTags.split(", ").filter(t => t != tag).join(", ");
+        imgElement.setAttribute("data-tags", updatedTags);
+      }
     }
-  })
+  }
+}
 
-  const dataGetPhotos : { photos : Photo[] } = await resGetPhotos.json();
-  // console.log(dataGetPhotos);
+/**
+ * Setzt die Eingabefelder im Modal zurück.
+ */
+function resetModalInputs() {
+  (document.querySelector("#edit-name") as HTMLInputElement).value = "";
+  (document.querySelector("#edit-date") as HTMLInputElement).value = "";
+  (document.querySelector("#addTagInput") as HTMLInputElement).value = "";
+}
 
-  dataGetPhotos.photos.forEach(photo  => insertPhotos(photo.id, photo.title, photo.taken, `http://localhost:8080/img/${photo.url}`, photo.tags == null ? "" : photo.tags));
-})
+/**
+ * Funktion zum Abrufen des Benutzernamens vom Server
+ */
+async function fetchUsername() : Promise<void> {
+  try {
+    const res : Response = await fetch("/username", {
+      method : "GET",
+      credentials : "include"
+    });
+
+    if (!res.ok) {
+      console.error("Error fetching username");
+    }
+
+    const data : { username : string } = await res.json();
+
+    renderUsername(data.username)
+
+  } catch (error) {
+    console.error("Error fetching username", error);
+  }
+}
+
+/**
+ * Funktion zum Rendern des Benutzernamens im DOM
+ * @param username Der Benutzername
+ */
+function renderUsername(username : string) {
+  const usernameField = document.querySelector("#username") as HTMLParagraphElement;
+  usernameField.textContent = username;
+}
+
+/**
+ * Funktion zum Abrufen aller Fotos eines Benutzers vom Server
+ */
+async function fetchPhotos() : Promise<void> {
+  try {
+    const res : Response = await fetch("/photos", {
+      method : "GET",
+      credentials : "include"
+    });
+
+    if (!res.ok) {
+      console.error("Error fetching photos");
+    }
+
+    const data : { photos : Photo[] } = await res.json();
+
+    data.photos.forEach(photo  => renderPhotos(photo));
+
+  } catch (error) {
+    console.error("Error fetching photos", error);
+  }
+}
+
+/**
+ * Funktion zum Initialisieren der Seite.
+ */
+function initializePage() : void {
+  document.addEventListener("DOMContentLoaded", async () : Promise<void> => {
+    await fetchUsername();
+    await fetchPhotos();
+  });
+}
+initializePage();
 
 /**
  * Fügt ein Bild in den DOM ein.
- * Dabei werden die Attribute src, title, date-date und data-tags gesetzt
- * https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
+ * Dabei werden die Attribute src, title, date-date und data-tags gesetzt https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
  * Des Weiteren werden die für Bootstrap erforderlichen Attribute dem <img> Tag hinzugefügt
- * @param id Eindeutige id des Fotos
- * @param title Titel des Bildes
- * @param taken Aufnahmedatum des Bildes
- * @param url Pfad URL des Bildes
- * @param tags Tags des Bildes, getrennt mit Schlagworten
+ * @param photo Ein Bild
  */
-function insertPhotos(id:string, title : string, taken : string, url : string, tags:string) : void {
+function renderPhotos(photo : Photo) : void {
+  const {id, imgUrl, title, taken, tags }  = photo;
+
   // Hauptcontainer auswählen
   const mainContainer = document.querySelector("#main-photos-container .row") as HTMLDivElement;
 
   // Prüfen, ob das Element existiert
   if (!mainContainer) {
-    console.log("Container not found");
+    console.error("Container not found");
     return;
   }
 
@@ -185,11 +260,12 @@ function insertPhotos(id:string, title : string, taken : string, url : string, t
   // Erstellen des Bildes
   const img = document.createElement("img") as HTMLImageElement;
   img.classList.add("img-fluid", "gallery-item");
+  img.dataset.id = id;
+  img.src = `http://localhost:8080/img/${imgUrl}`;
   img.title = title;
   img.dataset.date = taken;
-  img.dataset.id = id;
-  img.src = url;
-  if (tags) {
+
+  if (photo.tags) {
     img.dataset.tags = tags;
   }
 
@@ -204,10 +280,7 @@ function insertPhotos(id:string, title : string, taken : string, url : string, t
   mainContainer.appendChild(colDiv);
 }
 
-
-
-
-
+/*
 const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;
 addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
   const albumName = (document.getElementById("addAlbumName")as HTMLInputElement).value;
@@ -234,7 +307,7 @@ const addPhotoDate = document.getElementById("addPhotoDate") as HTMLInputElement
 let today = new Date().toISOString().split("T")[0];
 addPhotoDate.setAttribute("max", today);
 
-  const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
+const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
 addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
   const photoName = (document.getElementById("addPhotoName")as HTMLInputElement).value;
   const photoDate = (document.getElementById("addPhotoDate") as HTMLInputElement).value;
@@ -256,3 +329,5 @@ addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
   });
   const data = await res.json();
 });
+
+ */

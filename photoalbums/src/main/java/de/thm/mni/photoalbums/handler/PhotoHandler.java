@@ -47,7 +47,7 @@ public class PhotoHandler {
 						photo.put("id", row.getLong("ID"));
 						photo.put("title", row.getString("title"));
 						photo.put("taken", row.getLocalDate("taken").toString());
-						photo.put("url", row.getString("url"));
+						photo.put("imgUrl", row.getString("url"));
 						photo.put("tags", row.getString("tags"));
 						photos.add(photo);
 					}
