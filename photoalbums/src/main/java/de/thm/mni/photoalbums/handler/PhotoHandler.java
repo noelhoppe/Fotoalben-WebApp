@@ -13,6 +13,8 @@ import io.vertx.sqlclient.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.ResultSet;
+
 public class PhotoHandler {
 	JDBCPool jdbcPool;
 
@@ -115,6 +117,57 @@ public class PhotoHandler {
 				ctx.response().setStatusCode(204).end();
 			}
 		});
+	}
+
+
+	public void addTagToPhoto(RoutingContext ctx) {
+		final Integer photoID = ctx.body().asJsonObject().getInteger("photoID");
+		final String tagName = ctx.body().asJsonObject().getString("tagName");
+
+		jdbcPool.preparedQuery("SELECT * FROM Tags WHERE Tags.name = ?")
+			.execute(Tuple.of(tagName), res1 -> {
+				if (res1.succeeded() && res1.result().size() == 1) { // Der Tag existiert bereits in der Tags Tabelle
+					RowSet<Row> rows = res1.result();
+					for (Row row : rows) {
+						final Integer tagId = row.getInteger("ID");
+						jdbcPool.preparedQuery("INSERT INTO PhotosTags VALUES (?, ?)")
+							.execute(Tuple.of(photoID, tagId), res2 -> {
+								if (res2.succeeded()) {
+									MainVerticle.response(ctx.response(), 201, new JsonObject()
+										.put("message", "Der Tag wurde dem Foto hinzugefügt")
+									);
+								} else {
+									MainVerticle.response(ctx.response(), 500, new JsonObject()
+										.put("message", "Fehler beim Hinzufügen des Tags zum Foto")
+									);
+								}
+							});
+					}
+				} else { // Der Tag existiert noch nicht in der Tags Tabelle
+					jdbcPool.preparedQuery("INSERT INTO Tags (name) VALUES(?)")
+						.execute(Tuple.of(tagName), res3 -> {
+							if (res3.succeeded()) {
+								Integer generatedTagId = res3.result().property(JDBCPool.GENERATED_KEYS).getInteger(0);
+								jdbcPool.preparedQuery("INSERT INTO PhotosTags VALUES (?, ?)")
+									.execute(Tuple.of(photoID, generatedTagId), res4 -> {
+										if (res4.succeeded()) {
+											MainVerticle.response(ctx.response(), 201, new JsonObject()
+												.put("message", "Der Tag wurde dem Foto hinzugefügt")
+											);
+										} else {
+											MainVerticle.response(ctx.response(), 500, new JsonObject()
+												.put("message", "Fehler beim Hinzufügen des Tags zum Foto")
+											);
+										}
+									});
+							} else {
+								MainVerticle.response(ctx.response(), 500, new JsonObject()
+									.put("message", "Fehler beim Hinzufügen des Tags zur Tags Tabelle")
+								);
+							}
+						});
+				}
+			});
 	}
 
 

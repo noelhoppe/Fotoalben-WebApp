@@ -166,12 +166,13 @@ public class MainVerticle extends AbstractVerticle {
     router.route(HttpMethod.POST, "/photos").handler(BodyHandler.create().setUploadsDirectory("../../../../img"));
 
 
-
     router.route(HttpMethod.GET, "/username").handler(authenticationHandler::authenticate).handler(ctx -> {
       MainVerticle.response(ctx.response(), 200, new JsonObject().put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER)));
     });
 
+    // TODO: Man sollte nur Tags als richtiger Benutzer löschen können
     router.route(HttpMethod.DELETE, "/tag").handler(photoHandler::deleteTag);
+    router.route(HttpMethod.POST, "/tag").handler(photoHandler::addTagToPhoto);
 
 
 
