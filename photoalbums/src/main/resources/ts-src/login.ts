@@ -19,6 +19,7 @@ togglePasswordVisibility();
  */
 function login() {
     const serverRes : HTMLParagraphElement = document.getElementById("serverResponse") as HTMLParagraphElement;
+    console.log(serverRes);
 
     const loginForm = document.getElementById("loginForm") as HTMLFormElement;
     loginForm.addEventListener("submit", async(evt : SubmitEvent) => {

@@ -65,7 +65,7 @@ function extractPhotoData(target) {
  * @param photoData A Photo object containing the photo data.
  */
 function updateModalUI(photoData) {
-    const { id, title, taken, imgUrl, tags } = photoData;
+    const { id, title, taken, imgUrl, tags } = photoData; // DESTRUCTURING
     // Aktualisiere die Modal Elemente
     const imageTitle = document.querySelector("#image-title");
     const modalImg = document.querySelector("#modal-img");

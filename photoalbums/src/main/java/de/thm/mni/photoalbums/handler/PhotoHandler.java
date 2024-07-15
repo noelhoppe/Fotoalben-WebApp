@@ -97,7 +97,6 @@ public class PhotoHandler {
 			});
 	}
 
-	// TODO: Fehlermeldung parsen
 	public void deleteTag(RoutingContext ctx) {
 		String tagName = ctx.body().asJsonObject().getString("tag");
 		String photoId = ctx.body().asJsonObject().getString("imgId");
