@@ -101,12 +101,71 @@ function updateModalTags(modalTags, tags) {
             delBtn.classList.add("btn", "btn-close");
             delBtn.setAttribute("aria-label", "Tag entfernen");
             delBtn.setAttribute("id", "deleteTag");
-            delBtn.addEventListener("click", () => handleTagDelete(delBtn, tag, colDiv));
+            delBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () { return yield handleTagDelete(delBtn, tag, colDiv); }));
             tagElement.appendChild(delBtn);
             colDiv.appendChild(tagElement);
             modalTags.appendChild(colDiv);
         });
     }
+}
+/**
+ * Fügt einen Event-Listener zum Hinzufügen eines Tags hinzu
+ */
+function attachAddTagListener() {
+    document.addEventListener("DOMContentLoaded", () => {
+        const submitAddTagInput = document.querySelector("#submitAddTagInput");
+        submitAddTagInput.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+            // console.log("called1");
+            const tagName = document.querySelector("#addTagInput").value;
+            const photoID = Number(document.querySelector("#modal-img").getAttribute("data-id"));
+            yield handleTagAdd(photoID, tagName);
+        }));
+    });
+}
+attachAddTagListener();
+// TODO: Zeige dem Nutzer bessere Fehlermeldungen im Frontend an
+/**
+ * POST /tag
+ * {
+ *     photoID: ___,
+ *     tagName: ___
+ * }
+ *
+ * @param photoID Die unique id des Fotos
+ * @param tagName Der hinzugefügte Tagname
+ */
+function handleTagAdd(photoID, tagName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // console.log("called2");
+        const reqData = {
+            photoID: photoID,
+            tagName: tagName
+        };
+        const res = yield fetch("http://localhost:8080/tag", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(reqData)
+        });
+        if (res.status == 201) {
+            const img = document.querySelector(`img[data-id='${photoID}']`);
+            let tags = img.dataset.tags;
+            if (tags.length == 0) {
+                tags = tagName;
+            }
+            else {
+                tags = tags + `, ${tagName}`;
+            }
+            img.dataset.tags = tags;
+            updateModalUI(extractPhotoData(img));
+        }
+        else {
+            const data = yield res.json();
+            console.log(data);
+        }
+    });
 }
 /**
  * Behandelt das Löschen eines Tags.
@@ -240,6 +299,9 @@ function renderPhotos(photo) {
     img.dataset.date = taken;
     if (photo.tags) {
         img.dataset.tags = tags;
+    }
+    else {
+        img.dataset.tags = "";
     }
     // Für das Bootstrap modal erforderliche Attribute setzen
     img.setAttribute("data-bs-toggle", "modal");

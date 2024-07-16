@@ -111,7 +111,7 @@ function updateModalTags(modalTags: HTMLDivElement, tags: string) {
       delBtn.setAttribute("aria-label", "Tag entfernen");
       delBtn.setAttribute("id", "deleteTag");
 
-      delBtn.addEventListener("click", () => handleTagDelete(delBtn, tag, colDiv));
+      delBtn.addEventListener("click", async() => await handleTagDelete(delBtn, tag, colDiv));
 
       tagElement.appendChild(delBtn);
       colDiv.appendChild(tagElement);
@@ -119,6 +119,66 @@ function updateModalTags(modalTags: HTMLDivElement, tags: string) {
     });
   }
 }
+
+/**
+ * Fügt einen Event-Listener zum Hinzufügen eines Tags hinzu
+ */
+function attachAddTagListener() {
+  document.addEventListener("DOMContentLoaded", () => {
+    const submitAddTagInput = document.querySelector("#submitAddTagInput") as HTMLButtonElement;
+    submitAddTagInput.addEventListener("click", async () => {
+      // console.log("called1");
+      const tagName = (document.querySelector("#addTagInput") as HTMLInputElement).value;
+      const photoID = Number((document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id") as string);
+      await handleTagAdd(photoID, tagName);
+    });
+  });
+}
+attachAddTagListener();
+
+// TODO: Zeige dem Nutzer bessere Fehlermeldungen im Frontend an
+/**
+ * POST /tag
+ * {
+ *     photoID: ___,
+ *     tagName: ___
+ * }
+ *
+ * @param photoID Die unique id des Fotos
+ * @param tagName Der hinzugefügte Tagname
+ */
+async function handleTagAdd(photoID: number, tagName: string) {
+  // console.log("called2");
+  const reqData = {
+    photoID: photoID,
+    tagName: tagName
+  };
+
+  const res: Response = await fetch("http://localhost:8080/tag", {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(reqData)
+  });
+
+  if (res.status == 201) {
+    const img = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
+    let tags = img.dataset.tags as string;
+    if (tags.length == 0) {
+      tags = tagName;
+    } else {
+      tags = tags + `, ${tagName}`;
+    }
+    img.dataset.tags = tags;
+    updateModalUI(extractPhotoData(img));
+  } else {
+    const data = await res.json();
+    console.log(data);
+  }
+}
+
 
 /**
  * Behandelt das Löschen eines Tags.
@@ -267,6 +327,8 @@ function renderPhotos(photo : Photo) : void {
 
   if (photo.tags) {
     img.dataset.tags = tags;
+  } else {
+    img.dataset.tags = "";
   }
 
   // Für das Bootstrap modal erforderliche Attribute setzen

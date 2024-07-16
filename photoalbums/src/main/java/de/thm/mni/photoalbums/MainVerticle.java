@@ -170,7 +170,7 @@ public class MainVerticle extends AbstractVerticle {
       MainVerticle.response(ctx.response(), 200, new JsonObject().put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER)));
     });
 
-    // TODO: Man sollte nur Tags als richtiger Benutzer löschen können
+    // TODO: Man sollte nur die Tags seiner Fotos bearbeiten können
     router.route(HttpMethod.DELETE, "/tag").handler(photoHandler::deleteTag);
     router.route(HttpMethod.POST, "/tag").handler(photoHandler::addTagToPhoto);
 

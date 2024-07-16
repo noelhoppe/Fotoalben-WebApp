@@ -120,7 +120,9 @@ public class PhotoHandler {
 	}
 
 
+	// TODO: Zeige dem Nutzer bessere Fehlermeldungen an
 	public void addTagToPhoto(RoutingContext ctx) {
+		System.out.println("POST /tag called");
 		final Integer photoID = ctx.body().asJsonObject().getInteger("photoID");
 		final String tagName = ctx.body().asJsonObject().getString("tagName");
 
@@ -138,7 +140,7 @@ public class PhotoHandler {
 									);
 								} else {
 									MainVerticle.response(ctx.response(), 500, new JsonObject()
-										.put("message", "Fehler beim Hinzufügen des Tags zum Foto")
+										.put("message", "Der Tag existiert bereits")
 									);
 								}
 							});
@@ -156,7 +158,7 @@ public class PhotoHandler {
 											);
 										} else {
 											MainVerticle.response(ctx.response(), 500, new JsonObject()
-												.put("message", "Fehler beim Hinzufügen des Tags zum Foto")
+												.put("message", "Der Tag existier bereits")
 											);
 										}
 									});
