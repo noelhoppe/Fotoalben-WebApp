@@ -50,6 +50,7 @@ CREATE TABLE PhotosTags(
     FOREIGN KEY (TAGS_ID) REFERENCES Tags(ID)
 );
 
+
 CREATE TABLE AlbumsTags(
     Alben_ID INTEGER,
     Tags_ID INTEGER,
