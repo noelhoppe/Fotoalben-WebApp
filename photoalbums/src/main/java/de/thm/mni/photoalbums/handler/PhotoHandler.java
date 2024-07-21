@@ -12,6 +12,7 @@ import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.vertx.ext.web.FileUpload;
 
 import java.sql.ResultSet;
 
