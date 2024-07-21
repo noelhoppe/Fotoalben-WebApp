@@ -112,6 +112,7 @@ public class MainVerticle extends AbstractVerticle {
     Router router = Router.router(vertx);
 
     // Body-Handler, um body des http-req zu parsen und an den RoutingContext weiterzugeben
+    router.route(HttpMethod.POST, "/photos").handler(BodyHandler.create().setUploadsDirectory("img")); //BodyHandler für Photoupload
     router.route().handler(BodyHandler.create());
 
     // Request logging
@@ -163,7 +164,7 @@ public class MainVerticle extends AbstractVerticle {
     PhotoHandler photoHandler = new PhotoHandler(jdbcPool);
     router.route(HttpMethod.GET, "/photos").handler(photoHandler::getAllPhotosFromUser);
     router.route(HttpMethod.GET, "/img/:imageId").handler(photoHandler::servePhotos);
-    router.route(HttpMethod.POST, "/photos").handler(BodyHandler.create().setUploadsDirectory("../../../../img"));
+    router.route(HttpMethod.POST, "/photos").handler(photoHandler::uploadPhoto);
 
 
     router.route(HttpMethod.GET, "/username").handler(authenticationHandler::authenticate).handler(ctx -> {

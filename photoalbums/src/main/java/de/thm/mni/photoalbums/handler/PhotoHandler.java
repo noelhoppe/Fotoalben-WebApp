@@ -4,6 +4,7 @@ import com.sun.tools.javac.Main;
 import de.thm.mni.photoalbums.MainVerticle;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import io.vertx.jdbcclient.JDBCPool;
@@ -172,6 +173,14 @@ public class PhotoHandler {
 			});
 	}
 
-
+public void uploadPhoto(RoutingContext ctx){
+    for (FileUpload file : ctx.fileUploads()) {
+      System.out.println("Filename" + file.fileName());
+    }
+  MainVerticle.response(ctx.response(), 201, new JsonObject()
+    .put("message", "Das Foto wurde hochgeladen!"));
+    //TODO: DATENBANK implementierung und Fehlermeldungen!
+    //TODO: Bild wird aktuell mit random NAME und ohne Dateiendung abgelegt
+}
 
 }

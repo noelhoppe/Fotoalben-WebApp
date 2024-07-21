@@ -342,7 +342,7 @@ function renderPhotos(photo : Photo) : void {
   mainContainer.appendChild(colDiv);
 }
 
-/*
+
 const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;
 addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
   const albumName = (document.getElementById("addAlbumName")as HTMLInputElement).value;
@@ -385,11 +385,10 @@ addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
     method: "POST",
     credentials : "include",
     headers : {
-      "Content-Type" : "multipart/form-data"
     },
     body : formData
   });
   const data = await res.json();
 });
 
- */
+

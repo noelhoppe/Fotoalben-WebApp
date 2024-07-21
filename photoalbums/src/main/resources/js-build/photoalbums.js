@@ -311,54 +311,42 @@ function renderPhotos(photo) {
     // Bild-Container in den Hauptcontainer einfügen
     mainContainer.appendChild(colDiv);
 }
-/*
-const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;
-addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
-  const albumName = (document.getElementById("addAlbumName")as HTMLInputElement).value;
-  const reqData = {
-    album : {
-      title : albumName
-
-    }
-  };
-
-  const res : Response = await fetch( "http://localhost:8080/albums", {
-    method: "POST",
-    credentials : "include",
-    headers : {
-      "Content-Type" : "application/json"
-    },
-    body : JSON.stringify(reqData),
-  });
-  // const data = await res.json(-);
-});
-
+const addAlbumSubmit = document.getElementById("addAlbumSubmit");
+addAlbumSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void 0, function* () {
+    const albumName = document.getElementById("addAlbumName").value;
+    const reqData = {
+        album: {
+            title: albumName
+        }
+    };
+    const res = yield fetch("http://localhost:8080/albums", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(reqData),
+    });
+    // const data = await res.json(-);
+}));
 //Don't allow Dates that are in the future for Image Date of creation
-const addPhotoDate = document.getElementById("addPhotoDate") as HTMLInputElement;
+const addPhotoDate = document.getElementById("addPhotoDate");
 let today = new Date().toISOString().split("T")[0];
 addPhotoDate.setAttribute("max", today);
-
-const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
-addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
-  const photoName = (document.getElementById("addPhotoName")as HTMLInputElement).value;
-  const photoDate = (document.getElementById("addPhotoDate") as HTMLInputElement).value;
-  const photoData =((document.getElementById("photoUploadBtn") as HTMLInputElement).files as FileList);
-  const formData = new FormData();
-
-  formData.append("title", photoName);
-  formData.append("taken", photoDate);
-  formData.append("photo", photoData[0]);
-
-
-  const res : Response = await fetch("http://localhost:8080/photos", {
-    method: "POST",
-    credentials : "include",
-    headers : {
-      "Content-Type" : "multipart/form-data"
-    },
-    body : formData
-  });
-  const data = await res.json();
-});
-
- */ 
+const addPhotoSubmit = document.getElementById("addPhotoSubmit");
+addPhotoSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void 0, function* () {
+    const photoName = document.getElementById("addPhotoName").value;
+    const photoDate = document.getElementById("addPhotoDate").value;
+    const photoData = document.getElementById("photoUploadBtn").files;
+    const formData = new FormData();
+    formData.append("title", photoName);
+    formData.append("taken", photoDate);
+    formData.append("photo", photoData[0]);
+    const res = yield fetch("http://localhost:8080/photos", {
+        method: "POST",
+        credentials: "include",
+        headers: {},
+        body: formData
+    });
+    const data = yield res.json();
+}));
