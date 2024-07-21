@@ -24,8 +24,9 @@ public class PhotoHandler {
 	}
 
 	/**
-	 * Ein Nutzer fragt seine gesamten Fotos an.
-	 * Selektiert alle Felder der Tabelle Photos, wo Photos.Users_ID der user id des Session Objektes entspricht.
+	 * Handler für GET /photos <br>
+	 * Gibt Statuscode 200 und JSON mit allen Fotoinformationen inklusive Tags als kommaseparierter String zurück.<br>
+	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist. <br>
 	 * @param ctx Routing Context
 	 */
 	public void getAllPhotosFromUser(RoutingContext ctx) {
