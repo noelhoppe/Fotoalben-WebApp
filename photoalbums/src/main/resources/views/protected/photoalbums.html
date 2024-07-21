@@ -315,7 +315,7 @@
               <input id="edit-name" type="text" class="form-control me-2" placeholder="Fototitel ändern" aria-label="Search in this album">
             </div>
             <div class="col">
-              <button class="btn btn-primary" type="submit">Speichern</button>
+              <button id="submit-edit-name" class="btn btn-primary" type="submit">Speichern</button>
             </div>
           </div>
 
@@ -336,6 +336,12 @@
               <button class="btn btn-primary" id="submitAddTagInput">Speichern</button>
             </div>
           </div>
+
+          <div id="error-edit-photo-container" class="row alert alert-danger d-none">
+            <h4>Fehler</h4>
+            <p id="error-edit-photo"></p>
+          </div>
+
         </div>
       </div>
 

@@ -4,7 +4,7 @@
 function togglePasswordVisibility() {
     const checkbox = document.getElementById("togglePasswordVisibility") as HTMLInputElement;
     checkbox.addEventListener("change", () => {
-        const password : HTMLInputElement = document.getElementById("password") as HTMLInputElement;
+        const password = document.getElementById("password") as HTMLInputElement;
         if (password.type == "password") {
             password.type = "text";
         } else {
@@ -18,19 +18,25 @@ togglePasswordVisibility();
  * Funktion zum Einloggen eines Benutzers
  */
 function login() {
-    const serverRes : HTMLParagraphElement = document.getElementById("serverResponse") as HTMLParagraphElement;
-    console.log(serverRes);
+    interface ServerReq {
+        user : {
+            username : string,
+            password : string
+        }
+    }
+
+    interface ServerRes {
+        message : string
+    }
 
     const loginForm = document.getElementById("loginForm") as HTMLFormElement;
     loginForm.addEventListener("submit", async(evt : SubmitEvent) => {
         evt.preventDefault();
-        const username : string = (document.getElementById("username") as HTMLInputElement).value;
-        const password : string = (document.getElementById("password") as HTMLInputElement).value;
 
-        const reqData = {
+        const reqData : ServerReq = {
             user : {
-                username : username,
-                password : password
+                username : (document.getElementById("username") as HTMLInputElement).value,
+                password : (document.getElementById("password") as HTMLInputElement).value
             }
         };
 
@@ -44,12 +50,15 @@ function login() {
             body : JSON.stringify(reqData),
         });
 
+        const serverRes = document.getElementById("error-login") as HTMLParagraphElement;
+        const serverResContainer = document.getElementById("error-login-container") as HTMLDivElement;
         if (res.redirected){
             window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
-            serverRes.textContent = "";
+            serverResContainer.classList.add("d-none");
         }
         else {
-            const data = await res.json();
+            const data = await res.json() as ServerRes;
+            serverResContainer.classList.remove("d-none");
             serverRes.textContent = data.message;
         }
     })
