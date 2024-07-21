@@ -4,7 +4,6 @@ import com.sun.tools.javac.Main;
 import de.thm.mni.photoalbums.MainVerticle;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import io.vertx.jdbcclient.JDBCPool;
@@ -100,6 +99,12 @@ public class PhotoHandler {
 			});
 	}
 
+	// TODO: Man kann nur Tags von seinen eigenen Fotos löschen
+	/**
+	 * Handler für DELETE /tag <br>
+	 *
+	 * @param ctx Routing Context
+	 */
 	public void deleteTag(RoutingContext ctx) {
 		String tagName = ctx.body().asJsonObject().getString("tag");
 		String photoId = ctx.body().asJsonObject().getString("imgId");
@@ -120,16 +125,52 @@ public class PhotoHandler {
 		});
 	}
 
-
-	// TODO: Zeige dem Nutzer bessere Fehlermeldungen an
+	/**
+	 * Handler für POST /tag <br>
+	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag Leerzeichen enthält.<br>
+	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag leer is.<br>
+	 * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht Tags zu Fotos eines anderen Benutzers hinzuzufügen. <br>
+	 * Gibt Statuscode 409 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht einen Tag hinzuzufügen, der bereits dem entsprechenden Foto zugewiesen ist.
+	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
+	 * @param ctx Routing Context
+	 */
 	public void addTagToPhoto(RoutingContext ctx) {
-		System.out.println("POST /tag called");
 		final Integer photoID = ctx.body().asJsonObject().getInteger("photoID");
 		final String tagName = ctx.body().asJsonObject().getString("tagName");
 
+		if (tagName.contains(" ")) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Der Tagname darf keine Leerzeichen enthalten")
+			);
+		}
+
+		if (tagName.trim().isEmpty()) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Der Tagname darf nicht leer sein")
+			);
+		}
+
+		jdbcPool.preparedQuery("SELECT Users_ID FROM Photos WHERE ID = ?")
+				.execute(Tuple.of(photoID), res -> {
+					if (res.succeeded() && res.result().size() == 1) {
+						for (Row row : res.result()) {
+							if (row.getInteger("Users_ID") != ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID)) {
+								MainVerticle.response(ctx.response(), 401, new JsonObject()
+									.put("message", "Es können ausschließlich Tags zu eigenen Fotos hinzugefügt werden")
+								);
+							}
+						}
+					} else {
+						MainVerticle.response(ctx.response(), 500, new JsonObject()
+							.put("message", "Ein interner Serverfehler ist aufgetreten")
+						);
+					}
+				});
+
+
 		jdbcPool.preparedQuery("SELECT * FROM Tags WHERE Tags.name = ?")
 			.execute(Tuple.of(tagName), res1 -> {
-				if (res1.succeeded() && res1.result().size() == 1) { // Der Tag existiert bereits in der Tags Tabelle
+				if (res1.succeeded() && res1.result().size() > 1) { // Der Tag existiert bereits in der Tags Tabelle
 					RowSet<Row> rows = res1.result();
 					for (Row row : rows) {
 						final Integer tagId = row.getInteger("ID");
@@ -140,7 +181,7 @@ public class PhotoHandler {
 										.put("message", "Der Tag wurde dem Foto hinzugefügt")
 									);
 								} else {
-									MainVerticle.response(ctx.response(), 500, new JsonObject()
+									MainVerticle.response(ctx.response(), 409, new JsonObject()
 										.put("message", "Der Tag existiert bereits")
 									);
 								}
@@ -158,8 +199,8 @@ public class PhotoHandler {
 												.put("message", "Der Tag wurde dem Foto hinzugefügt")
 											);
 										} else {
-											MainVerticle.response(ctx.response(), 500, new JsonObject()
-												.put("message", "Der Tag existier bereits")
+											MainVerticle.response(ctx.response(), 409, new JsonObject()
+												.put("message", "Der Tag existiert bereits")
 											);
 										}
 									});
@@ -169,6 +210,57 @@ public class PhotoHandler {
 								);
 							}
 						});
+				}
+			});
+	}
+
+	/**
+	 * Handler für PATCH /photoTitle <br>
+	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Titel leer ist bzw. nur aus Leerzeichen besteht. <br>
+	 * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht, den Titel eines Bildes eines anderen Nutzers zu bearbeiten. <br>
+	 * Gibt Statuscode 500 zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
+	 *
+	 * @param ctx Routing Context
+	 */
+	public void  editPhotoTitle(RoutingContext ctx) {
+		Integer photoID = ctx.body().asJsonObject().getInteger("photoID");
+		String photoTitle = ctx.body().asJsonObject().getString("photoTitle");
+
+		if (photoTitle.trim().isEmpty()) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Der Titel darf nicht leer sein")
+			);
+		}
+
+		jdbcPool.preparedQuery("SELECT Users_ID FROM Photos WHERE ID = ?")
+				.execute(Tuple.of(photoID), res -> {
+					if (res.succeeded() && res.result().size() >= 1) {
+						RowSet<Row> rows = res.result();
+						for (Row row : rows) {
+							if (row.getInteger("Users_ID") != ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID)) {
+								MainVerticle.response(ctx.response(), 401, new JsonObject()
+									.put("message", "Nutzer dürfen nur die Titel ihrer eigenen Fotos bearbeiten")
+								);
+							}
+						}
+					} else {
+						MainVerticle.response(ctx.response(), 500, new JsonObject()
+							.put("message", "Ein interner Serverfehler ist aufgetreten")
+						);
+					}
+				});
+
+		jdbcPool.preparedQuery("UPDATE Photos SET Photos.Title = ? WHERE Photos.ID = ?")
+			.execute(Tuple.of(photoTitle, photoID), res -> {
+				if (res.succeeded()) {
+					MainVerticle.response(ctx.response(), 200, new JsonObject()
+						.put("message", "Der Fototitel wurde erfolgreich geändert")
+						.put("photoTitle", photoTitle)
+					);
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Es ist ein Fehler beim Ändern des Fototitels aufgetreten")
+					);
 				}
 			});
 	}

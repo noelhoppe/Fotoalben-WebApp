@@ -151,8 +151,6 @@ public class MainVerticle extends AbstractVerticle {
       if (ctx.session().isEmpty()) {
         MainVerticle.response(ctx.response(), 500, new JsonObject().put("message", "Die Session ist ungültig oder abgelaufen. Bitte melden Sie sich erneut an"));
       } else {
-        String username = ctx.session().get("user");
-        String role = ctx.session().get("role");
         ctx.session().destroy();
         ctx.response()
                   .setStatusCode(303)
@@ -160,6 +158,7 @@ public class MainVerticle extends AbstractVerticle {
                   .end();
       }
     });
+
 
     PhotoHandler photoHandler = new PhotoHandler(jdbcPool);
     router.route(HttpMethod.GET, "/photos").handler(photoHandler::getAllPhotosFromUser);
@@ -171,10 +170,10 @@ public class MainVerticle extends AbstractVerticle {
       MainVerticle.response(ctx.response(), 200, new JsonObject().put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER)));
     });
 
-    // TODO: Man sollte nur die Tags seiner Fotos bearbeiten können
-    router.route(HttpMethod.DELETE, "/tag").handler(photoHandler::deleteTag);
-    router.route(HttpMethod.POST, "/tag").handler(photoHandler::addTagToPhoto);
+    router.route(HttpMethod.DELETE, "/tag").handler(authenticationHandler::authenticate).handler(photoHandler::deleteTag);
+    router.route(HttpMethod.POST, "/tag").handler(authenticationHandler::authenticate).handler(photoHandler::addTagToPhoto);
 
+    router.route(HttpMethod.PATCH, "/photoTitle").handler(authenticationHandler::authenticate).handler(photoHandler::editPhotoTitle);
 
 
     return Future.succeededFuture(router);

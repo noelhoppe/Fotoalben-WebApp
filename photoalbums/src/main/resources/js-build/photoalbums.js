@@ -109,6 +109,14 @@ function updateModalTags(modalTags, tags) {
     }
 }
 /**
+ * Setzt die Eingabefelder im Modal zurück.
+ */
+function resetModalInputs() {
+    document.querySelector("#edit-name").value = "";
+    document.querySelector("#edit-date").value = "";
+    document.querySelector("#addTagInput").value = "";
+}
+/**
  * Fügt einen Event-Listener zum Hinzufügen eines Tags hinzu
  */
 function attachAddTagListener() {
@@ -123,7 +131,6 @@ function attachAddTagListener() {
     });
 }
 attachAddTagListener();
-// TODO: Zeige dem Nutzer bessere Fehlermeldungen im Frontend an
 /**
  * POST /tag
  * {
@@ -150,6 +157,7 @@ function handleTagAdd(photoID, tagName) {
             body: JSON.stringify(reqData)
         });
         if (res.status == 201) {
+            document.querySelector("#error-edit-photo-container").classList.add("d-none");
             const img = document.querySelector(`img[data-id='${photoID}']`);
             let tags = img.dataset.tags;
             if (tags.length == 0) {
@@ -163,9 +171,48 @@ function handleTagAdd(photoID, tagName) {
         }
         else {
             const data = yield res.json();
-            console.log(data);
+            /*
+            (document.querySelector("#error-edit-photo-container")  as HTMLDivElement).classList.remove("d-none");
+            (document.querySelector("#error-edit-photo") as HTMLParagraphElement).textContent = data.message;
+             */
+            renderErrorEditPhoto(false, data.message);
         }
     });
+}
+/**
+ * Rendert die Fehlermeldungen, die auftreten können, wenn man ein Foto bearbeitet.
+ * @param resetErrorMessage
+ * @param message
+ */
+function renderErrorEditPhoto(resetErrorMessage, message) {
+    const errorContainer = document.querySelector("#error-edit-photo-container");
+    const errorParagraph = document.querySelector("#error-edit-photo");
+    if (resetErrorMessage) {
+        // Wenn resetErrorMessage true ist, leeren wir die Fehlermeldung und verstecken den Container
+        if (errorParagraph) {
+            errorParagraph.textContent = '';
+        }
+        if (errorContainer) {
+            errorContainer.classList.add("d-none");
+        }
+    }
+    else {
+        // Wenn message definiert ist und nicht leer ist, zeigen wir die Fehlermeldung an
+        if (message && message.trim() !== '') {
+            if (errorParagraph) {
+                errorParagraph.textContent = message;
+            }
+            if (errorContainer) {
+                errorContainer.classList.remove("d-none");
+            }
+        }
+        else {
+            // Wenn keine Nachricht vorhanden ist oder leer ist, verstecken wir den Container
+            if (errorContainer) {
+                errorContainer.classList.add("d-none");
+            }
+        }
+    }
 }
 /**
  * Behandelt das Löschen eines Tags.
@@ -205,13 +252,45 @@ function handleTagDelete(delBtn, tag, colDiv) {
     });
 }
 /**
- * Setzt die Eingabefelder im Modal zurück.
+ * PATCH
+ * {
+ *     "photoID" : ___,
+ *     "photoTitle" : ___
+ * }
  */
-function resetModalInputs() {
-    document.querySelector("#edit-name").value = "";
-    document.querySelector("#edit-date").value = "";
-    document.querySelector("#addTagInput").value = "";
+function editPhotoTitle() {
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelector("#submit-edit-name").addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const photoID = Number(document.querySelector("#modal-img").getAttribute("data-id"));
+                const reqData = {
+                    photoID: photoID,
+                    photoTitle: document.querySelector("#edit-name").value
+                };
+                const res = yield fetch("http://localhost:8080/photoTitle", {
+                    method: "PATCH",
+                    credentials: "include",
+                    body: JSON.stringify(reqData)
+                });
+                const data = yield res.json();
+                if (res.status == 200) {
+                    const img = document.querySelector(`img[data-id='${photoID}']`);
+                    img.setAttribute("title", data.photoTitle);
+                    renderErrorEditPhoto(true);
+                    updateModalUI(extractPhotoData(img));
+                }
+                else {
+                    console.log("called");
+                    renderErrorEditPhoto(false, data.message);
+                }
+            }
+            catch (error) {
+                console.log("Error updating photo's title" + error);
+            }
+        }));
+    });
 }
+editPhotoTitle();
 /**
  * Funktion zum Abrufen des Benutzernamens vom Server
  */

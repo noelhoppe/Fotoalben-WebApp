@@ -6,10 +6,16 @@ interface Photo {
   tags?:string; // tags als kommaseparierter String
 }
 
+
+
 /**
  * Funktion zum Abmelden des Benutzers
  */
 function logout() {
+  interface ServerRes {
+    url : string
+  }
+
   const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
   logoutBtn.addEventListener("click", async () => {
     const res : Response = await fetch("http://localhost:8080/logout", {
@@ -28,6 +34,8 @@ function logout() {
 }
 logout();
 
+
+
 /**
  * Fügt einen Klick-Event-Listener zu Galerie-Elementen hinzu.
  */
@@ -35,6 +43,7 @@ function attachGalleryItemClickListener() {
   document.addEventListener('click', handleGalleryItemClick);
 }
 attachGalleryItemClickListener();
+
 
 /**
  * Behandelt das Klick-Ereignis auf ein Galerie-Element.
@@ -121,6 +130,16 @@ function updateModalTags(modalTags: HTMLDivElement, tags: string) {
 }
 
 /**
+ * Setzt die Eingabefelder im Modal zurück.
+ */
+function resetModalInputs() {
+  (document.querySelector("#edit-name") as HTMLInputElement).value = "";
+  (document.querySelector("#edit-date") as HTMLInputElement).value = "";
+  (document.querySelector("#addTagInput") as HTMLInputElement).value = "";
+}
+
+
+/**
  * Fügt einen Event-Listener zum Hinzufügen eines Tags hinzu
  */
 function attachAddTagListener() {
@@ -136,7 +155,7 @@ function attachAddTagListener() {
 }
 attachAddTagListener();
 
-// TODO: Zeige dem Nutzer bessere Fehlermeldungen im Frontend an
+
 /**
  * POST /tag
  * {
@@ -148,8 +167,17 @@ attachAddTagListener();
  * @param tagName Der hinzugefügte Tagname
  */
 async function handleTagAdd(photoID: number, tagName: string) {
+  interface ServerReq {
+    photoID : number,
+    tagName : string
+  }
+
+  interface ServerRes {
+    message : string
+  }
+
   // console.log("called2");
-  const reqData = {
+  const reqData : ServerReq = {
     photoID: photoID,
     tagName: tagName
   };
@@ -164,6 +192,7 @@ async function handleTagAdd(photoID: number, tagName: string) {
   });
 
   if (res.status == 201) {
+    (document.querySelector("#error-edit-photo-container")  as HTMLDivElement).classList.add("d-none");
     const img = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
     let tags = img.dataset.tags as string;
     if (tags.length == 0) {
@@ -174,10 +203,50 @@ async function handleTagAdd(photoID: number, tagName: string) {
     img.dataset.tags = tags;
     updateModalUI(extractPhotoData(img));
   } else {
-    const data = await res.json();
-    console.log(data);
+    const data  = await res.json() as ServerRes;
+    /*
+    (document.querySelector("#error-edit-photo-container")  as HTMLDivElement).classList.remove("d-none");
+    (document.querySelector("#error-edit-photo") as HTMLParagraphElement).textContent = data.message;
+     */
+    renderErrorEditPhoto(false, data.message);
   }
 }
+
+/**
+ * Rendert die Fehlermeldungen, die auftreten können, wenn man ein Foto bearbeitet.
+ * @param resetErrorMessage
+ * @param message
+ */
+function renderErrorEditPhoto(resetErrorMessage: boolean, message?: string) {
+  const errorContainer = document.querySelector("#error-edit-photo-container") as HTMLDivElement;
+  const errorParagraph = document.querySelector("#error-edit-photo") as HTMLParagraphElement;
+
+  if (resetErrorMessage) {
+    // Wenn resetErrorMessage true ist, leeren wir die Fehlermeldung und verstecken den Container
+    if (errorParagraph) {
+      errorParagraph.textContent = '';
+    }
+    if (errorContainer) {
+      errorContainer.classList.add("d-none");
+    }
+  } else {
+    // Wenn message definiert ist und nicht leer ist, zeigen wir die Fehlermeldung an
+    if (message && message.trim() !== '') {
+      if (errorParagraph) {
+        errorParagraph.textContent = message;
+      }
+      if (errorContainer) {
+        errorContainer.classList.remove("d-none");
+      }
+    } else {
+      // Wenn keine Nachricht vorhanden ist oder leer ist, verstecken wir den Container
+      if (errorContainer) {
+        errorContainer.classList.add("d-none");
+      }
+    }
+  }
+}
+
 
 
 /**
@@ -221,13 +290,52 @@ async function handleTagDelete(delBtn: HTMLButtonElement, tag: string, colDiv: H
 }
 
 /**
- * Setzt die Eingabefelder im Modal zurück.
+ * PATCH
+ * {
+ *     "photoID" : ___,
+ *     "photoTitle" : ___
+ * }
  */
-function resetModalInputs() {
-  (document.querySelector("#edit-name") as HTMLInputElement).value = "";
-  (document.querySelector("#edit-date") as HTMLInputElement).value = "";
-  (document.querySelector("#addTagInput") as HTMLInputElement).value = "";
+function editPhotoTitle() {
+  document.addEventListener("DOMContentLoaded", () => {
+    (document.querySelector("#submit-edit-name") as HTMLButtonElement).addEventListener("click", async() => {
+      try {
+        interface ServerReq {
+          photoID : number,
+          photoTitle : string
+        }
+
+        const photoID = Number((document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id"));
+        const reqData : ServerReq = {
+          photoID : photoID,
+          photoTitle : (document.querySelector("#edit-name") as HTMLInputElement).value
+        }
+
+        const res = await fetch("http://localhost:8080/photoTitle", {
+          method : "PATCH",
+          credentials : "include",
+          body : JSON.stringify(reqData)
+        })
+
+        const data = await res.json();
+
+        if (res.status == 200) {
+          const img = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
+          img.setAttribute("title", data.photoTitle);
+          renderErrorEditPhoto(true);
+          updateModalUI(extractPhotoData(img));
+        } else {
+          console.log("called");
+          renderErrorEditPhoto(false, data.message);
+        }
+      } catch(error) {
+        console.log("Error updating photo's title" + error);
+      }
+    })
+  })
 }
+editPhotoTitle();
+
 
 /**
  * Funktion zum Abrufen des Benutzernamens vom Server

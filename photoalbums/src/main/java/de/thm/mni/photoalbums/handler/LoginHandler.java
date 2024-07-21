@@ -24,7 +24,6 @@ public class LoginHandler {
 		this.jdbcPool = jdbcPool;
 	}
 
-	// TODO: Sollte ich ein Statuscode 3xx zurückgeben bei erfolgreichen Login
 	/**
 	 * Extrahiert das JsonObject user aus dem RoutingContext und selektiert die Felder username und password des user Objekts.
 	 * Gibt Statuscode 400 mit entsprechender JSON message zurück,
@@ -33,6 +32,7 @@ public class LoginHandler {
 	 * der Benutzername oder das Passwort falsch ist.
 	 * Gibt Statuscode 500 mit entsprechender JSON message zurück, wenn ein Server- oder Datenbankfehler aufgetreten ist.
 	 * Gibt Statuscode 200 mit entsprechender JSPON message zurück, wenn der Login erfolgreich war, also wenn das Paar Benutzername und Passwort existiert
+	 * Die Passwörter sind in der Datenbank mit rounds 10 gehasht gespeichert.
 	 * @param ctx Routing Context
 	 */
 	public void handleLogin(RoutingContext ctx) {

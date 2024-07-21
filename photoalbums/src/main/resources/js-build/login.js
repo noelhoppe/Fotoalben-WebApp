@@ -28,17 +28,13 @@ togglePasswordVisibility();
  * Funktion zum Einloggen eines Benutzers
  */
 function login() {
-    const serverRes = document.getElementById("serverResponse");
-    console.log(serverRes);
     const loginForm = document.getElementById("loginForm");
     loginForm.addEventListener("submit", (evt) => __awaiter(this, void 0, void 0, function* () {
         evt.preventDefault();
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
         const reqData = {
             user: {
-                username: username,
-                password: password
+                username: document.getElementById("username").value,
+                password: document.getElementById("password").value
             }
         };
         const res = yield fetch("http://localhost:8080/login", {
@@ -50,12 +46,15 @@ function login() {
             },
             body: JSON.stringify(reqData),
         });
+        const serverRes = document.getElementById("error-login");
+        const serverResContainer = document.getElementById("error-login-container");
         if (res.redirected) {
             window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
-            serverRes.textContent = "";
+            serverResContainer.classList.add("d-none");
         }
         else {
             const data = yield res.json();
+            serverResContainer.classList.remove("d-none");
             serverRes.textContent = data.message;
         }
     }));
