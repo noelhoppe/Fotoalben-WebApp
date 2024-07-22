@@ -65,9 +65,9 @@ public class PhotoHandler {
 	}
 
 	/**
-	 * Sendet das Bild und prüft, ob der Nutzer das Bild anfragen darf.
-	 * http://localhost:8080/img/1.jpg wird verhindert für nicht angemeldeten Benutzer
-	 *
+	 * Prüft, ob der Nutzer das Bild anfragen darf, d.h ob es dem Nutzer zugewiesen ist und sendet es zurück.<br>
+	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
+	 * Gibt Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn der Nutzer ein Bild anfragt, welches ihm nicht zugewiesen ist.<br>
 	 * @param ctx Routing Context
 	 */
 	public void servePhotos(RoutingContext ctx) {
@@ -104,6 +104,8 @@ public class PhotoHandler {
 	// TODO: Man kann nur Tags von seinen eigenen Fotos löschen
 	/**
 	 * Handler für DELETE /tag <br>
+	 * Gibt Statuscode 204 zurück, wenn der Tag erfolgreich vom Foto gelöscht wurde. <br>
+	 *
 	 *
 	 * @param ctx Routing Context
 	 */
@@ -142,13 +144,13 @@ public class PhotoHandler {
 
 		if (tagName.contains(" ")) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
-				.put("message", "Der Tagname darf keine Leerzeichen enthalten")
+				.put("message", "Der Tag darf keine Leerzeichen enthalten")
 			);
 		}
 
 		if (tagName.trim().isEmpty()) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
-				.put("message", "Der Tagname darf nicht leer sein")
+				.put("message", "Der Tag darf nicht leer sein")
 			);
 		}
 
@@ -172,7 +174,7 @@ public class PhotoHandler {
 
 		jdbcPool.preparedQuery("SELECT * FROM Tags WHERE Tags.name = ?")
 			.execute(Tuple.of(tagName), res1 -> {
-				if (res1.succeeded() && res1.result().size() > 1) { // Der Tag existiert bereits in der Tags Tabelle
+				if (res1.succeeded() && res1.result().size() == 1) { // Der Tag existiert bereits in der Tags Tabelle
 					RowSet<Row> rows = res1.result();
 					for (Row row : rows) {
 						final Integer tagId = row.getInteger("ID");

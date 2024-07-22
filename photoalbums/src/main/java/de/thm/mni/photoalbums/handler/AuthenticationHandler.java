@@ -7,9 +7,9 @@ public class AuthenticationHandler {
 
 
 	/**
-	 * Wer bin ich? Welcher Benutzer ist angemeldet?
-	 * Wenn das Session-Objekt leer ist, d.h. kein Benutzer angemeldet ist, wird die http-Anfrage hier mit einem 401 Unauthorized und einer entsprechenden Fehlermeldung abgewiesen.
-	 * Wenn das Session-Objekt nicht leer ist, d.h. ein Benutzer angemeldet ist, wird die http-Anfrage an den nächsten handler weitergegeben und weiterverarbeitet.
+	 * Wer bin ich? Welcher Benutzer ist angemeldet?<br>
+	 * Wenn das Session-Objekt leer ist, d.h. kein Benutzer angemeldet ist, wird die http-Anfrage hier mit einem 401 Unauthorized abgewiesen. <br>
+	 * Wenn das Session-Objekt nicht leer ist, d.h. ein Benutzer angemeldet ist, wird die http-Anfrage an den nächsten handler weitergegeben und weiterverarbeitet.<br>
 	 * @param ctx
 	 */
 	public void authenticate(RoutingContext ctx) {

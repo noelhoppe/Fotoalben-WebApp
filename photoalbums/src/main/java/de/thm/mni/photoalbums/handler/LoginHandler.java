@@ -25,14 +25,14 @@ public class LoginHandler {
 	}
 
 	/**
-	 * Extrahiert das JsonObject user aus dem RoutingContext und selektiert die Felder username und password des user Objekts.
-	 * Gibt Statuscode 400 mit entsprechender JSON message zurück,
-	 * wenn der Benutzername oder das Password Leerzeichen enthält,
-	 * der Benutzernamen oder das Password null oder leer ist oder
-	 * der Benutzername oder das Passwort falsch ist.
-	 * Gibt Statuscode 500 mit entsprechender JSON message zurück, wenn ein Server- oder Datenbankfehler aufgetreten ist.
-	 * Gibt Statuscode 200 mit entsprechender JSPON message zurück, wenn der Login erfolgreich war, also wenn das Paar Benutzername und Passwort existiert
-	 * Die Passwörter sind in der Datenbank mit rounds 10 gehasht gespeichert.
+	 * Extrahiert das JsonObject user aus dem RoutingContext und selektiert die Felder username und password des user Objekts.<br>
+	 * Gibt Statuscode 400 mit entsprechender JSON message zurück,<br>
+	 * wenn der Benutzername oder das Password Leerzeichen enthält,<br>
+	 * der Benutzernamen oder das Password null oder leer ist oder<br>
+	 * der Benutzername oder das Passwort falsch ist.<br>
+	 * Gibt Statuscode 500 mit entsprechender JSON message zurück, wenn ein Server- oder Datenbankfehler aufgetreten ist. <br>
+	 * Gibt Statuscode 303 mit Location Header zurück, wenn der Login erfolgreich war, also wenn das Paar Benutzername und Passwort existiert <br>
+	 * Die Passwörter sind in der Datenbank mit Bcrypt (rounds 10) gehasht gespeichert.<br>
 	 * @param ctx Routing Context
 	 */
 	public void handleLogin(RoutingContext ctx) {

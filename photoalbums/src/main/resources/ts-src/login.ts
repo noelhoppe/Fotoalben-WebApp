@@ -4,11 +4,11 @@
 function togglePasswordVisibility() {
     const checkbox = document.getElementById("togglePasswordVisibility") as HTMLInputElement;
     checkbox.addEventListener("change", () => {
-        const password = document.getElementById("password") as HTMLInputElement;
-        if (password.type == "password") {
-            password.type = "text";
+        const inputField = document.getElementById("password") as HTMLInputElement;
+        if (inputField.type == "password") {
+            inputField.type = "text";
         } else {
-            password.type = "password";
+            inputField.type = "password";
         }
     })
 }
@@ -53,12 +53,12 @@ function login() {
         const serverRes = document.getElementById("error-login") as HTMLParagraphElement;
         const serverResContainer = document.getElementById("error-login-container") as HTMLDivElement;
         if (res.redirected){
-            window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
             serverResContainer.classList.add("d-none");
+            window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
         }
         else {
-            const data = await res.json() as ServerRes;
             serverResContainer.classList.remove("d-none");
+            const data = await res.json() as ServerRes;
             serverRes.textContent = data.message;
         }
     })
