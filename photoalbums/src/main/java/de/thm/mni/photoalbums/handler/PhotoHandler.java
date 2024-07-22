@@ -115,18 +115,48 @@ public class PhotoHandler {
 		System.out.println(tagName);
 		System.out.println(photoId);
 
-		jdbcPool.preparedQuery("""
-			DELETE pt
-   			FROM PhotosTags pt
-   			LEFT JOIN Tags t
-       				ON pt.TAGS_ID = t.ID
-   			WHERE t.name = ? AND pt.Photos_ID = ?
-			"""
-		).execute(Tuple.of(tagName, photoId), res -> {
-			if (res.succeeded()) {
-				ctx.response().setStatusCode(204).end();
-			}
-		});
+		jdbcPool.preparedQuery("SELECT * FROM Photos WHERE Photos.ID = ?")
+			.execute(Tuple.of(photoId), res -> {
+				if (res.succeeded()) {
+					RowSet<Row> rows = res.result();
+					if (rows.size() == 0) {
+						MainVerticle.response(ctx.response(), 404, new JsonObject()
+							.put("message", "Foto nicht gefunden")
+						);
+						return;
+					}
+					for (Row row : rows) {
+						if (row.getInteger("Users_ID") != ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID)) {
+							MainVerticle.response(ctx.response(), 401, new JsonObject()
+								.put("message", "Es können nur Tags von eigenen Fotos entfernt werden")
+							);
+							return;
+						}
+					}
+
+					// Wenn der Benutzer berechtigt ist, den Tag zu löschen
+					jdbcPool.preparedQuery("""
+                       				DELETE pt
+                        				FROM PhotosTags pt
+                        				LEFT JOIN Tags t
+                        					ON pt.TAGS_ID = t.ID
+                        				WHERE t.name = ? AND pt.Photos_ID = ?
+                        			"""
+					).execute(Tuple.of(tagName, photoId), res2 -> {
+						if (res2.succeeded()) {
+							ctx.response().setStatusCode(204).end();
+						} else {
+							MainVerticle.response(ctx.response(), 500, new JsonObject()
+								.put("message", "Fehler beim Löschen des Tags")
+							);
+						}
+					});
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Ein interner Serverfehler ist aufgetreten")
+					);
+				}
+			});
 	}
 
 	/**
