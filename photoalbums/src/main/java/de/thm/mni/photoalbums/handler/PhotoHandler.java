@@ -409,7 +409,37 @@ public class PhotoHandler {
 
 
 public void uploadPhoto(RoutingContext ctx){
+
+
+    String photoTitle = ctx.request().getFormAttribute("title");
+    String photoDate = ctx.request().getFormAttribute("date");
+
+    if (photoTitle.trim().isEmpty()) {
+      MainVerticle.response(ctx.response(), 400, new JsonObject()
+        .put("message", "Der Titel darf nicht leer sein"));
+    }
+
+    //TODO: Datum überprüfen, TAGS implementieren!!
+
+
+    if (ctx.fileUploads().isEmpty()){
+      MainVerticle.response(ctx.response(), 400, new JsonObject()
+        .put("message", "Es wurde keine Bilddatei mitgesendet"));
+    }
+
     for (FileUpload file : ctx.fileUploads()) {
+      String fileNameOriginal = file.fileName();
+      String fileExtension = fileNameOriginal.substring(fileNameOriginal.lastIndexOf("."));
+      String mimeType = file.contentType();
+
+      if (!mimeType.equals("image/png") && !mimeType.equals("image/jpeg")) {
+        MainVerticle.response(ctx.response(), 400, new JsonObject()
+          .put("message", "Die hochgeladene Datei muss eine Bilddatei des Typs JPEG oder PNG sein"));
+
+      }
+
+
+
       System.out.println("Filename" + file.fileName());
     }
   MainVerticle.response(ctx.response(), 201, new JsonObject()
