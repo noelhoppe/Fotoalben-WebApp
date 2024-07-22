@@ -15,6 +15,7 @@ import io.vertx.sqlclient.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.vertx.ext.web.FileUpload;
+import io.vertx.core.file.FileSystem;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -433,6 +434,7 @@ public void uploadPhoto(RoutingContext ctx){
       String mimeType = file.contentType();
 
       if (!mimeType.equals("image/png") && !mimeType.equals("image/jpeg")) {
+            //TODO: FILE vertx.fileSystem().delete löschen implementieren
         MainVerticle.response(ctx.response(), 400, new JsonObject()
           .put("message", "Die hochgeladene Datei muss eine Bilddatei des Typs JPEG oder PNG sein"));
 
@@ -444,7 +446,7 @@ public void uploadPhoto(RoutingContext ctx){
     }
   MainVerticle.response(ctx.response(), 201, new JsonObject()
     .put("message", "Das Foto wurde hochgeladen!"));
-    //TODO: DATENBANK implementierung und Fehlermeldungen!
+    //TODO: DATENBANK implementierung!
     //TODO: Bild wird aktuell mit random NAME und ohne Dateiendung abgelegt
 }
 
