@@ -101,12 +101,12 @@ public class PhotoHandler {
 			});
 	}
 
-	// TODO: Man kann nur Tags von seinen eigenen Fotos löschen
 	/**
 	 * Handler für DELETE /tag <br>
 	 * Gibt Statuscode 204 zurück, wenn der Tag erfolgreich vom Foto gelöscht wurde. <br>
-	 *
-	 *
+	 * Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht gefunden wurde.<br>
+	 * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht Tags von Bildern eines anderen Benutzers zu entfernen.<br>
+	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist<br>
 	 * @param ctx Routing Context
 	 */
 	public void deleteTag(RoutingContext ctx) {
@@ -255,6 +255,7 @@ public class PhotoHandler {
 	 * Handler für PATCH /photoTitle <br>
 	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Titel leer ist bzw. nur aus Leerzeichen besteht. <br>
 	 * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht, den Titel eines Bildes eines anderen Nutzers zu bearbeiten. <br>
+	 * Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Bild nicht existiert.
 	 * Gibt Statuscode 500 zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
 	 *
 	 * @param ctx Routing Context
@@ -262,6 +263,15 @@ public class PhotoHandler {
 	public void  editPhotoTitle(RoutingContext ctx) {
 		Integer photoID = ctx.body().asJsonObject().getInteger("photoID");
 		String photoTitle = ctx.body().asJsonObject().getString("photoTitle");
+
+		jdbcPool.preparedQuery("SELECT * FROM Photos WHERE ID = ?")
+			.execute(Tuple.of(photoID), res -> {
+				if (res.succeeded() && res.result().size() == 0) {
+					MainVerticle.response(ctx.response(), 404, new JsonObject()
+						.put("message", "Das Bild existiert nicht")
+					);
+				}
+			});
 
 		if (photoTitle.trim().isEmpty()) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
@@ -278,28 +288,29 @@ public class PhotoHandler {
 								MainVerticle.response(ctx.response(), 401, new JsonObject()
 									.put("message", "Nutzer dürfen nur die Titel ihrer eigenen Fotos bearbeiten")
 								);
+								return;
 							}
 						}
+						// Der Nutzer bearbeitet seinen eigenen Fototitel
+						jdbcPool.preparedQuery("UPDATE Photos SET Photos.Title = ? WHERE Photos.ID = ?")
+							.execute(Tuple.of(photoTitle, photoID), res2 -> {
+								if (res2.succeeded()) {
+									MainVerticle.response(ctx.response(), 200, new JsonObject()
+										.put("message", "Der Fototitel wurde erfolgreich geändert")
+										.put("photoTitle", photoTitle)
+									);
+								} else {
+									MainVerticle.response(ctx.response(), 500, new JsonObject()
+										.put("message", "Es ist ein Fehler beim Ändern des Fototitels aufgetreten")
+									);
+								}
+							});
 					} else {
 						MainVerticle.response(ctx.response(), 500, new JsonObject()
 							.put("message", "Ein interner Serverfehler ist aufgetreten")
 						);
 					}
 				});
-
-		jdbcPool.preparedQuery("UPDATE Photos SET Photos.Title = ? WHERE Photos.ID = ?")
-			.execute(Tuple.of(photoTitle, photoID), res -> {
-				if (res.succeeded()) {
-					MainVerticle.response(ctx.response(), 200, new JsonObject()
-						.put("message", "Der Fototitel wurde erfolgreich geändert")
-						.put("photoTitle", photoTitle)
-					);
-				} else {
-					MainVerticle.response(ctx.response(), 500, new JsonObject()
-						.put("message", "Es ist ein Fehler beim Ändern des Fototitels aufgetreten")
-					);
-				}
-			});
 	}
 
 public void uploadPhoto(RoutingContext ctx){
