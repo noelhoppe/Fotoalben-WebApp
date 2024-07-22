@@ -382,7 +382,6 @@ public class PhotoHandler {
 	}
 
 	/**
-	 *
 	 * @param photoId Die ID des Fotos (unique, weil PK)
 	 * @param ctx Der RoutingContext
 	 * @return true, wenn das Foto existiert; false sonst
