@@ -66,8 +66,8 @@ public class PhotoHandler {
 
 	/**
 	 * Prüft, ob der Nutzer das Bild anfragen darf, d.h ob es dem Nutzer zugewiesen ist und sendet es zurück.<br>
-	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
 	 * Gibt Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn der Nutzer ein Bild anfragt, welches ihm nicht zugewiesen ist.<br>
+	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
 	 * @param ctx Routing Context
 	 */
 	public void servePhotos(RoutingContext ctx) {
@@ -161,6 +161,7 @@ public class PhotoHandler {
 
 	/**
 	 * Handler für POST /tag <br>
+	 * Gibt Statuscode 201 mit entsprechender Erfolgsmeldung zurück, wenn der Tag erfolgreich zum Foto hinzugefügt wurde.<br>
 	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag Leerzeichen enthält.<br>
 	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag leer is.<br>
 	 * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht Tags zu Fotos eines anderen Benutzers hinzuzufügen. <br>
