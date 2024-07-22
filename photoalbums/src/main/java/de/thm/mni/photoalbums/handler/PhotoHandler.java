@@ -146,12 +146,14 @@ public class PhotoHandler {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Tag darf keine Leerzeichen enthalten")
 			);
+			return;
 		}
 
 		if (tagName.trim().isEmpty()) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Tag darf nicht leer sein")
 			);
+			return;
 		}
 
 		jdbcPool.preparedQuery("SELECT Users_ID FROM Photos WHERE ID = ?")
@@ -162,60 +164,61 @@ public class PhotoHandler {
 								MainVerticle.response(ctx.response(), 401, new JsonObject()
 									.put("message", "Es können ausschließlich Tags zu eigenen Fotos hinzugefügt werden")
 								);
+								return;
 							}
 						}
+
+						// Der Benutzer ist berechtigt, den Tag hinzuzufügen
+						jdbcPool.preparedQuery("SELECT * FROM Tags WHERE Tags.name = ?")
+							.execute(Tuple.of(tagName), res1 -> {
+								if (res1.succeeded() && res1.result().size() == 1) { // Der Tag existiert bereits in der Tags Tabelle
+									RowSet<Row> rows = res1.result();
+									for (Row row : rows) {
+										final Integer tagId = row.getInteger("ID");
+										jdbcPool.preparedQuery("INSERT INTO PhotosTags VALUES (?, ?)")
+											.execute(Tuple.of(photoID, tagId), res2 -> {
+												if (res2.succeeded()) {
+													MainVerticle.response(ctx.response(), 201, new JsonObject()
+														.put("message", "Der Tag wurde dem Foto hinzugefügt")
+													);
+												} else {
+													MainVerticle.response(ctx.response(), 409, new JsonObject()
+														.put("message", "Der Tag existiert bereits")
+													);
+												}
+											});
+									}
+								} else { // Der Tag existiert noch nicht in der Tags Tabelle
+									jdbcPool.preparedQuery("INSERT INTO Tags (name) VALUES(?)")
+										.execute(Tuple.of(tagName), res3 -> {
+											if (res3.succeeded()) {
+												Integer generatedTagId = res3.result().property(JDBCPool.GENERATED_KEYS).getInteger(0);
+												jdbcPool.preparedQuery("INSERT INTO PhotosTags VALUES (?, ?)")
+													.execute(Tuple.of(photoID, generatedTagId), res4 -> {
+														if (res4.succeeded()) {
+															MainVerticle.response(ctx.response(), 201, new JsonObject()
+																.put("message", "Der Tag wurde dem Foto hinzugefügt")
+															);
+														} else {
+															MainVerticle.response(ctx.response(), 409, new JsonObject()
+																.put("message", "Der Tag existiert bereits")
+															);
+														}
+													});
+											} else {
+												MainVerticle.response(ctx.response(), 500, new JsonObject()
+													.put("message", "Fehler beim Hinzufügen des Tags zur Tags Tabelle")
+												);
+											}
+										});
+								}
+							});
 					} else {
 						MainVerticle.response(ctx.response(), 500, new JsonObject()
 							.put("message", "Ein interner Serverfehler ist aufgetreten")
 						);
 					}
 				});
-
-
-		jdbcPool.preparedQuery("SELECT * FROM Tags WHERE Tags.name = ?")
-			.execute(Tuple.of(tagName), res1 -> {
-				if (res1.succeeded() && res1.result().size() == 1) { // Der Tag existiert bereits in der Tags Tabelle
-					RowSet<Row> rows = res1.result();
-					for (Row row : rows) {
-						final Integer tagId = row.getInteger("ID");
-						jdbcPool.preparedQuery("INSERT INTO PhotosTags VALUES (?, ?)")
-							.execute(Tuple.of(photoID, tagId), res2 -> {
-								if (res2.succeeded()) {
-									MainVerticle.response(ctx.response(), 201, new JsonObject()
-										.put("message", "Der Tag wurde dem Foto hinzugefügt")
-									);
-								} else {
-									MainVerticle.response(ctx.response(), 409, new JsonObject()
-										.put("message", "Der Tag existiert bereits")
-									);
-								}
-							});
-					}
-				} else { // Der Tag existiert noch nicht in der Tags Tabelle
-					jdbcPool.preparedQuery("INSERT INTO Tags (name) VALUES(?)")
-						.execute(Tuple.of(tagName), res3 -> {
-							if (res3.succeeded()) {
-								Integer generatedTagId = res3.result().property(JDBCPool.GENERATED_KEYS).getInteger(0);
-								jdbcPool.preparedQuery("INSERT INTO PhotosTags VALUES (?, ?)")
-									.execute(Tuple.of(photoID, generatedTagId), res4 -> {
-										if (res4.succeeded()) {
-											MainVerticle.response(ctx.response(), 201, new JsonObject()
-												.put("message", "Der Tag wurde dem Foto hinzugefügt")
-											);
-										} else {
-											MainVerticle.response(ctx.response(), 409, new JsonObject()
-												.put("message", "Der Tag existiert bereits")
-											);
-										}
-									});
-							} else {
-								MainVerticle.response(ctx.response(), 500, new JsonObject()
-									.put("message", "Fehler beim Hinzufügen des Tags zur Tags Tabelle")
-								);
-							}
-						});
-				}
-			});
 	}
 
 	/**
