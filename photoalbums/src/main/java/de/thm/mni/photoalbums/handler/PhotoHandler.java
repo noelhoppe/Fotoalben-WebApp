@@ -2,6 +2,8 @@ package de.thm.mni.photoalbums.handler;
 
 import com.sun.tools.javac.Main;
 import de.thm.mni.photoalbums.MainVerticle;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -15,6 +17,10 @@ import org.slf4j.LoggerFactory;
 import io.vertx.ext.web.FileUpload;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 public class PhotoHandler {
 	JDBCPool jdbcPool;
@@ -265,6 +271,7 @@ public class PhotoHandler {
 		Integer photoID = ctx.body().asJsonObject().getInteger("photoID");
 		String photoTitle = ctx.body().asJsonObject().getString("photoTitle");
 
+		/*
 		jdbcPool.preparedQuery("SELECT * FROM Photos WHERE ID = ?")
 			.execute(Tuple.of(photoID), res -> {
 				if (res.succeeded() && res.result().size() == 0) {
@@ -274,16 +281,27 @@ public class PhotoHandler {
 				}
 			});
 
-		if (photoTitle.trim().isEmpty()) {
-			MainVerticle.response(ctx.response(), 400, new JsonObject()
-				.put("message", "Der Titel darf nicht leer sein")
-			);
-		}
+		 */
 
-		jdbcPool.preparedQuery("SELECT Users_ID FROM Photos WHERE ID = ?")
-				.execute(Tuple.of(photoID), res -> {
-					if (res.succeeded() && res.result().size() >= 1) {
-						RowSet<Row> rows = res.result();
+		photoExists(photoID, ctx).onComplete(res -> {
+			if (res.succeeded() && !res.result()) {
+				MainVerticle.response(ctx.response(), 404, new JsonObject()
+					.put("message", "Das Bild existiert nicht")
+				);
+				return;
+			}
+
+			if (photoTitle.trim().isEmpty()) {
+				MainVerticle.response(ctx.response(), 400, new JsonObject()
+					.put("message", "Der Titel darf nicht leer sein")
+				);
+				return;
+			}
+
+			jdbcPool.preparedQuery("SELECT Users_ID FROM Photos WHERE ID = ?")
+				.execute(Tuple.of(photoID), res2 -> {
+					if (res.succeeded() && res2.result().size() >= 1) {
+						RowSet<Row> rows = res2.result();
 						for (Row row : rows) {
 							if (row.getInteger("Users_ID") != ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID)) {
 								MainVerticle.response(ctx.response(), 401, new JsonObject()
@@ -294,8 +312,8 @@ public class PhotoHandler {
 						}
 						// Der Nutzer bearbeitet seinen eigenen Fototitel
 						jdbcPool.preparedQuery("UPDATE Photos SET Photos.Title = ? WHERE Photos.ID = ?")
-							.execute(Tuple.of(photoTitle, photoID), res2 -> {
-								if (res2.succeeded()) {
+							.execute(Tuple.of(photoTitle, photoID), res3 -> {
+								if (res3.succeeded()) {
 									MainVerticle.response(ctx.response(), 200, new JsonObject()
 										.put("message", "Der Fototitel wurde erfolgreich geändert")
 										.put("photoTitle", photoTitle)
@@ -312,7 +330,83 @@ public class PhotoHandler {
 						);
 					}
 				});
+		});
 	}
+
+	/**
+	 * Handler für PATCH /photoDate <br>
+	 * Gebe Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Nutzer gehört, der die Route aufruft. <br>
+	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht in der Datenbank existiert. <br>
+	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn date nicht korrekt nach folgenden Schema formatiert ist 'YYYY-MM-DD' <br>
+	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Feld photoID kein gültiger Wert ist. <br>
+	 * @param ctx Routing Context
+	 */
+	public void handleEditPhotoDate(RoutingContext ctx) {
+		Integer photoID;
+		try {
+			photoID = ctx.body().asJsonObject().getInteger("photoID");
+		} catch(Exception e) {
+			MainVerticle.response(ctx.response(), 404, new JsonObject()
+				.put("message", "Ungültiges Feld photoID: Die photoID muss eine gültige Zahl vom Typ number sein")
+			);
+			return;
+		}
+
+		String date = ctx.body().asJsonObject().getString("date");
+		if (!isValidDate(date)) {
+			MainVerticle.response(ctx.response(), 404, new JsonObject()
+				.put("message", "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen")
+			);
+		}
+
+
+
+
+
+
+	}
+
+	/**
+	 *
+	 * @param date Das Datum als String, das geparst werden soll
+	 * @return true, wenn das Datum im Format YYYY-MMM-DD vorliegt und in der Vergangenheit liegt; false sonst
+	 */
+	private boolean isValidDate(String date) {
+		try {
+			LocalDate parsedDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
+			return parsedDate.isBefore(LocalDate.now());
+		} catch(DateTimeParseException e) {
+			return false;
+		}
+	}
+
+	/**
+	 *
+	 * @param photoId Die ID des Fotos (unique, weil PK)
+	 * @param ctx Der RoutingContext
+	 * @return true, wenn das Foto existiert; false sonst
+	 */
+	private Future<Boolean> photoExists(Integer photoId, RoutingContext ctx) {
+		Promise<Boolean> promise = Promise.promise();
+
+		jdbcPool.preparedQuery("SELECT COUNT(*) AS count FROM Photos WHERE ID = ?")
+			.execute(Tuple.of(photoId), res -> {
+				if (res.succeeded() && res.result().size() == 1) {
+					if (res.result().iterator().next().getInteger("count") == 1) {
+						promise.complete(true);
+					} else {
+						promise.complete(false);
+					}
+				} else {
+					promise.complete(false);
+				}
+			});
+		return promise.future();
+	}
+
+
+
+
 
 public void uploadPhoto(RoutingContext ctx){
     for (FileUpload file : ctx.fileUploads()) {

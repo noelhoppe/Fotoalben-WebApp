@@ -159,7 +159,6 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
 
-
     PhotoHandler photoHandler = new PhotoHandler(jdbcPool);
     router.route(HttpMethod.GET, "/photos").handler(photoHandler::getAllPhotosFromUser);
     router.route(HttpMethod.GET, "/img/:imageId").handler(photoHandler::servePhotos);
@@ -174,6 +173,9 @@ public class MainVerticle extends AbstractVerticle {
     router.route(HttpMethod.POST, "/tag").handler(authenticationHandler::authenticate).handler(photoHandler::addTagToPhoto);
 
     router.route(HttpMethod.PATCH, "/photoTitle").handler(authenticationHandler::authenticate).handler(photoHandler::editPhotoTitle);
+
+
+    // router.route(HttpMethod.PATCH, "/photoData").handler(authenticationHandler::authenticate).handler(photoHandler::handleEditPhotoDate)
 
 
     return Future.succeededFuture(router);

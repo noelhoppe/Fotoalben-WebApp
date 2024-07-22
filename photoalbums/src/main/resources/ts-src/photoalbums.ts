@@ -9,13 +9,9 @@ interface Photo {
 
 
 /**
- * Funktion zum Abmelden des Benutzers
+ * POST /logout
  */
 function logout() {
-  interface ServerRes {
-    url : string
-  }
-
   const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
   logoutBtn.addEventListener("click", async () => {
     const res : Response = await fetch("http://localhost:8080/logout", {
@@ -44,7 +40,6 @@ function attachGalleryItemClickListener() {
 }
 attachGalleryItemClickListener();
 
-
 /**
  * Behandelt das Klick-Ereignis auf ein Galerie-Element.
  * @param e MouseEvent
@@ -72,8 +67,8 @@ function extractPhotoData(target: HTMLElement) : Photo {
 }
 
 /**
- * Updates the modal UI with the extracted photo data.
- * @param photoData A Photo object containing the photo data.
+ * Aktualisiert das Modal mit den extrahierten Fotodaten
+ * @param photoData Ein Photo Objekt, welches die Fotodaten beinhaltet
  */
 function updateModalUI(photoData: Photo) {
   const { id, title, taken, imgUrl, tags } = photoData; // DESTRUCTURING
@@ -155,7 +150,6 @@ function attachAddTagListener() {
 }
 attachAddTagListener();
 
-
 /**
  * POST /tag
  * {
@@ -163,8 +157,8 @@ attachAddTagListener();
  *     tagName: ___
  * }
  *
- * @param photoID Die unique id des Fotos
- * @param tagName Der hinzugefügte Tagname
+ * @param photoID Die id des Fotos (unique, weil primary key)
+ * @param tagName Der Tag, der hinzugefügt werden soll
  */
 async function handleTagAdd(photoID: number, tagName: string) {
   interface ServerReq {
@@ -204,18 +198,16 @@ async function handleTagAdd(photoID: number, tagName: string) {
     updateModalUI(extractPhotoData(img));
   } else {
     const data  = await res.json() as ServerRes;
-    /*
-    (document.querySelector("#error-edit-photo-container")  as HTMLDivElement).classList.remove("d-none");
-    (document.querySelector("#error-edit-photo") as HTMLParagraphElement).textContent = data.message;
-     */
     renderErrorEditPhoto(false, data.message);
   }
 }
 
+
+
 /**
  * Rendert die Fehlermeldungen, die auftreten können, wenn man ein Foto bearbeitet.
- * @param resetErrorMessage
- * @param message
+ * @param resetErrorMessage true, wenn die Fehlermeldung zurückgesetzt werden soll und der container versteckt werden soll; false sonst
+ * @param message Die Fehlermeldung, die gerendert werden soll
  */
 function renderErrorEditPhoto(resetErrorMessage: boolean, message?: string) {
   const errorContainer = document.querySelector("#error-edit-photo-container") as HTMLDivElement;
@@ -231,7 +223,7 @@ function renderErrorEditPhoto(resetErrorMessage: boolean, message?: string) {
     }
   } else {
     // Wenn message definiert ist und nicht leer ist, zeigen wir die Fehlermeldung an
-    if (message && message.trim() !== '') {
+    if (message && message.trim() != '') {
       if (errorParagraph) {
         errorParagraph.textContent = message;
       }
@@ -251,6 +243,11 @@ function renderErrorEditPhoto(resetErrorMessage: boolean, message?: string) {
 
 /**
  * Behandelt das Löschen eines Tags.
+ * DELETE /tag
+ * {
+ *     "imgId" : ___,
+ *     "tag" : ___
+ * }
  * @param delBtn HTMLButtonElement
  * @param tag string
  * @param colDiv HTMLDivElement
@@ -338,7 +335,7 @@ editPhotoTitle();
 
 
 /**
- * Funktion zum Abrufen des Benutzernamens vom Server
+ * GET /username
  */
 async function fetchUsername() : Promise<void> {
   try {
@@ -370,6 +367,7 @@ function renderUsername(username : string) {
 }
 
 /**
+ * GET /photos <br>
  * Funktion zum Abrufen aller Fotos eines Benutzers vom Server
  */
 async function fetchPhotos() : Promise<void> {
@@ -449,6 +447,20 @@ function renderPhotos(photo : Photo) : void {
   // Bild-Container in den Hauptcontainer einfügen
   mainContainer.appendChild(colDiv);
 }
+
+
+/**
+ * PATCH /photoDate
+ * {
+ *     "photoID" : ___,
+ *     "date" : ___
+ * }
+ */
+async function handleEditPhotoDate() {
+
+}
+
+
 
 
 const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;

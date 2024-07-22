@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 /**
- * Funktion zum Abmelden des Benutzers
+ * POST /logout
  */
 function logout() {
     const logoutBtn = document.querySelector("#logout-btn");
@@ -61,8 +61,8 @@ function extractPhotoData(target) {
     return { id, title, taken, imgUrl, tags };
 }
 /**
- * Updates the modal UI with the extracted photo data.
- * @param photoData A Photo object containing the photo data.
+ * Aktualisiert das Modal mit den extrahierten Fotodaten
+ * @param photoData Ein Photo Objekt, welches die Fotodaten beinhaltet
  */
 function updateModalUI(photoData) {
     const { id, title, taken, imgUrl, tags } = photoData; // DESTRUCTURING
@@ -138,8 +138,8 @@ attachAddTagListener();
  *     tagName: ___
  * }
  *
- * @param photoID Die unique id des Fotos
- * @param tagName Der hinzugefügte Tagname
+ * @param photoID Die id des Fotos (unique, weil primary key)
+ * @param tagName Der Tag, der hinzugefügt werden soll
  */
 function handleTagAdd(photoID, tagName) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -171,18 +171,14 @@ function handleTagAdd(photoID, tagName) {
         }
         else {
             const data = yield res.json();
-            /*
-            (document.querySelector("#error-edit-photo-container")  as HTMLDivElement).classList.remove("d-none");
-            (document.querySelector("#error-edit-photo") as HTMLParagraphElement).textContent = data.message;
-             */
             renderErrorEditPhoto(false, data.message);
         }
     });
 }
 /**
  * Rendert die Fehlermeldungen, die auftreten können, wenn man ein Foto bearbeitet.
- * @param resetErrorMessage
- * @param message
+ * @param resetErrorMessage true, wenn die Fehlermeldung zurückgesetzt werden soll und der container versteckt werden soll; false sonst
+ * @param message Die Fehlermeldung, die gerendert werden soll
  */
 function renderErrorEditPhoto(resetErrorMessage, message) {
     const errorContainer = document.querySelector("#error-edit-photo-container");
@@ -198,7 +194,7 @@ function renderErrorEditPhoto(resetErrorMessage, message) {
     }
     else {
         // Wenn message definiert ist und nicht leer ist, zeigen wir die Fehlermeldung an
-        if (message && message.trim() !== '') {
+        if (message && message.trim() != '') {
             if (errorParagraph) {
                 errorParagraph.textContent = message;
             }
@@ -216,6 +212,11 @@ function renderErrorEditPhoto(resetErrorMessage, message) {
 }
 /**
  * Behandelt das Löschen eines Tags.
+ * DELETE /tag
+ * {
+ *     "imgId" : ___,
+ *     "tag" : ___
+ * }
  * @param delBtn HTMLButtonElement
  * @param tag string
  * @param colDiv HTMLDivElement
@@ -292,7 +293,7 @@ function editPhotoTitle() {
 }
 editPhotoTitle();
 /**
- * Funktion zum Abrufen des Benutzernamens vom Server
+ * GET /username
  */
 function fetchUsername() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -321,6 +322,7 @@ function renderUsername(username) {
     usernameField.textContent = username;
 }
 /**
+ * GET /photos <br>
  * Funktion zum Abrufen aller Fotos eines Benutzers vom Server
  */
 function fetchPhotos() {
@@ -389,6 +391,17 @@ function renderPhotos(photo) {
     colDiv.appendChild(img);
     // Bild-Container in den Hauptcontainer einfügen
     mainContainer.appendChild(colDiv);
+}
+/**
+ * PATCH /photoDate
+ * {
+ *     "photoID" : ___,
+ *     "date" : ___
+ * }
+ */
+function handleEditPhotoDate() {
+    return __awaiter(this, void 0, void 0, function* () {
+    });
 }
 const addAlbumSubmit = document.getElementById("addAlbumSubmit");
 addAlbumSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void 0, function* () {
