@@ -25,6 +25,7 @@ public class LoginHandler {
 	 * @param ctx Routing Context
 	 */
 	public void grabData(RoutingContext ctx) {
+		System.out.println("called grabData in LoginHandler.java");
 		try {
 			String username = ctx.body().asJsonObject().getString("username");
 			String password = ctx.body().asJsonObject().getString("password");
@@ -51,6 +52,7 @@ public class LoginHandler {
 	 * @param ctx Routing Context
 	 */
 	public void validateUsernameInput(RoutingContext ctx) {
+		System.out.println("called validateUsernameInput in LoginHandler.java");
 		if (ctx.data().get("username").toString().contains(" ")) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Nutzername darf keine Leerzeichen enthalten")
@@ -72,6 +74,7 @@ public class LoginHandler {
 	 * @param ctx Routing Context
 	 */
 	public void validatePasswordInput(RoutingContext ctx) {
+		System.out.println("called validatePasswordInput in LoginHandler.java");
 		if (ctx.data().get("password").toString().contains(" ")) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Das Passwort darf keine Leerzeichen enthalten")
@@ -92,6 +95,7 @@ public class LoginHandler {
 	 * @param ctx Routing Context
 	 */
 	public void checkUsernamePasswordPair(RoutingContext ctx) {
+		System.out.println("called checkUsernamePasswordPair in LoginHandler.java");
 		String username = ctx.data().get("username").toString();
 		String password = ctx.data().get("password").toString();
 

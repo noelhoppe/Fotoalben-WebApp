@@ -214,7 +214,7 @@ function renderErrorEditPhoto(resetErrorMessage, message) {
  * Behandelt das Löschen eines Tags.
  * DELETE /tag
  * {
- *     "imgId" : ___,
+ *     "photoID" : ___,
  *     "tag" : ___
  * }
  * @param delBtn HTMLButtonElement
@@ -226,9 +226,10 @@ function handleTagDelete(delBtn, tag, colDiv) {
         const img = document.querySelector("#modal-img");
         const imgId = img.dataset.id;
         const reqData = {
-            imgId: imgId,
+            photoID: imgId + ".jpg",
             tag: tag
         };
+        console.log(reqData);
         const res = yield fetch("http://localhost:8080/tag", {
             method: "DELETE",
             credentials: "include",
@@ -249,6 +250,9 @@ function handleTagDelete(delBtn, tag, colDiv) {
                     imgElement.setAttribute("data-tags", updatedTags);
                 }
             }
+        }
+        else {
+            console.log(yield res.json());
         }
     });
 }
@@ -315,6 +319,21 @@ function fetchUsername() {
         }
     });
 }
+function fetchRole() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/role", {
+                method: "GET",
+                credentials: "include"
+            });
+            const data = yield res.json();
+            renderGoToAdminPage(data.role);
+        }
+        catch (error) {
+            console.error("Error fetching user  role" + error);
+        }
+    });
+}
 /**
  * Zeigt den Button "Zur Adminseite" nicht an, wenn der Nutzer kein Admin ist.
  * @param role Rolle des Benutzers
@@ -365,6 +384,7 @@ function initializePage() {
     document.addEventListener("DOMContentLoaded", () => __awaiter(this, void 0, void 0, function* () {
         yield fetchUsername();
         yield fetchPhotos();
+        yield fetchRole();
     }));
 }
 initializePage();

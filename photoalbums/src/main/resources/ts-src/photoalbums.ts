@@ -245,7 +245,7 @@ function renderErrorEditPhoto(resetErrorMessage: boolean, message?: string) {
  * Behandelt das Löschen eines Tags.
  * DELETE /tag
  * {
- *     "imgId" : ___,
+ *     "photoID" : ___,
  *     "tag" : ___
  * }
  * @param delBtn HTMLButtonElement
@@ -257,9 +257,11 @@ async function handleTagDelete(delBtn: HTMLButtonElement, tag: string, colDiv: H
   const imgId = img.dataset.id as string;
 
   const reqData = {
-    imgId: imgId,
+    photoID: imgId + ".jpg",
     tag: tag
   };
+
+  console.log(reqData)
 
   const res = await fetch("http://localhost:8080/tag", {
     method: "DELETE",
@@ -283,6 +285,8 @@ async function handleTagDelete(delBtn: HTMLButtonElement, tag: string, colDiv: H
         imgElement.setAttribute("data-tags", updatedTags);
       }
     }
+  } else {
+    console.log(await res.json())
   }
 }
 
@@ -359,6 +363,19 @@ async function fetchUsername() : Promise<void> {
   }
 }
 
+async function fetchRole()  {
+  try {
+    const res : Response = await fetch("http://localhost:8080/role", {
+      method : "GET",
+      credentials : "include"
+    })
+    const data : { role : string } = await res.json()
+    renderGoToAdminPage(data.role);
+  } catch (error) {
+    console.error("Error fetching user  role" + error);
+  }
+}
+
 /**
  * Zeigt den Button "Zur Adminseite" nicht an, wenn der Nutzer kein Admin ist.
  * @param role Rolle des Benutzers
@@ -412,6 +429,7 @@ function initializePage() : void {
   document.addEventListener("DOMContentLoaded", async () : Promise<void> => {
     await fetchUsername();
     await fetchPhotos();
+    await fetchRole();
   });
 }
 initializePage();

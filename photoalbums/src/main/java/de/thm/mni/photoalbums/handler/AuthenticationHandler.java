@@ -11,6 +11,7 @@ public class AuthenticationHandler {
 	 * @param ctx Der Routing Context
 	 */
 	public void isLoggedIn(RoutingContext ctx) {
+		System.out.println("called isLoggedIn in AuthenticationHandler.java");
 		if (ctx.session().isEmpty()) {
 			ctx.response().setStatusCode(401).end(new JsonObject().put("message", "Bitte melde dich zuerst an, um diese Route aufzurufen").encodePrettily());
 		} else {
@@ -25,6 +26,7 @@ public class AuthenticationHandler {
 	 * @param ctx
 	 */
 	public void isAdmin(RoutingContext ctx) {
+		System.out.println("called isAdmin in AuthenticationHandler.java");
 		if (ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ROLE).equals("ADMIN")) {
 			ctx.next();
 		} else {

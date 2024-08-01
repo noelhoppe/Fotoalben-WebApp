@@ -175,6 +175,11 @@ public class MainVerticle extends AbstractVerticle {
     router.get( "/username").handler(authenticationHandler::isLoggedIn).handler(ctx -> {
       MainVerticle.response(ctx.response(), 200, new JsonObject()
              .put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER))
+      );
+    });
+
+    router.get("/role").handler(authenticationHandler::isLoggedIn).handler(ctx -> {
+      MainVerticle.response(ctx.response(), 200, new JsonObject()
              .put("role", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ROLE))
       );
     });
@@ -204,27 +209,35 @@ public class MainVerticle extends AbstractVerticle {
            .handler(authenticationHandler::isLoggedIn)
            .handler(photoHandler::getAllPhotosFromUser);
 
-    router.get("/img/:imageID")
+    router.get("/img/:photoID")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
-             ctx.data().put("photoID", ctx.pathParam("imageID"));
+             ctx.data().put("photoID", ctx.pathParam("photoID"));
              ctx.next();
            })
+           .handler(photoHandler::validatePhotoInputReq)
            .handler(photoHandler::photoExits)
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::servePhotos);
 
+    router.delete("/tag")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+             ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
+             ctx.data().put("tag", ctx.body().asJsonObject().getString("tag"));
+             ctx.next();
+           })
+           .handler(photoHandler::validatePhotoInputReq)
+           .handler(photoHandler::validateTagInputReq)
+           .handler(photoHandler::photoExits)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::deleteTag);
+
+    router.post("/tag") .handler(authenticationHandler::isLoggedIn).handler(photoHandler::addTagToPhoto);
+
+    router.patch( "/photoTitle").handler(authenticationHandler::isLoggedIn).handler(photoHandler::editPhotoTitle);
 
     router.post("/photos").handler(photoHandler::uploadPhoto);
-
-
-
-
-    router.route(HttpMethod.DELETE, "/tag").handler(authenticationHandler::isLoggedIn).handler(photoHandler::deleteTag);
-    router.route(HttpMethod.POST, "/tag").handler(authenticationHandler::isLoggedIn).handler(photoHandler::addTagToPhoto);
-
-    router.route(HttpMethod.PATCH, "/photoTitle").handler(authenticationHandler::isLoggedIn).handler(photoHandler::editPhotoTitle);
-
 
     // router.route(HttpMethod.PATCH, "/photoData").handler(authenticationHandler::authenticate).handler(photoHandler::handleEditPhotoDate)
 

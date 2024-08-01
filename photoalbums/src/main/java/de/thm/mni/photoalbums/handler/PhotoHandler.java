@@ -37,6 +37,7 @@ public class PhotoHandler {
 	 * @param ctx Routing Context
 	 */
 	public void getAllPhotosFromUser(RoutingContext ctx) {
+		System.out.print("called getAllPhotosFromUsers in PhotoHandler.java");
 		Integer userIdStr = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
 		jdbcPool.preparedQuery("""
 				SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
@@ -75,6 +76,8 @@ public class PhotoHandler {
 	 * @param ctx Routing Context
 	 */
 	public void servePhotos(RoutingContext ctx) {
+		System.out.println("called servePhotos in PhotoHandler.java");
+		System.out.println(ctx.data().get("photoID"));
 		ctx.response().sendFile("img/" + ctx.data().get("photoID"));
 	}
 
@@ -86,8 +89,8 @@ public class PhotoHandler {
 	 * @param ctx Der Routing Context
 	 */
 	public void photoExits(RoutingContext ctx) {
-		String photoID = (String) ctx.data().get("photoID");
-		System.out.println(photoID);
+		System.out.println("called photoExits in PhotoHandler.java");
+		String photoID = ctx.data().get("photoID").toString();
 		jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM Photos WHERE ID = ?")
 			.execute(Tuple.of(photoID), res -> {
 				if (res.succeeded() && res.result().iterator().next().getInteger("count") == 1) {
@@ -105,7 +108,8 @@ public class PhotoHandler {
 	 * @param ctx
 	 */
 	public void photoIsUser(RoutingContext ctx) {
-		String photoID = (String) ctx.data().get("photoID");
+		System.out.println("called photoIsUser in PhotoHandler.java");
+		String photoID = ctx.data().get("photoID").toString();
 		Integer userId = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
 		jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM Photos WHERE ID = ? AND Users_ID = ?")
 			.execute(Tuple.of(photoID, userId), res -> {
@@ -119,60 +123,84 @@ public class PhotoHandler {
 			});
 	}
 
+	/**
+	 * Prüft, ob die photoID eine gültige Zahl ist<br>
+	 * Wenn ja, rufe den nächsten Handler auf.<br>
+	 * Wenn nein, beende die http-Anfrage mit dem Statuscode 400 und einer entsprechenden Fehlermeldung.
+	 * @param ctx Routing Context
+	 */
+	public void validatePhotoInputReq(RoutingContext ctx) {
+		System.out.println("called validatePhotoInputReq in PhotoHandler.java");
+		String photoID = ctx.data().get("photoID").toString();
+		// Extrahiere den numerischen Teil vor ".jpg"
+		if (photoID.endsWith(".jpg")) {
+			String numericPart = photoID.substring(0, photoID.length() - 4);
+			try {
+				int photoIDInt = Integer.parseInt(numericPart);
+				ctx.data().put("photoID", photoIDInt + ".jpg");
+				ctx.next();
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+				MainVerticle.response(ctx.response(), 400, new JsonObject()
+					.put("message", "photoID muss eine gültige Zahl sein")
+				);
+			}
+		} else {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "photoID muss das Format Zahl.jpg haben")
+			);
+		}
+	}
+
+	public void validateTagInputReq(RoutingContext ctx) {
+		System.out.println("called validateTagInputReq in PhotoHandler.java");
+		try {
+			String tag = ctx.data().get("tag").toString();
+			if (tag == null) {
+				throw new IllegalArgumentException();
+			}
+
+			if (tag.contains(" ")) {
+				MainVerticle.response(ctx.response(), 400, new JsonObject()
+					.put("message", "Der Tag darf keine Leerzeichen enthalten")
+				);
+			}
+
+			if (tag.trim().isEmpty()) {
+				MainVerticle.response(ctx.response(), 400, new JsonObject()
+					.put("message", "Der Tag darf nicht leer sein")
+				);
+			}
+			ctx.next();
+
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "tag darf nicht null sein")
+			);
+		}
+	}
+
 
 	/**
-	 * Handler für DELETE /tag <br>
 	 * Gibt Statuscode 204 zurück, wenn der Tag erfolgreich vom Foto gelöscht wurde. <br>
-	 * Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht gefunden wurde.<br>
-	 * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht Tags von Bildern eines anderen Benutzers zu entfernen.<br>
 	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist<br>
 	 * @param ctx Routing Context
 	 */
 	public void deleteTag(RoutingContext ctx) {
-		String tagName = ctx.body().asJsonObject().getString("tag");
-		String photoId = ctx.body().asJsonObject().getString("imgId");
-		System.out.println(tagName);
-		System.out.println(photoId);
+		System.out.println("called deleteTag in PhotoHandler.java");
+		String photoID = ctx.data().get("photoID").toString();
+		String tag = ctx.data().get("tag").toString();
 
-		jdbcPool.preparedQuery("SELECT * FROM Photos WHERE Photos.ID = ?")
-			.execute(Tuple.of(photoId), res -> {
+		jdbcPool.preparedQuery("DELETE FROM PhotosTags WHERE Photos_ID = ? AND Tags_ID = ? ")
+			.execute(Tuple.of(photoID, tag), res -> {
 				if (res.succeeded()) {
-					RowSet<Row> rows = res.result();
-					if (rows.size() == 0) {
-						MainVerticle.response(ctx.response(), 404, new JsonObject()
-							.put("message", "Foto nicht gefunden")
-						);
-						return;
-					}
-					for (Row row : rows) {
-						if (row.getInteger("Users_ID") != ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID)) {
-							MainVerticle.response(ctx.response(), 401, new JsonObject()
-								.put("message", "Es können nur Tags von eigenen Fotos entfernt werden")
-							);
-							return;
-						}
-					}
-
-					// Wenn der Benutzer berechtigt ist, den Tag zu löschen
-					jdbcPool.preparedQuery("""
-                       				DELETE pt
-                        				FROM PhotosTags pt
-                        				LEFT JOIN Tags t
-                        					ON pt.TAGS_ID = t.ID
-                        				WHERE t.name = ? AND pt.Photos_ID = ?
-                        			"""
-					).execute(Tuple.of(tagName, photoId), res2 -> {
-						if (res2.succeeded()) {
-							ctx.response().setStatusCode(204).end();
-						} else {
-							MainVerticle.response(ctx.response(), 500, new JsonObject()
-								.put("message", "Fehler beim Löschen des Tags")
-							);
-						}
-					});
+					ctx.response()
+						.setStatusCode(204)
+						.end();
 				} else {
 					MainVerticle.response(ctx.response(), 500, new JsonObject()
-						.put("message", "Ein interner Serverfehler ist aufgetreten")
+						.put("message", "Fehler beim Löschen des Tags")
 					);
 				}
 			});
