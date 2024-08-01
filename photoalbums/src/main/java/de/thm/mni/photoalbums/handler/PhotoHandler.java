@@ -23,6 +23,7 @@ public class PhotoHandler {
 
 	public PhotoHandler(JDBCPool jdbcPool, Vertx vertx) {
 		this.jdbcPool = jdbcPool;
+    this.vertx = vertx;
 	}
 
 	/**
@@ -419,13 +420,18 @@ public void uploadPhoto(RoutingContext ctx){
     }
 
     for (FileUpload file : ctx.fileUploads()) {
-      String fileNameOriginal = file.fileName();
+      String fileNameOriginal = file.fileName(); //TODO: evtl. rausnehmen weil überflüssig
+      String fileNameUpload = file.uploadedFileName();
       String fileExtension = fileNameOriginal.substring(fileNameOriginal.lastIndexOf("."));
       String mimeType = file.contentType();
+      String fileNameNew = photoTitle + "." + fileExtension;
 
       if (!mimeType.equals("image/png") && !mimeType.equals("image/jpeg")) {
-            //TODO: FILE vertx.fileSystem().delete löschen implementieren
-            //TODO: Lässt FileSystem ungültige Dateinamen zu oder gibt es ein Error -> wenn nicht einzeln als Error implementieren
+        vertx.fileSystem().delete(fileNameUpload, deleteResult -> {
+          if (deleteResult.failed()) {
+            System.err.println(deleteResult.cause().getMessage()); //gebe Fehlermeldung aus
+          }
+        });
         MainVerticle.response(ctx.response(), 400, new JsonObject()
           .put("message", "Die hochgeladene Datei muss eine Bilddatei des Typs JPEG oder PNG sein"));
 
@@ -440,6 +446,7 @@ public void uploadPhoto(RoutingContext ctx){
                         			"""
       ).execute(Tuple.of(testID, photoTitle, photoDate, testTitle), res -> {
         if (res.succeeded()) {
+
           //1. rename File
           //2. edit database
           System.out.println("Filename" + file.fileName());
