@@ -154,7 +154,7 @@ attachAddTagListener();
  * POST /tag
  * {
  *     photoID: ___,
- *     tagName: ___
+ *     tag: ___
  * }
  *
  * @param photoID Die id des Fotos (unique, weil primary key)
@@ -163,7 +163,7 @@ attachAddTagListener();
 async function handleTagAdd(photoID: number, tagName: string) {
   interface ServerReq {
     photoID : number,
-    tagName : string
+    tag : string
   }
 
   interface ServerRes {
@@ -173,8 +173,9 @@ async function handleTagAdd(photoID: number, tagName: string) {
   // console.log("called2");
   const reqData : ServerReq = {
     photoID: photoID,
-    tagName: tagName
+    tag: tagName
   };
+  console.log(reqData);
 
   const res: Response = await fetch("http://localhost:8080/tag", {
     method: "POST",
@@ -186,6 +187,10 @@ async function handleTagAdd(photoID: number, tagName: string) {
   });
 
   if (res.status == 201) {
+
+    const data : ServerRes = await res.json();
+    console.log(data.message);
+
     (document.querySelector("#error-edit-photo-container")  as HTMLDivElement).classList.add("d-none");
     const img = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
     let tags = img.dataset.tags as string;
@@ -257,7 +262,7 @@ async function handleTagDelete(delBtn: HTMLButtonElement, tag: string, colDiv: H
   const imgId = img.dataset.id as string;
 
   const reqData = {
-    photoID: imgId + ".jpg",
+    photoID: imgId,
     tag: tag
   };
 
@@ -356,7 +361,6 @@ async function fetchUsername() : Promise<void> {
     console.log(data);
 
     renderUsername(data.username);
-    renderGoToAdminPage(data.role);
 
   } catch (error) {
     console.error("Error fetching username", error);

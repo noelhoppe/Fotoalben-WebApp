@@ -1,24 +1,17 @@
 package de.thm.mni.photoalbums.handler;
 
-import com.sun.tools.javac.Main;
 import de.thm.mni.photoalbums.MainVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.Session;
 import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.vertx.ext.web.FileUpload;
-import io.vertx.core.file.FileSystem;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -77,8 +70,7 @@ public class PhotoHandler {
 	 */
 	public void servePhotos(RoutingContext ctx) {
 		System.out.println("called servePhotos in PhotoHandler.java");
-		System.out.println(ctx.data().get("photoID"));
-		ctx.response().sendFile("img/" + ctx.data().get("photoID"));
+		ctx.response().sendFile("img/" + ctx.data().get("photoID") + ".jpg");
 	}
 
 
@@ -90,7 +82,7 @@ public class PhotoHandler {
 	 */
 	public void photoExits(RoutingContext ctx) {
 		System.out.println("called photoExits in PhotoHandler.java");
-		String photoID = ctx.data().get("photoID").toString();
+		Integer photoID = Integer.valueOf(ctx.data().get("photoID").toString());
 		jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM Photos WHERE ID = ?")
 			.execute(Tuple.of(photoID), res -> {
 				if (res.succeeded() && res.result().iterator().next().getInteger("count") == 1) {
@@ -109,7 +101,7 @@ public class PhotoHandler {
 	 */
 	public void photoIsUser(RoutingContext ctx) {
 		System.out.println("called photoIsUser in PhotoHandler.java");
-		String photoID = ctx.data().get("photoID").toString();
+		Integer photoID = Integer.valueOf(ctx.data().get("photoID").toString());
 		Integer userId = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
 		jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM Photos WHERE ID = ? AND Users_ID = ?")
 			.execute(Tuple.of(photoID, userId), res -> {
@@ -131,23 +123,14 @@ public class PhotoHandler {
 	 */
 	public void validatePhotoInputReq(RoutingContext ctx) {
 		System.out.println("called validatePhotoInputReq in PhotoHandler.java");
-		String photoID = ctx.data().get("photoID").toString();
-		// Extrahiere den numerischen Teil vor ".jpg"
-		if (photoID.endsWith(".jpg")) {
-			String numericPart = photoID.substring(0, photoID.length() - 4);
-			try {
-				int photoIDInt = Integer.parseInt(numericPart);
-				ctx.data().put("photoID", photoIDInt + ".jpg");
-				ctx.next();
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
-				MainVerticle.response(ctx.response(), 400, new JsonObject()
-					.put("message", "photoID muss eine gültige Zahl sein")
-				);
-			}
-		} else {
+		try {
+			int photoIDInt = Integer.parseInt(ctx.data().get("photoID").toString());
+			ctx.data().put("photoID", photoIDInt);
+			ctx.next();
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
-				.put("message", "photoID muss das Format Zahl.jpg haben")
+				.put("message", "photoID muss eine gültige Zahl sein")
 			);
 		}
 	}
@@ -195,21 +178,25 @@ public class PhotoHandler {
 	 */
 	public void deleteTag(RoutingContext ctx) {
 		System.out.println("called deleteTag in PhotoHandler.java");
-		String photoID = ctx.data().get("photoID").toString();
+		Integer photoID = Integer.valueOf(ctx.data().get("photoID").toString());
 		String tag = ctx.data().get("tag").toString();
 
-		jdbcPool.preparedQuery("DELETE FROM PhotosTags WHERE Photos_ID = ? AND Tags_ID = ? ")
-			.execute(Tuple.of(photoID, tag), res -> {
-				if (res.succeeded()) {
-					ctx.response()
-						.setStatusCode(204)
-						.end();
-				} else {
-					MainVerticle.response(ctx.response(), 500, new JsonObject()
-						.put("message", "Fehler beim Löschen des Tags")
-					);
-				}
-			});
+		getTagId(tag).onComplete(ar -> {
+			if (ar.succeeded()) {
+				jdbcPool.preparedQuery("DELETE FROM PhotosTags WHERE Photos_ID = ? AND Tags_ID = ? ")
+					.execute(Tuple.of(photoID, ar.result()), res -> {
+						if (res.succeeded()) {
+							ctx.response()
+								.setStatusCode(204)
+								.end();
+						} else {
+							MainVerticle.response(ctx.response(), 500, new JsonObject()
+								.put("message", "Fehler beim Löschen des Tags")
+							);
+						}
+					});
+			}
+		});
 	}
 
 	/**
@@ -223,78 +210,38 @@ public class PhotoHandler {
 	 * @param ctx Routing Context
 	 */
 	public void addTagToPhoto(RoutingContext ctx) {
-		final Integer photoID = ctx.body().asJsonObject().getInteger("photoID");
-		final String tagName = ctx.body().asJsonObject().getString("tagName");
+		System.out.println("called addTagToPhoto in PhotoHandler.java");
 
-		if (tagName.contains(" ")) {
-			MainVerticle.response(ctx.response(), 400, new JsonObject()
-				.put("message", "Der Tag darf keine Leerzeichen enthalten")
-			);
-			return;
-		}
+		Integer photoID = Integer.valueOf(ctx.data().get("photoID").toString());
+		String tag = ctx.data().get("tag").toString();
 
-		if (tagName.trim().isEmpty()) {
-			MainVerticle.response(ctx.response(), 400, new JsonObject()
-				.put("message", "Der Tag darf nicht leer sein")
-			);
-			return;
-		}
-
-		jdbcPool.preparedQuery("SELECT Users_ID FROM Photos WHERE ID = ?")
-				.execute(Tuple.of(photoID), res -> {
-					if (res.succeeded() && res.result().size() == 1) {
-						for (Row row : res.result()) {
-							if (row.getInteger("Users_ID") != ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID)) {
-								MainVerticle.response(ctx.response(), 401, new JsonObject()
-									.put("message", "Es können ausschließlich Tags zu eigenen Fotos hinzugefügt werden")
-								);
-								return;
-							}
+		getTagId(tag).onComplete(res -> {
+			if (res.succeeded()) {
+				jdbcPool.preparedQuery("INSERT INTO  PhotosTags VALUES (?, ?)")
+					.execute(Tuple.of(photoID, res.result()), dbRes -> {
+						if (dbRes.succeeded()) {
+							MainVerticle.response(ctx.response(), 201, new JsonObject()
+								.put("message", "Tag erfolgreich zum Foto hinzugefügt")
+							);
+						} else {
+							MainVerticle.response(ctx.response(), 500, new JsonObject()
+								.put("message", "Fehler beim Hinzufügen des Tags")
+							);
 						}
-
-						// Der Benutzer ist berechtigt, den Tag hinzuzufügen
-						jdbcPool.preparedQuery("SELECT * FROM Tags WHERE Tags.name = ?")
-							.execute(Tuple.of(tagName), res1 -> {
-								if (res1.succeeded() && res1.result().size() == 1) { // Der Tag existiert bereits in der Tags Tabelle
-									RowSet<Row> rows = res1.result();
-									for (Row row : rows) {
-										final Integer tagId = row.getInteger("ID");
-										jdbcPool.preparedQuery("INSERT INTO PhotosTags VALUES (?, ?)")
-											.execute(Tuple.of(photoID, tagId), res2 -> {
-												if (res2.succeeded()) {
-													MainVerticle.response(ctx.response(), 201, new JsonObject()
-														.put("message", "Der Tag wurde dem Foto hinzugefügt")
-													);
-												} else {
-													MainVerticle.response(ctx.response(), 409, new JsonObject()
-														.put("message", "Der Tag existiert bereits")
-													);
-												}
-											});
-									}
-								} else { // Der Tag existiert noch nicht in der Tags Tabelle
-									jdbcPool.preparedQuery("INSERT INTO Tags (name) VALUES(?)")
-										.execute(Tuple.of(tagName), res3 -> {
-											if (res3.succeeded()) {
-												Integer generatedTagId = res3.result().property(JDBCPool.GENERATED_KEYS).getInteger(0);
-												jdbcPool.preparedQuery("INSERT INTO PhotosTags VALUES (?, ?)")
-													.execute(Tuple.of(photoID, generatedTagId), res4 -> {
-														if (res4.succeeded()) {
-															MainVerticle.response(ctx.response(), 201, new JsonObject()
-																.put("message", "Der Tag wurde dem Foto hinzugefügt")
-															);
-														} else {
-															MainVerticle.response(ctx.response(), 409, new JsonObject()
-																.put("message", "Der Tag existiert bereits")
-															);
-														}
-													});
-											} else {
-												MainVerticle.response(ctx.response(), 500, new JsonObject()
-													.put("message", "Fehler beim Hinzufügen des Tags zur Tags Tabelle")
-												);
-											}
-										});
+					});
+			} else {
+				addTagToTableTags(tag).onComplete(ar -> {
+					if (ar.succeeded()) {
+						jdbcPool.preparedQuery("INSERT INTO  PhotosTags VALUES (?, ?)")
+							.execute(Tuple.of(photoID, res.result()), dbRes -> {
+								if (dbRes.succeeded()) {
+									MainVerticle.response(ctx.response(), 201, new JsonObject()
+										.put("message", "Tag erfolgreich zum Foto hinzugefügt")
+									);
+								} else {
+									MainVerticle.response(ctx.response(), 500, new JsonObject()
+										.put("message", "Fehler beim Hinzufügen des Tags")
+									);
 								}
 							});
 					} else {
@@ -303,7 +250,51 @@ public class PhotoHandler {
 						);
 					}
 				});
+			}
+		});
 	}
+
+
+	/**
+	 *
+	 * @param tag Der tag, der überprüft werden soll
+	 * @return
+	 */
+	Future<Integer> getTagId(String tag) {
+		System.out.println("called tagExistsInTableTags in PhotoHandler.java");
+
+		Promise<Integer> promise = Promise.promise();
+
+		jdbcPool.preparedQuery("SELECT ID FROM Tags WHERE Tags.name = ?")
+			.execute(Tuple.of(tag), res -> {
+				if (res.succeeded() && res.result().size() == 1) {
+					promise.complete(res.result().iterator().next().getInteger("ID"));
+				} else {
+					promise.fail(res.cause());
+				}
+			});
+
+		return promise.future();
+	}
+
+	Future<Integer> addTagToTableTags(String tag) {
+		System.out.println("called addTagToTableTags in PhotoHandler.java");
+
+		Promise<Integer> promise = Promise.promise();
+
+		jdbcPool.preparedQuery("INSERT INTO Tags (name) VALUES (?)")
+			.execute(Tuple.of(tag), res -> {
+				if (res.succeeded()) {
+					promise.complete(res.result().property(JDBCPool.GENERATED_KEYS).getInteger(0));
+				}  else {
+					promise.fail(res.cause());
+				}
+			});
+
+		return promise.future();
+	}
+
+
 
 	/**
 	 * Handler für PATCH /photoTitle <br>

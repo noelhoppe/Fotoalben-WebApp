@@ -212,7 +212,7 @@ public class MainVerticle extends AbstractVerticle {
     router.get("/img/:photoID")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
-             ctx.data().put("photoID", ctx.pathParam("photoID"));
+             ctx.data().put("photoID", ctx.pathParam("photoID").substring(0, ctx.pathParam("photoID").length() - 4));
              ctx.next();
            })
            .handler(photoHandler::validatePhotoInputReq)
@@ -233,7 +233,18 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::deleteTag);
 
-    router.post("/tag") .handler(authenticationHandler::isLoggedIn).handler(photoHandler::addTagToPhoto);
+    router.post("/tag")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+             ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
+             ctx.data().put("tag", ctx.body().asJsonObject().getString("tag"));
+             ctx.next();
+           })
+           .handler(photoHandler::validatePhotoInputReq)
+           .handler(photoHandler::validateTagInputReq)
+           .handler(photoHandler::photoExits)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::addTagToPhoto);
 
     router.patch( "/photoTitle").handler(authenticationHandler::isLoggedIn).handler(photoHandler::editPhotoTitle);
 

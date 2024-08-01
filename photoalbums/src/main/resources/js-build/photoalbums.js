@@ -135,7 +135,7 @@ attachAddTagListener();
  * POST /tag
  * {
  *     photoID: ___,
- *     tagName: ___
+ *     tag: ___
  * }
  *
  * @param photoID Die id des Fotos (unique, weil primary key)
@@ -146,8 +146,9 @@ function handleTagAdd(photoID, tagName) {
         // console.log("called2");
         const reqData = {
             photoID: photoID,
-            tagName: tagName
+            tag: tagName
         };
+        console.log(reqData);
         const res = yield fetch("http://localhost:8080/tag", {
             method: "POST",
             credentials: "include",
@@ -157,6 +158,8 @@ function handleTagAdd(photoID, tagName) {
             body: JSON.stringify(reqData)
         });
         if (res.status == 201) {
+            const data = yield res.json();
+            console.log(data.message);
             document.querySelector("#error-edit-photo-container").classList.add("d-none");
             const img = document.querySelector(`img[data-id='${photoID}']`);
             let tags = img.dataset.tags;
@@ -226,7 +229,7 @@ function handleTagDelete(delBtn, tag, colDiv) {
         const img = document.querySelector("#modal-img");
         const imgId = img.dataset.id;
         const reqData = {
-            photoID: imgId + ".jpg",
+            photoID: imgId,
             tag: tag
         };
         console.log(reqData);
@@ -312,7 +315,6 @@ function fetchUsername() {
             const data = yield res.json();
             console.log(data);
             renderUsername(data.username);
-            renderGoToAdminPage(data.role);
         }
         catch (error) {
             console.error("Error fetching username", error);
