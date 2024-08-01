@@ -38,7 +38,6 @@ public class PhotoHandler {
 	 */
 	public void getAllPhotosFromUser(RoutingContext ctx) {
 		Integer userIdStr = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
-
 		jdbcPool.preparedQuery("""
 				SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
     				FROM Photos p
@@ -72,41 +71,53 @@ public class PhotoHandler {
 	}
 
 	/**
-	 * Prüft, ob der Nutzer das Bild anfragen darf, d.h ob es dem Nutzer zugewiesen ist und sendet es zurück.<br>
-	 * Gibt Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn der Nutzer ein Bild anfragt, welches ihm nicht zugewiesen ist.<br>
-	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
+	 * Sendet das Foto
 	 * @param ctx Routing Context
 	 */
 	public void servePhotos(RoutingContext ctx) {
-		String imageId = ctx.pathParam("imageId");
+		ctx.response().sendFile("img/" + ctx.data().get("photoID"));
+	}
+
+
+	/**
+	 * Prüft, ob das Bild in der Datenbank existiert.<br>
+	 * Wenn ja, rufe den nächsten Handler auf.<br>
+	 * Wenn nein, beende die Anfrage mit einem 404 und entsprechender Fehlermeldung<br>
+	 * @param ctx Der Routing Context
+	 */
+	public void photoExits(RoutingContext ctx) {
+		String photoID = (String) ctx.data().get("photoID");
+		jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM Photos WHERE ID = ?")
+			.execute(Tuple.of(photoID), res -> {
+				if (res.succeeded() && res.result().iterator().next().getInteger("count") == 1) {
+					ctx.next();
+				} else {
+					MainVerticle.response(ctx.response(), 404, new JsonObject().put("message", "Das Foto wurde nicht gefunden."));
+				}
+			});
+	}
+
+	/**
+	 * Prüft, ob das Bild dem Nutzer zugewiesen ist.
+	 * Wenn ja, rufe den nächsten Handler auf.
+	 * Wenn nein, beende die Anfrage mit einem 403 und entsprechender Fehlermeldung
+	 * @param ctx
+	 */
+	public void photoIsUser(RoutingContext ctx) {
+		String photoID = (String) ctx.data().get("photoID");
 		Integer userId = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
-		// System.out.println("userId: " + userId);
-		// System.out.println("imageId: " + imageId);
-
-		// Überprüfung der userId auf null
-		if (userId == null) {
-			MainVerticle.response(ctx.response(), 403, new JsonObject()
-				.put("message", "Unautorisierter Zugriff auf das Bild")
-			);
-			return;
-		}
-
-		jdbcPool.preparedQuery("SELECT url FROM Photos WHERE url = ? AND Users_ID = ?")
-			.execute(Tuple.of(imageId, userId), res -> {
-				if (res.succeeded() && res.result().size() > 0) {
-					String imagePath = "img/" + imageId;
-					ctx.response().sendFile(imagePath).onFailure(err -> {
-						MainVerticle.response(ctx.response(), 500, new JsonObject()
-							.put("message", "Ein interner Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut")
-						);
-					});
+		jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM Photos WHERE ID = ? AND Users_ID = ?")
+			.execute(Tuple.of(photoID, userId), res -> {
+				if (res.succeeded() && res.result().iterator().next().getInteger("count") == 1) {
+					ctx.next();
 				} else {
 					MainVerticle.response(ctx.response(), 403, new JsonObject()
-						.put("message", "Unautorisierter Zugriff auf das Bild")
+						.put("message", "Das Foto gehört nicht dem Benutzer")
 					);
 				}
 			});
 	}
+
 
 	/**
 	 * Handler für DELETE /tag <br>

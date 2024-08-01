@@ -19,10 +19,8 @@ togglePasswordVisibility();
  */
 function login() {
     interface ServerReq {
-        user : {
-            username : string,
-            password : string
-        }
+        username : string,
+        password : string
     }
 
     interface ServerRes {
@@ -34,10 +32,8 @@ function login() {
         evt.preventDefault();
 
         const reqData : ServerReq = {
-            user : {
-                username : (document.getElementById("username") as HTMLInputElement).value,
-                password : (document.getElementById("password") as HTMLInputElement).value
-            }
+            username : (document.getElementById("username") as HTMLInputElement).value,
+            password : (document.getElementById("password") as HTMLInputElement).value
         };
 
         const res : Response = await fetch("http://localhost:8080/login", {

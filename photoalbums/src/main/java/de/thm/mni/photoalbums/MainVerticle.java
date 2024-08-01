@@ -35,7 +35,6 @@ public class MainVerticle extends AbstractVerticle {
    * initialisiert einen JDBC Pool und stellt einen HTTP Server bereit, der Anfragen über ein Router-Objekt verarbeitet.
    *
    * @param startPromise ein Promise, das anzeigt, ob der Startvorgang erfolgreich oder fehlerhaft war.
-   * @throws Exception falls ein Fehler während des Startvorgangs auftritt
    */
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
@@ -46,7 +45,7 @@ public class MainVerticle extends AbstractVerticle {
               .compose(this::startHttpServer)
               .onComplete(ar -> {
                 if (ar.succeeded()) {
-                  System.out.println("Main verticle started successfully");
+                  System.out.println("Main verticle started successfully. Http Server started on http://localhost:8080.");
                   startPromise.complete();
                 } else {
                   ar.cause().printStackTrace();
@@ -129,7 +128,8 @@ public class MainVerticle extends AbstractVerticle {
 
     // Static Handler, der sicherstellt, dass protected *.html Dateien nur für angemeldete Benutzer aufgerufen werden können
     AuthenticationHandler authenticationHandler = new AuthenticationHandler();
-    router.route("/protected/*").handler(authenticationHandler::authenticate).handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views/protected")
+
+    router.route("/protected/*").handler(authenticationHandler::isLoggedIn).handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views/protected")
               .setCachingEnabled(false) // während Entwicklungsprozess
     );
 
@@ -144,11 +144,29 @@ public class MainVerticle extends AbstractVerticle {
               .setCachingEnabled(false)
     );
 
-    LoginHandler loginHandler = new LoginHandler(jdbcPool, SESSION_ATTRIBUTE_USER, SESSION_ATTRIBUTE_ROLE, SESSION_ATTRIBUTE_ID);
-    router.route(HttpMethod.POST, "/login").handler(loginHandler::handleLogin);
 
-    router.route(HttpMethod.POST, "/logout").handler(ctx -> {
-      System.out.println("Logout request received");
+
+
+
+
+
+    // --- LOGIN ---
+    LoginHandler loginHandler = new LoginHandler(jdbcPool);
+    router.post("/login")
+           .handler(loginHandler::grabData)
+           .handler(loginHandler::validateUsernameInput)
+           .handler(loginHandler::validatePasswordInput)
+           .handler(loginHandler::checkUsernamePasswordPair);
+
+    router.get( "/username").handler(authenticationHandler::isLoggedIn).handler(ctx -> {
+      MainVerticle.response(ctx.response(), 200, new JsonObject().put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER)));
+    });
+    // --- LOGIN ---
+
+
+
+    // -- LOGOUT ---
+    router.post("/logout").handler(ctx -> {
       if (ctx.session().isEmpty()) {
         MainVerticle.response(ctx.response(), 500, new JsonObject().put("message", "Die Session ist ungültig oder abgelaufen. Bitte melden Sie sich erneut an"));
       } else {
@@ -159,21 +177,34 @@ public class MainVerticle extends AbstractVerticle {
                   .end();
       }
     });
+    // --- LOGOUT ---
 
+    // -- PHOTO HANDLER ---
     PhotoHandler photoHandler = new PhotoHandler(jdbcPool);
-    router.route(HttpMethod.GET, "/photos").handler(photoHandler::getAllPhotosFromUser);
-    router.route(HttpMethod.GET, "/img/:imageId").handler(photoHandler::servePhotos);
-    router.route(HttpMethod.POST, "/photos").handler(photoHandler::uploadPhoto);
+    router.get("/photos")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(photoHandler::getAllPhotosFromUser);
+
+    router.get("/img/:imageID")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+             ctx.data().put("photoID", ctx.pathParam("imageID"));
+             ctx.next();
+           })
+           .handler(photoHandler::photoExits)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::servePhotos);
 
 
-    router.route(HttpMethod.GET, "/username").handler(authenticationHandler::authenticate).handler(ctx -> {
-      MainVerticle.response(ctx.response(), 200, new JsonObject().put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER)));
-    });
+    router.post("/photos").handler(photoHandler::uploadPhoto);
 
-    router.route(HttpMethod.DELETE, "/tag").handler(authenticationHandler::authenticate).handler(photoHandler::deleteTag);
-    router.route(HttpMethod.POST, "/tag").handler(authenticationHandler::authenticate).handler(photoHandler::addTagToPhoto);
 
-    router.route(HttpMethod.PATCH, "/photoTitle").handler(authenticationHandler::authenticate).handler(photoHandler::editPhotoTitle);
+
+
+    router.route(HttpMethod.DELETE, "/tag").handler(authenticationHandler::isLoggedIn).handler(photoHandler::deleteTag);
+    router.route(HttpMethod.POST, "/tag").handler(authenticationHandler::isLoggedIn).handler(photoHandler::addTagToPhoto);
+
+    router.route(HttpMethod.PATCH, "/photoTitle").handler(authenticationHandler::isLoggedIn).handler(photoHandler::editPhotoTitle);
 
 
     // router.route(HttpMethod.PATCH, "/photoData").handler(authenticationHandler::authenticate).handler(photoHandler::handleEditPhotoDate)
