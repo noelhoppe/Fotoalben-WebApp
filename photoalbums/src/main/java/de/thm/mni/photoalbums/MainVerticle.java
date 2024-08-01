@@ -6,7 +6,6 @@ import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.*;
-import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerResponse;
@@ -35,7 +34,6 @@ public class MainVerticle extends AbstractVerticle {
    * initialisiert einen JDBC Pool und stellt einen HTTP Server bereit, der Anfragen über ein Router-Objekt verarbeitet.
    *
    * @param startPromise ein Promise, das anzeigt, ob der Startvorgang erfolgreich oder fehlerhaft war.
-   * @throws Exception falls ein Fehler während des Startvorgangs auftritt
    */
   @Override
   public void start(Promise<Void> startPromise) throws Exception {
@@ -46,7 +44,7 @@ public class MainVerticle extends AbstractVerticle {
               .compose(this::startHttpServer)
               .onComplete(ar -> {
                 if (ar.succeeded()) {
-                  System.out.println("Main verticle started successfully");
+                  System.out.println("Main verticle started successfully. Http Server started on http://localhost:8080.");
                   startPromise.complete();
                 } else {
                   ar.cause().printStackTrace();
@@ -116,39 +114,80 @@ public class MainVerticle extends AbstractVerticle {
     router.route(HttpMethod.POST, "/photos").handler(BodyHandler.create().setUploadsDirectory("img")); //BodyHandler für Photoupload
     router.route().handler(BodyHandler.create());
 
-    // Request logging
+    // --- REQUEST LOGGING ---
     router.route().handler(LoggerHandler.create());
+    // --- REQUEST LOGGING ---
 
-    // Session-Handler, um sich zu merken, ob ein Nutzer eingeloggt ist
+
+
+    // --- SESSION HANDLER ---
     router.route().handler(SessionHandler.create(
               LocalSessionStore.create(vertx)
     ));
+    //  --- SESSION HANDLER ---
 
-    // AuthorizationHandler authHandler = new AuthenticationHandler();
-    // router.route("/protected/admin.html").route(authHandler::authorize).route(handler)
 
-    // Static Handler, der sicherstellt, dass protected *.html Dateien nur für angemeldete Benutzer aufgerufen werden können
+
     AuthenticationHandler authenticationHandler = new AuthenticationHandler();
-    router.route("/protected/*").handler(authenticationHandler::authenticate).handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views/protected")
-              .setCachingEnabled(false) // während Entwicklungsprozess
+
+
+
+    // --- STATIC HANDLER ---
+    // admin.html kann nur vom admin aufgerufen werden
+    router.get("/protected/admin.html")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(authenticationHandler::isAdmin)
+           .handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views/protected")
+                  .setCachingEnabled(false)
+           );
+
+    // photoalbums.html kann nur von eingeloggten Benutzern aufgerufen werden
+    router.get("/protected/photoalbums.html")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views/protected")
+                  .setCachingEnabled(false)
     );
 
     // Static Handler, um login.html OHNE AUTHENTIFIZIERUNG auszuliefern
-    router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views")
-              .setCachingEnabled(false)
-              .setIndexPage("login.html")
+    router.get()
+           .handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views")
+                  .setCachingEnabled(false)
+                  .setIndexPage("login.html")
     );
 
-    // Static Handler, um login.js OHNE AUTHENTIFIZIERUNG auszuliefern
-    router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "js-build")
-              .setCachingEnabled(false)
+    // Static Handler, um *.js OHNE AUTHENTIFIZIERUNG auszuliefern
+    router.get().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "js-build")
+           .setCachingEnabled(false)
     );
+    // --- STATIC HANDLER ---
 
-    LoginHandler loginHandler = new LoginHandler(jdbcPool, SESSION_ATTRIBUTE_USER, SESSION_ATTRIBUTE_ROLE, SESSION_ATTRIBUTE_ID);
-    router.route(HttpMethod.POST, "/login").handler(loginHandler::handleLogin);
 
-    router.route(HttpMethod.POST, "/logout").handler(ctx -> {
-      System.out.println("Logout request received");
+
+    // --- LOGIN ---
+    LoginHandler loginHandler = new LoginHandler(jdbcPool);
+    router.post("/login")
+           .handler(loginHandler::grabData)
+           .handler(loginHandler::validateUsernameInput)
+           .handler(loginHandler::validatePasswordInput)
+           .handler(loginHandler::checkUsernamePasswordPair);
+
+    router.get( "/username").handler(authenticationHandler::isLoggedIn).handler(ctx -> {
+      MainVerticle.response(ctx.response(), 200, new JsonObject()
+             .put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER))
+      );
+    });
+
+    router.get("/role").handler(authenticationHandler::isLoggedIn).handler(ctx -> {
+      MainVerticle.response(ctx.response(), 200, new JsonObject()
+             .put("role", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ROLE))
+      );
+    });
+    // --- LOGIN ---
+
+
+
+    // -- LOGOUT ---
+    router.post("/logout").handler(ctx -> {
       if (ctx.session().isEmpty()) {
         MainVerticle.response(ctx.response(), 500, new JsonObject().put("message", "Die Session ist ungültig oder abgelaufen. Bitte melden Sie sich erneut an"));
       } else {
@@ -159,22 +198,67 @@ public class MainVerticle extends AbstractVerticle {
                   .end();
       }
     });
+    // --- LOGOUT ---
 
+
+
+    // -- PHOTO HANDLER ---
     PhotoHandler photoHandler = new PhotoHandler(jdbcPool);
-    router.route(HttpMethod.GET, "/photos").handler(photoHandler::getAllPhotosFromUser);
-    router.route(HttpMethod.GET, "/img/:imageId").handler(photoHandler::servePhotos);
-    router.route(HttpMethod.POST, "/photos").handler(photoHandler::uploadPhoto);
+    router.get("/photos")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(photoHandler::getAllPhotosFromUser);
 
+    router.get("/img/:photoID")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+             ctx.data().put("photoID", ctx.pathParam("photoID").substring(0, ctx.pathParam("photoID").length() - 4)); // "1.jpg" => "1"
+             ctx.next();
+           })
+           .handler(photoHandler::validatePhotoInputReq)
+           .handler(photoHandler::photoExists)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::servePhotos); // "1" => "1.jpg"
 
-    router.route(HttpMethod.GET, "/username").handler(authenticationHandler::authenticate).handler(ctx -> {
-      MainVerticle.response(ctx.response(), 200, new JsonObject().put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER)));
-    });
+    router.delete("/tag")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+             ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
+             ctx.data().put("tag", ctx.body().asJsonObject().getString("tag"));
+             ctx.next();
+           })
+           .handler(photoHandler::validatePhotoInputReq)
+           .handler(photoHandler::validateTagInputReq)
+           .handler(photoHandler::photoExists)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::deleteTag);
 
-    router.route(HttpMethod.DELETE, "/tag").handler(authenticationHandler::authenticate).handler(photoHandler::deleteTag);
-    router.route(HttpMethod.POST, "/tag").handler(authenticationHandler::authenticate).handler(photoHandler::addTagToPhoto);
+    router.post("/tag")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+             ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
+             ctx.data().put("tag", ctx.body().asJsonObject().getString("tag"));
+             ctx.next();
+           })
+           .handler(photoHandler::validatePhotoInputReq)
+           .handler(photoHandler::validateTagInputReq)
+           .handler(photoHandler::photoExists)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::addTagToPhoto);
 
-    router.route(HttpMethod.PATCH, "/photoTitle").handler(authenticationHandler::authenticate).handler(photoHandler::editPhotoTitle);
+    router.patch( "/photoTitle")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+             ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
+             ctx.data().put("photoTitle", ctx.body().asJsonObject().getString("photoTitle"));
+             ctx.next();
+           })
+           .handler(photoHandler::validatePhotoInputReq)
+           .handler(photoHandler::validatePhotoTitleReq)
+           .handler(photoHandler::photoExists)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::editPhotoTitle);
 
+    router.post("/photos").handler(photoHandler::uploadPhoto);
 
     // router.route(HttpMethod.PATCH, "/photoData").handler(authenticationHandler::authenticate).handler(photoHandler::handleEditPhotoDate)
 

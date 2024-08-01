@@ -13,58 +13,92 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class LoginHandler {
 	private JDBCPool jdbcPool;
-	private final String SESSION_ATTRIBUTE_USER;
-	private final String SESSION_ATTRIBUTE_ROLE;
-	private final String SESSION_ATTRIBUTE_ID;
 
-	public LoginHandler(JDBCPool jdbcPool, String sessionAttributeUser, String sessionAttributeRole, String sessionAttributeId) {
-		this.SESSION_ATTRIBUTE_USER = sessionAttributeUser;
-		this.SESSION_ATTRIBUTE_ROLE = sessionAttributeRole;
-		this.SESSION_ATTRIBUTE_ID = sessionAttributeId;
+	public LoginHandler(JDBCPool jdbcPool) {
 		this.jdbcPool = jdbcPool;
 	}
 
 	/**
-	 * Extrahiert das JsonObject user aus dem RoutingContext und selektiert die Felder username und password des user Objekts.<br>
-	 * Gibt Statuscode 400 mit entsprechender JSON message zurück,<br>
-	 * wenn der Benutzername oder das Password Leerzeichen enthält,<br>
-	 * der Benutzernamen oder das Password null oder leer ist oder<br>
-	 * der Benutzername oder das Passwort falsch ist.<br>
-	 * Gibt Statuscode 500 mit entsprechender JSON message zurück, wenn ein Server- oder Datenbankfehler aufgetreten ist. <br>
-	 * Gibt Statuscode 303 mit Location Header zurück, wenn der Login erfolgreich war, also wenn das Paar Benutzername und Passwort existiert <br>
-	 * Die Passwörter sind in der Datenbank mit Bcrypt (rounds 10) gehasht gespeichert.<br>
+	 * Selektiert die Felder username und password aus dem RoutingContext. <br>
+	 * Gibt Statuscode 500 mit entsprechender JSON message zurück, wenn die Anfrage falsch formatiert ist oder der username oder das password null ist und beendet die http Anfrage im Anschluss. <br>
+	 * Ansonsten wird der nächste Handler aufgerufen.<br>
 	 * @param ctx Routing Context
 	 */
-	public void handleLogin(RoutingContext ctx) {
-		JsonObject user = ctx.body().asJsonObject().getJsonObject("user");
-		String username = user.getString("username");
-		String password = user.getString("password");
+	public void grabData(RoutingContext ctx) {
+		System.out.println("called grabData in LoginHandler.java");
+		try {
+			String username = ctx.body().asJsonObject().getString("username");
+			String password = ctx.body().asJsonObject().getString("password");
 
-		if (username.contains(" ")) {
-			MainVerticle.response(ctx.response(), 400, new JsonObject()
-				.put("message", "Der Username darf keine Leerzeichen enthalten")
+			if (username == null || password == null) {
+				throw new IllegalArgumentException();
+			}
+
+			ctx.put("username", username);
+			ctx.put("password", password);
+			ctx.next();
+		} catch(IllegalArgumentException iae) {
+			MainVerticle.response(ctx.response(), 500, new JsonObject()
+				.put("message", "Die Anfrage muss folgendes Format haben und die keys username und password sind nicht null-Werte")
+				.put("username", "___")
+				.put("password", "___")
 			);
 		}
+	}
 
-		if (password.contains(" ")) {
+	/**
+	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn das Feld username leer ist oder Leerzeichen enthält und beendet die http-Anfrage. <br>
+	 * Ansonsten wird der nächste Handler aufgerufen. <br>
+	 * @param ctx Routing Context
+	 */
+	public void validateUsernameInput(RoutingContext ctx) {
+		System.out.println("called validateUsernameInput in LoginHandler.java");
+		if (ctx.data().get("username").toString().contains(" ")) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
-				.put("message", "Das Passwort darf keine Leerzeichen enthalten")
+				.put("message", "Der Nutzername darf keine Leerzeichen enthalten")
 			);
 		}
-
-		if (username == null || username.trim().isEmpty()) {
+		else if (ctx.data().get("username").toString().trim().isEmpty()) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Nutzername darf nicht leer sein")
 			);
 		}
+		else {
+			ctx.next();
+		}
+	}
 
-		if (password == null || password.trim().isEmpty()) {
+	/**
+	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn das Feld password leer ist oder Leerzeichen enthält und beendet die http-Anfrage. <br>
+	 * Ansonsten wird der nächste Handler aufgerufen. <br>
+	 * @param ctx Routing Context
+	 */
+	public void validatePasswordInput(RoutingContext ctx) {
+		System.out.println("called validatePasswordInput in LoginHandler.java");
+		if (ctx.data().get("password").toString().contains(" ")) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Das Passwort darf keine Leerzeichen enthalten")
+			);
+		} else if (ctx.data().get("password").toString().trim().isEmpty()) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Das Passwort darf nicht leer sein")
 			);
+		} else {
+			ctx.next();
 		}
+	}
 
-		// Execute SQL query to retrieve user from database
+	/**
+	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn das Paar username und password nicht existiert und beendet die Anfrage. <br>
+	 * Gibt Statuscode 303 mit entsprechendem Location-Header zurück, wenn der Login erfolgreich war. <br>
+	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist. <br>
+	 * @param ctx Routing Context
+	 */
+	public void checkUsernamePasswordPair(RoutingContext ctx) {
+		System.out.println("called checkUsernamePasswordPair in LoginHandler.java");
+		String username = ctx.data().get("username").toString();
+		String password = ctx.data().get("password").toString();
+
 		jdbcPool.preparedQuery("SELECT * FROM Users WHERE Users.username = ?")
 			.execute(Tuple.of(username), ar -> {
 				if (ar.succeeded()) {
@@ -75,17 +109,15 @@ public class LoginHandler {
 						String role = row.getString("role");
 						Integer id = row.getInteger("ID");
 						if (BCrypt.checkpw(password, storedPasswordHash)) {
-							System.out.println("Login erfolgreich");
 							ctx.session()
-								.put(SESSION_ATTRIBUTE_ID, id)
-								.put(SESSION_ATTRIBUTE_USER, username)
-								.put(SESSION_ATTRIBUTE_ROLE, role);
+								.put(MainVerticle.SESSION_ATTRIBUTE_ID, id)
+								.put(MainVerticle.SESSION_ATTRIBUTE_USER, username)
+								.put(MainVerticle.SESSION_ATTRIBUTE_ROLE, role);
 							ctx.response()
 								.setStatusCode(303)
 								.putHeader("Location", "/protected/photoalbums.html")
 								.end();
 						} else { // Passwort falsch
-							System.out.println("Login nicht erfolgreich");
 							MainVerticle.response(ctx.response(), 400, new JsonObject().put("message", "Nutzername oder Passwort falsch"));
 						}
 					} else {

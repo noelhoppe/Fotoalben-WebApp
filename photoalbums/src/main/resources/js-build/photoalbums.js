@@ -14,17 +14,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 function logout() {
     const logoutBtn = document.querySelector("#logout-btn");
     logoutBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
-        const res = yield fetch("http://localhost:8080/logout", {
-            method: "POST",
-            redirect: "follow",
-            credentials: "include"
-        });
-        if (res.redirected) {
-            window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
+        try {
+            const res = yield fetch("http://localhost:8080/logout", {
+                method: "POST",
+                redirect: "follow",
+                credentials: "include"
+            });
+            if (res.redirected) {
+                window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
+            }
+            else {
+                const data = yield res.json();
+                console.log(data.message);
+            }
         }
-        else {
-            const data = yield res.json();
-            console.log(data);
+        catch (error) {
+            console.error("Error POST /logout", error);
         }
     }));
 }
@@ -123,7 +128,6 @@ function attachAddTagListener() {
     document.addEventListener("DOMContentLoaded", () => {
         const submitAddTagInput = document.querySelector("#submitAddTagInput");
         submitAddTagInput.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
-            // console.log("called1");
             const tagName = document.querySelector("#addTagInput").value;
             const photoID = Number(document.querySelector("#modal-img").getAttribute("data-id"));
             yield handleTagAdd(photoID, tagName);
@@ -135,7 +139,7 @@ attachAddTagListener();
  * POST /tag
  * {
  *     photoID: ___,
- *     tagName: ___
+ *     tag: ___
  * }
  *
  * @param photoID Die id des Fotos (unique, weil primary key)
@@ -146,32 +150,39 @@ function handleTagAdd(photoID, tagName) {
         // console.log("called2");
         const reqData = {
             photoID: photoID,
-            tagName: tagName
+            tag: tagName
         };
-        const res = yield fetch("http://localhost:8080/tag", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(reqData)
-        });
-        if (res.status == 201) {
-            document.querySelector("#error-edit-photo-container").classList.add("d-none");
-            const img = document.querySelector(`img[data-id='${photoID}']`);
-            let tags = img.dataset.tags;
-            if (tags.length == 0) {
-                tags = tagName;
+        try {
+            const res = yield fetch("http://localhost:8080/tag", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(reqData)
+            });
+            if (res.status == 201) {
+                const data = yield res.json();
+                console.log(data.message);
+                document.querySelector("#error-edit-photo-container").classList.add("d-none");
+                const img = document.querySelector(`img[data-id='${photoID}']`);
+                let tags = img.dataset.tags;
+                if (tags.length == 0) {
+                    tags = tagName;
+                }
+                else {
+                    tags = tags + `, ${tagName}`;
+                }
+                img.dataset.tags = tags;
+                updateModalUI(extractPhotoData(img));
             }
             else {
-                tags = tags + `, ${tagName}`;
+                const data = yield res.json();
+                renderErrorEditPhoto(false, data.message);
             }
-            img.dataset.tags = tags;
-            updateModalUI(extractPhotoData(img));
         }
-        else {
-            const data = yield res.json();
-            renderErrorEditPhoto(false, data.message);
+        catch (error) {
+            console.error("Error POST /tag", error);
         }
     });
 }
@@ -214,7 +225,7 @@ function renderErrorEditPhoto(resetErrorMessage, message) {
  * Behandelt das Löschen eines Tags.
  * DELETE /tag
  * {
- *     "imgId" : ___,
+ *     "photoID" : ___,
  *     "tag" : ___
  * }
  * @param delBtn HTMLButtonElement
@@ -226,29 +237,37 @@ function handleTagDelete(delBtn, tag, colDiv) {
         const img = document.querySelector("#modal-img");
         const imgId = img.dataset.id;
         const reqData = {
-            imgId: imgId,
+            photoID: imgId,
             tag: tag
         };
-        const res = yield fetch("http://localhost:8080/tag", {
-            method: "DELETE",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(reqData)
-        });
-        if (res.status == 204) {
-            // Remove Element from DOM
-            colDiv.remove();
-            // Aktualisiere die Tags des Bildes
-            const imgElement = document.querySelector(`img[data-id='${imgId}']`);
-            if (imgElement) {
-                const currentTags = imgElement.getAttribute("data-tags");
-                if (currentTags) {
-                    const updatedTags = currentTags.split(", ").filter(t => t != tag).join(", ");
-                    imgElement.setAttribute("data-tags", updatedTags);
+        try {
+            const res = yield fetch("http://localhost:8080/tag", {
+                method: "DELETE",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(reqData)
+            });
+            if (res.status == 204) {
+                // Remove Element from DOM
+                colDiv.remove();
+                // Aktualisiere die Tags des Bildes
+                const imgElement = document.querySelector(`img[data-id='${imgId}']`);
+                if (imgElement) {
+                    const currentTags = imgElement.getAttribute("data-tags");
+                    if (currentTags) {
+                        const updatedTags = currentTags.split(", ").filter(t => t != tag).join(", ");
+                        imgElement.setAttribute("data-tags", updatedTags);
+                    }
                 }
             }
+            else {
+                console.log(yield res.json());
+            }
+        }
+        catch (error) {
+            console.error("Error DELETE /tag", error);
         }
     });
 }
@@ -306,13 +325,57 @@ function fetchUsername() {
                 console.error("Error fetching username");
             }
             const data = yield res.json();
+            console.log(data);
             renderUsername(data.username);
         }
         catch (error) {
-            console.error("Error fetching username", error);
+            console.error("Error GET /username", error);
         }
     });
 }
+/**
+ * GET /role
+ */
+function fetchRole() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/role", {
+                method: "GET",
+                credentials: "include"
+            });
+            const data = yield res.json();
+            renderGoToAdminPage(data.role);
+        }
+        catch (error) {
+            console.error("Error GET /role" + error);
+        }
+    });
+}
+/**
+ * Zeigt den Button "Zur Adminseite" nicht an, wenn der Nutzer kein Admin ist.
+ * @param role Rolle des Benutzers
+ */
+function renderGoToAdminPage(role) {
+    const goToAdminPageItem = document.querySelector("#go-to-admin-page");
+    if (role == "ADMIN") {
+        goToAdminPageItem.classList.remove("d-none");
+    }
+    else {
+        goToAdminPageItem.classList.add("d-none");
+    }
+}
+function redirectToAdminPage() {
+    document.querySelector("#go-to-admin-page").addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/protected/admin.html");
+            window.location.href = res.url;
+        }
+        catch (error) {
+            console.error("Error redirecting to Admin-Page");
+        }
+    }));
+}
+redirectToAdminPage();
 /**
  * Funktion zum Rendern des Benutzernamens im DOM
  * @param username Der Benutzername
@@ -339,7 +402,7 @@ function fetchPhotos() {
             data.photos.forEach(photo => renderPhotos(photo));
         }
         catch (error) {
-            console.error("Error fetching photos", error);
+            console.error("Error GET /photos", error);
         }
     });
 }
@@ -350,6 +413,7 @@ function initializePage() {
     document.addEventListener("DOMContentLoaded", () => __awaiter(this, void 0, void 0, function* () {
         yield fetchUsername();
         yield fetchPhotos();
+        yield fetchRole();
     }));
 }
 initializePage();

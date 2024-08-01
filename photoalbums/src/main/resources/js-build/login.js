@@ -32,10 +32,8 @@ function login() {
     loginForm.addEventListener("submit", (evt) => __awaiter(this, void 0, void 0, function* () {
         evt.preventDefault();
         const reqData = {
-            user: {
-                username: document.getElementById("username").value,
-                password: document.getElementById("password").value
-            }
+            username: document.getElementById("username").value,
+            password: document.getElementById("password").value
         };
         const res = yield fetch("http://localhost:8080/login", {
             method: "POST",
