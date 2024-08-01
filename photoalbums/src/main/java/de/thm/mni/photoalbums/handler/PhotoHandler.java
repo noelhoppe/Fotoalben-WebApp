@@ -80,7 +80,7 @@ public class PhotoHandler {
 	 * Wenn nein, beende die Anfrage mit einem 404 und entsprechender Fehlermeldung<br>
 	 * @param ctx Der Routing Context
 	 */
-	public void photoExits(RoutingContext ctx) {
+	public void photoExists(RoutingContext ctx) {
 		System.out.println("called photoExits in PhotoHandler.java");
 		Integer photoID = Integer.valueOf(ctx.data().get("photoID").toString());
 		jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM Photos WHERE ID = ?")
@@ -116,9 +116,9 @@ public class PhotoHandler {
 	}
 
 	/**
-	 * Prüft, ob die photoID das folgende Format hat: int.jpg<br>
+	 * Prüft, ob die photoID eine gültige Zahl ist. <br>
 	 * Wenn ja, rufe den nächsten Handler auf.<br>
-	 * Wenn nein, beende die http-Anfrage mit dem Statuscode 400 und einer entsprechenden Fehlermeldung.
+	 * Wenn nein, beende die http-Anfrage mit dem Statuscode 400 und einer entsprechenden Fehlermeldung.<br>
 	 * @param ctx Routing Context
 	 */
 	public void validatePhotoInputReq(RoutingContext ctx) {
@@ -224,8 +224,8 @@ public class PhotoHandler {
 								.put("message", "Tag erfolgreich zum Foto hinzugefügt")
 							);
 						} else {
-							MainVerticle.response(ctx.response(), 500, new JsonObject()
-								.put("message", "Fehler beim Hinzufügen des Tags")
+							MainVerticle.response(ctx.response(), 409, new JsonObject()
+								.put("message", "Der Tag existiert bereits")
 							);
 						}
 					});
@@ -239,8 +239,8 @@ public class PhotoHandler {
 										.put("message", "Tag erfolgreich zum Foto hinzugefügt")
 									);
 								} else {
-									MainVerticle.response(ctx.response(), 500, new JsonObject()
-										.put("message", "Fehler beim Hinzufügen des Tags")
+									MainVerticle.response(ctx.response(), 409, new JsonObject()
+										.put("message", "Der Tag existiert bereits")
 									);
 								}
 							});
@@ -294,81 +294,45 @@ public class PhotoHandler {
 		return promise.future();
 	}
 
+	/**
+	 * Prüft, ob der Fototitel nur aus Leerzeichen besteht, also leer ist. <br>
+	 * Wenn ja, gebe Statuscode 400 mit entsprechender Fehlermeldung zurück. <br>
+	 * Wenn nein, gebe die Anfrage an den nächsten Handler weiter <br>
+	 * @param ctx Routing Context
+	 */
+	public void validatePhotoTitleReq(RoutingContext ctx) {
+		String photoTitle = ctx.data().get("photoTitle").toString();
+
+		if (photoTitle.trim().isEmpty()) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Der Titel darf nicht leer sein")
+			);
+		} else {
+			ctx.next();
+		}
+	}
 
 
 	/**
-	 * Handler für PATCH /photoTitle <br>
-	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Titel leer ist bzw. nur aus Leerzeichen besteht. <br>
-	 * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht, den Titel eines Bildes eines anderen Nutzers zu bearbeiten. <br>
-	 * Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Bild nicht existiert.
-	 * Gibt Statuscode 500 zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
 	 *
-	 * @param ctx Routing Context
+	 * @param ctx
 	 */
 	public void  editPhotoTitle(RoutingContext ctx) {
-		Integer photoID = ctx.body().asJsonObject().getInteger("photoID");
-		String photoTitle = ctx.body().asJsonObject().getString("photoTitle");
+		String photoTitle = ctx.data().get("photoTitle").toString();
 
-		/*
-		jdbcPool.preparedQuery("SELECT * FROM Photos WHERE ID = ?")
-			.execute(Tuple.of(photoID), res -> {
-				if (res.succeeded() && res.result().size() == 0) {
-					MainVerticle.response(ctx.response(), 404, new JsonObject()
-						.put("message", "Das Bild existiert nicht")
+		jdbcPool.preparedQuery("UPDATE Photos SET title = ? WHERE Photos.ID = ?")
+			.execute(Tuple.of(photoTitle, ctx.data().get("photoID")), res -> {
+				if (res.succeeded()) {
+					MainVerticle.response(ctx.response(), 200, new JsonObject()
+						.put("message", "Der Fototitel wurde erfolgreich geändert")
+						.put("photoTitle", photoTitle)
+					);
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Ein interner Serverfehler ist aufgetreten")
 					);
 				}
 			});
-
-		 */
-
-		photoExists(photoID, ctx).onComplete(res -> {
-			if (res.succeeded() && !res.result()) {
-				MainVerticle.response(ctx.response(), 404, new JsonObject()
-					.put("message", "Das Bild existiert nicht")
-				);
-				return;
-			}
-
-			if (photoTitle.trim().isEmpty()) {
-				MainVerticle.response(ctx.response(), 400, new JsonObject()
-					.put("message", "Der Titel darf nicht leer sein")
-				);
-				return;
-			}
-
-			jdbcPool.preparedQuery("SELECT Users_ID FROM Photos WHERE ID = ?")
-				.execute(Tuple.of(photoID), res2 -> {
-					if (res.succeeded() && res2.result().size() >= 1) {
-						RowSet<Row> rows = res2.result();
-						for (Row row : rows) {
-							if (row.getInteger("Users_ID") != ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID)) {
-								MainVerticle.response(ctx.response(), 401, new JsonObject()
-									.put("message", "Nutzer dürfen nur die Titel ihrer eigenen Fotos bearbeiten")
-								);
-								return;
-							}
-						}
-						// Der Nutzer bearbeitet seinen eigenen Fototitel
-						jdbcPool.preparedQuery("UPDATE Photos SET Photos.Title = ? WHERE Photos.ID = ?")
-							.execute(Tuple.of(photoTitle, photoID), res3 -> {
-								if (res3.succeeded()) {
-									MainVerticle.response(ctx.response(), 200, new JsonObject()
-										.put("message", "Der Fototitel wurde erfolgreich geändert")
-										.put("photoTitle", photoTitle)
-									);
-								} else {
-									MainVerticle.response(ctx.response(), 500, new JsonObject()
-										.put("message", "Es ist ein Fehler beim Ändern des Fototitels aufgetreten")
-									);
-								}
-							});
-					} else {
-						MainVerticle.response(ctx.response(), 500, new JsonObject()
-							.put("message", "Ein interner Serverfehler ist aufgetreten")
-						);
-					}
-				});
-		});
 	}
 
 	/**
@@ -417,31 +381,6 @@ public class PhotoHandler {
 			return false;
 		}
 	}
-
-	/**
-	 * @param photoId Die ID des Fotos (unique, weil PK)
-	 * @param ctx Der RoutingContext
-	 * @return true, wenn das Foto existiert; false sonst
-	 */
-	private Future<Boolean> photoExists(Integer photoId, RoutingContext ctx) {
-		Promise<Boolean> promise = Promise.promise();
-
-		jdbcPool.preparedQuery("SELECT COUNT(*) AS count FROM Photos WHERE ID = ?")
-			.execute(Tuple.of(photoId), res -> {
-				if (res.succeeded() && res.result().size() == 1) {
-					if (res.result().iterator().next().getInteger("count") == 1) {
-						promise.complete(true);
-					} else {
-						promise.complete(false);
-					}
-				} else {
-					promise.complete(false);
-				}
-			});
-		return promise.future();
-	}
-
-
 
 
 

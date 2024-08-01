@@ -333,6 +333,9 @@ function fetchUsername() {
         }
     });
 }
+/**
+ * GET /role
+ */
 function fetchRole() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -361,6 +364,18 @@ function renderGoToAdminPage(role) {
         goToAdminPageItem.classList.add("d-none");
     }
 }
+function redirectToAdminPage() {
+    document.querySelector("#go-to-admin-page").addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/protected/admin.html");
+            window.location.href = res.url;
+        }
+        catch (error) {
+            console.error("Error redirecting to Admin-Page");
+        }
+    }));
+}
+redirectToAdminPage();
 /**
  * Funktion zum Rendern des Benutzernamens im DOM
  * @param username Der Benutzername

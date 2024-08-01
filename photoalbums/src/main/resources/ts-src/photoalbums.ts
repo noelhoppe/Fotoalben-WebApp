@@ -376,6 +376,9 @@ async function fetchUsername() : Promise<void> {
   }
 }
 
+/**
+ * GET /role
+ */
 async function fetchRole()  {
   try {
     const res : Response = await fetch("http://localhost:8080/role", {
@@ -394,13 +397,28 @@ async function fetchRole()  {
  * @param role Rolle des Benutzers
  */
 function renderGoToAdminPage(role : string) : void {
-  const goToAdminPageItem = document.querySelector("#go-to-admin-page") as HTMLUListElement;
+  const goToAdminPageItem = document.querySelector("#go-to-admin-page") as HTMLButtonElement;
   if (role == "ADMIN") {
     goToAdminPageItem.classList.remove("d-none");
   } else {
     goToAdminPageItem.classList.add("d-none");
   }
 }
+
+
+function redirectToAdminPage() {
+  (document.querySelector("#go-to-admin-page") as HTMLButtonElement).addEventListener("click", async() => {
+    try {
+      const res = await fetch("http://localhost:8080/protected/admin.html");
+
+      window.location.href = res.url;
+
+    } catch(error) {
+      console.error("Error redirecting to Admin-Page")
+    }
+  })
+}
+redirectToAdminPage();
 
 /**
  * Funktion zum Rendern des Benutzernamens im DOM
@@ -493,6 +511,8 @@ function renderPhotos(photo : Photo) : void {
   // Bild-Container in den Hauptcontainer einfügen
   mainContainer.appendChild(colDiv);
 }
+
+
 
 
 /**

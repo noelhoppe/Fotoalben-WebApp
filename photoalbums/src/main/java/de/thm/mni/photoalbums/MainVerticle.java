@@ -6,7 +6,6 @@ import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.*;
-import io.vertx.core.file.FileSystem;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerResponse;
@@ -212,13 +211,13 @@ public class MainVerticle extends AbstractVerticle {
     router.get("/img/:photoID")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
-             ctx.data().put("photoID", ctx.pathParam("photoID").substring(0, ctx.pathParam("photoID").length() - 4));
+             ctx.data().put("photoID", ctx.pathParam("photoID").substring(0, ctx.pathParam("photoID").length() - 4)); // "1.jpg" => "1"
              ctx.next();
            })
            .handler(photoHandler::validatePhotoInputReq)
-           .handler(photoHandler::photoExits)
+           .handler(photoHandler::photoExists)
            .handler(photoHandler::photoIsUser)
-           .handler(photoHandler::servePhotos);
+           .handler(photoHandler::servePhotos); // "1" => "1.jpg"
 
     router.delete("/tag")
            .handler(authenticationHandler::isLoggedIn)
@@ -229,7 +228,7 @@ public class MainVerticle extends AbstractVerticle {
            })
            .handler(photoHandler::validatePhotoInputReq)
            .handler(photoHandler::validateTagInputReq)
-           .handler(photoHandler::photoExits)
+           .handler(photoHandler::photoExists)
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::deleteTag);
 
@@ -242,11 +241,22 @@ public class MainVerticle extends AbstractVerticle {
            })
            .handler(photoHandler::validatePhotoInputReq)
            .handler(photoHandler::validateTagInputReq)
-           .handler(photoHandler::photoExits)
+           .handler(photoHandler::photoExists)
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::addTagToPhoto);
 
-    router.patch( "/photoTitle").handler(authenticationHandler::isLoggedIn).handler(photoHandler::editPhotoTitle);
+    router.patch( "/photoTitle")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+             ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
+             ctx.data().put("photoTitle", ctx.body().asJsonObject().getString("photoTitle"));
+             ctx.next();
+           })
+           .handler(photoHandler::validatePhotoInputReq)
+           .handler(photoHandler::validatePhotoTitleReq)
+           .handler(photoHandler::photoExists)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::editPhotoTitle);
 
     router.post("/photos").handler(photoHandler::uploadPhoto);
 
