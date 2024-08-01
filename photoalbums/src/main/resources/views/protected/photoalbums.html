@@ -22,6 +22,7 @@
         <path d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5m0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0"/>
       </svg>
     </a>
+
     <!-- Mobile  navbar -->
     <button class="navbar-toggler" type="button"
             data-bs-toggle="collapse"
@@ -34,6 +35,13 @@
         <li class="nav-item d-flex align-items-center justify-content-center">
           <button id="logout-btn" class="btn btn-lg btn-primary">Logout</button>
         </li>
+
+        <li id="go-to-admin-page" class="d-flex justify-content-center my-auto d-none"> <!-- d-none, wenn der user kein admin ist -->
+          <button class="btn btn-secondary">
+            Zur Adminseite
+          </button>
+        </li>
+
         <li class="nav-item">
           <div class="d-flex flex-column gap-1">
             <div class="mx-auto">

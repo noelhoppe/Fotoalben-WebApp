@@ -173,7 +173,10 @@ public class MainVerticle extends AbstractVerticle {
            .handler(loginHandler::checkUsernamePasswordPair);
 
     router.get( "/username").handler(authenticationHandler::isLoggedIn).handler(ctx -> {
-      MainVerticle.response(ctx.response(), 200, new JsonObject().put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER)));
+      MainVerticle.response(ctx.response(), 200, new JsonObject()
+             .put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER))
+             .put("role", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ROLE))
+      );
     });
     // --- LOGIN ---
 

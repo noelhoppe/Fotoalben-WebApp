@@ -306,12 +306,27 @@ function fetchUsername() {
                 console.error("Error fetching username");
             }
             const data = yield res.json();
+            console.log(data);
             renderUsername(data.username);
+            renderGoToAdminPage(data.role);
         }
         catch (error) {
             console.error("Error fetching username", error);
         }
     });
+}
+/**
+ * Zeigt den Button "Zur Adminseite" nicht an, wenn der Nutzer kein Admin ist.
+ * @param role Rolle des Benutzers
+ */
+function renderGoToAdminPage(role) {
+    const goToAdminPageItem = document.querySelector("#go-to-admin-page");
+    if (role == "ADMIN") {
+        goToAdminPageItem.classList.remove("d-none");
+    }
+    else {
+        goToAdminPageItem.classList.add("d-none");
+    }
 }
 /**
  * Funktion zum Rendern des Benutzernamens im DOM
