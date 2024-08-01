@@ -410,14 +410,27 @@ public class PhotoHandler {
 
 public void uploadPhoto(RoutingContext ctx){
 
-
+    int testID = 1;
+    String testTitle = "testname"; //generiert duplikate --> FEHLER!!
     String photoTitle = ctx.request().getFormAttribute("title");
-    String photoDate = ctx.request().getFormAttribute("date");
+    String photoDate = ctx.request().getFormAttribute("taken");
+    System.out.println(photoTitle);
+    System.out.println(photoDate);
 
     if (photoTitle.trim().isEmpty()) {
       MainVerticle.response(ctx.response(), 400, new JsonObject()
         .put("message", "Der Titel darf nicht leer sein"));
     }
+
+    if (photoTitle.contains(" ")) {
+    MainVerticle.response(ctx.response(), 400, new JsonObject()
+      .put("message", "Der Titel darf keine Leerzeichen entahlten"));
+  }
+
+  if (photoTitle.length() >= 30) {
+    MainVerticle.response(ctx.response(), 400, new JsonObject()
+      .put("message", "Der Titel darf maximal 30 Zeichen lang sein!"));
+  }
 
     //TODO: Datum überprüfen, TAGS implementieren!!
 
@@ -434,19 +447,42 @@ public void uploadPhoto(RoutingContext ctx){
 
       if (!mimeType.equals("image/png") && !mimeType.equals("image/jpeg")) {
             //TODO: FILE vertx.fileSystem().delete löschen implementieren
+            //TODO: Lässt FileSystem ungültige Dateinamen zu oder gibt es ein Error -> wenn nicht einzeln als Error implementieren
         MainVerticle.response(ctx.response(), 400, new JsonObject()
           .put("message", "Die hochgeladene Datei muss eine Bilddatei des Typs JPEG oder PNG sein"));
 
       }
 
+      // --DATABASE--
+
+      jdbcPool.preparedQuery("""
+                       			INSERT INTO photos
+                        		     (Users_ID, title, taken, url)
+                        		     VALUES (?, ?, ?, ?)
+                        			"""
+      ).execute(Tuple.of(testID, photoTitle, photoDate, testTitle), res -> {
+        if (res.succeeded()) {
+          //1. rename File
+          //2. edit database
+          System.out.println("Filename" + file.fileName());
+          MainVerticle.response(ctx.response(), 201, new JsonObject()
+            .put("message", "Foto wurde erfolgreich hochgeladen!"));
+        } else {
+          System.err.println("Error: " + res.cause().getMessage());
+          MainVerticle.response(ctx.response(), 500, new JsonObject()
+            .put("message", "Fehler beim Upload des Fotos")
+          );
+        }
+      });
 
 
-      System.out.println("Filename" + file.fileName());
+
+
+
     }
-  MainVerticle.response(ctx.response(), 201, new JsonObject()
-    .put("message", "Das Foto wurde hochgeladen!"));
     //TODO: DATENBANK implementierung!
     //TODO: Bild wird aktuell mit random NAME und ohne Dateiendung abgelegt
+  // TODO: iat nutzer angemeldet???
 }
 
 }
