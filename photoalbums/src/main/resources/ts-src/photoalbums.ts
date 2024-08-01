@@ -514,7 +514,6 @@ function renderPhotos(photo : Photo) : void {
 
 
 
-
 /**
  * PATCH /photoDate
  * {
@@ -522,9 +521,43 @@ function renderPhotos(photo : Photo) : void {
  *     "date" : ___
  * }
  */
-async function handleEditPhotoDate() {
+async function handleEditPhotoDate(date : string) {
+  const photoID = (document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string;
+  try {
+    const reqData = {
+      photoID : photoID,
+      date : date
+    }
 
+    const res = await fetch("http://localhost:8080/photoDate", {
+      method : "PATCH",
+      credentials : "include",
+      body : JSON.stringify(reqData)
+    })
+
+    const data   : { message : string, newDate ?: string } = await res.json();
+
+    if (res.status == 200) {
+      const imgElement = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
+      imgElement.dataset.date = data.newDate;
+      updateModalUI(extractPhotoData(imgElement));
+      renderErrorEditPhoto(true);
+    } else {
+      renderErrorEditPhoto(false, data.message);
+    }
+  } catch (error) {
+    console.error("Error PATCH /photoDate")
+  }
 }
+
+function editDateListener() {
+  document.addEventListener("DOMContentLoaded", () => {
+    (document.querySelector("#submit-edit-date") as HTMLButtonElement).addEventListener("click", async() => {
+      await handleEditPhotoDate((document.querySelector("#edit-date") as HTMLInputElement).value);
+    })
+  })
+}
+editDateListener();
 
 
 
@@ -554,6 +587,7 @@ addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
 const addPhotoDate = document.getElementById("addPhotoDate") as HTMLInputElement;
 let today = new Date().toISOString().split("T")[0];
 addPhotoDate.setAttribute("max", today);
+
 
 const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
 addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {

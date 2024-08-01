@@ -211,7 +211,9 @@ public class MainVerticle extends AbstractVerticle {
     router.get("/img/:photoID")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
-             ctx.data().put("photoID", ctx.pathParam("photoID").substring(0, ctx.pathParam("photoID").length() - 4)); // "1.jpg" => "1"
+             String fileExtension = ctx.pathParam("photoID").substring(ctx.pathParam("photoID").lastIndexOf('.'));
+             ctx.data().put("fileExtension", fileExtension);
+             ctx.data().put("photoID", ctx.pathParam("photoID").substring(0, ctx.pathParam("photoID").lastIndexOf('.'))); // "1.jpg" => "1"
              ctx.next();
            })
            .handler(photoHandler::validatePhotoInputReq)
@@ -258,9 +260,23 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::editPhotoTitle);
 
+    router.patch("/photoDate")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+             ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
+             ctx.data().put("photoDate", ctx.body().asJsonObject().getString("date"));
+             ctx.next();
+           })
+           .handler(photoHandler::validatePhotoInputReq)
+           .handler(photoHandler::photoExists)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::handleEditPhotoDate);
+
+
     router.post("/photos").handler(photoHandler::uploadPhoto);
 
-    // router.route(HttpMethod.PATCH, "/photoData").handler(authenticationHandler::authenticate).handler(photoHandler::handleEditPhotoDate)
+
+
 
 
     return Future.succeededFuture(router);

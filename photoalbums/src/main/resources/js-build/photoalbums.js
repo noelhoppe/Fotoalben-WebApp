@@ -463,10 +463,43 @@ function renderPhotos(photo) {
  *     "date" : ___
  * }
  */
-function handleEditPhotoDate() {
+function handleEditPhotoDate(date) {
     return __awaiter(this, void 0, void 0, function* () {
+        const photoID = document.querySelector("#modal-img").dataset.id;
+        try {
+            const reqData = {
+                photoID: photoID,
+                date: date
+            };
+            const res = yield fetch("http://localhost:8080/photoDate", {
+                method: "PATCH",
+                credentials: "include",
+                body: JSON.stringify(reqData)
+            });
+            const data = yield res.json();
+            if (res.status == 200) {
+                const imgElement = document.querySelector(`img[data-id='${photoID}']`);
+                imgElement.dataset.date = data.newDate;
+                updateModalUI(extractPhotoData(imgElement));
+                renderErrorEditPhoto(true);
+            }
+            else {
+                renderErrorEditPhoto(false, data.message);
+            }
+        }
+        catch (error) {
+            console.error("Error PATCH /photoDate");
+        }
     });
 }
+function editDateListener() {
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelector("#submit-edit-date").addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+            yield handleEditPhotoDate(document.querySelector("#edit-date").value);
+        }));
+    });
+}
+editDateListener();
 const addAlbumSubmit = document.getElementById("addAlbumSubmit");
 addAlbumSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void 0, function* () {
     const albumName = document.getElementById("addAlbumName").value;

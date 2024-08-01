@@ -1,8 +1,10 @@
 package de.thm.mni.photoalbums.handler;
 
+import com.sun.tools.javac.Main;
 import de.thm.mni.photoalbums.MainVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -70,7 +72,7 @@ public class PhotoHandler {
 	 */
 	public void servePhotos(RoutingContext ctx) {
 		System.out.println("called servePhotos in PhotoHandler.java");
-		ctx.response().sendFile("img/" + ctx.data().get("photoID") + ".jpg");
+		ctx.response().sendFile("img/" + ctx.data().get("photoID") + ctx.data().get("fileExtension"));
 	}
 
 
@@ -301,6 +303,8 @@ public class PhotoHandler {
 	 * @param ctx Routing Context
 	 */
 	public void validatePhotoTitleReq(RoutingContext ctx) {
+		System.out.println("called validatePhotoTitleReq in PhotoHandler.java");
+
 		String photoTitle = ctx.data().get("photoTitle").toString();
 
 		if (photoTitle.trim().isEmpty()) {
@@ -318,6 +322,8 @@ public class PhotoHandler {
 	 * @param ctx
 	 */
 	public void  editPhotoTitle(RoutingContext ctx) {
+		System.out.println("called editPhotoTitle in PhotoHandler.java");
+
 		String photoTitle = ctx.data().get("photoTitle").toString();
 
 		jdbcPool.preparedQuery("UPDATE Photos SET title = ? WHERE Photos.ID = ?")
@@ -337,35 +343,35 @@ public class PhotoHandler {
 
 	/**
 	 * Handler für PATCH /photoDate <br>
-	 * Gebe Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Nutzer gehört, der die Route aufruft. <br>
-	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht in der Datenbank existiert. <br>
 	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn date nicht korrekt nach folgenden Schema formatiert ist 'YYYY-MM-DD' <br>
 	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Feld photoID kein gültiger Wert ist. <br>
 	 * @param ctx Routing Context
 	 */
 	public void handleEditPhotoDate(RoutingContext ctx) {
-		Integer photoID;
-		try {
-			photoID = ctx.body().asJsonObject().getInteger("photoID");
-		} catch(Exception e) {
-			MainVerticle.response(ctx.response(), 404, new JsonObject()
-				.put("message", "Ungültiges Feld photoID: Die photoID muss eine gültige Zahl vom Typ number sein")
-			);
-			return;
-		}
+		System.out.println("called handleEditPhotoDate in PhotoHandler.java");
 
 		String date = ctx.body().asJsonObject().getString("date");
+
 		if (!isValidDate(date)) {
 			MainVerticle.response(ctx.response(), 404, new JsonObject()
 				.put("message", "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen")
 			);
+			return;
 		}
 
-
-
-
-
-
+		jdbcPool.preparedQuery("UPDATE Photos SET taken = ? WHERE Photos.ID = ?")
+			.execute(Tuple.of(date, ctx.data().get("photoID")), res -> {
+				if (res.succeeded()) {
+					MainVerticle.response(ctx.response(), 200, new JsonObject()
+						.put("message", "Das Datum des Fotos wurde erfolgreich geändert")
+						.put("newDate", date)
+					);
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Ein interner Serverfehler ist aufgetreten")
+					);
+				}
+			});
 	}
 
 	/**
@@ -374,9 +380,11 @@ public class PhotoHandler {
 	 * @return true, wenn das Datum im Format YYYY-MMM-DD vorliegt und in der Vergangenheit liegt; false sonst
 	 */
 	private boolean isValidDate(String date) {
+		System.out.println("called isValidDate in PhotoHandler.java");
+
 		try {
 			LocalDate parsedDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
-			return parsedDate.isBefore(LocalDate.now());
+			return !parsedDate.isAfter(LocalDate.now());
 		} catch(DateTimeParseException e) {
 			return false;
 		}
