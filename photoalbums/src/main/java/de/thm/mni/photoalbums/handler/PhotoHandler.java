@@ -392,8 +392,6 @@ public void uploadPhoto(RoutingContext ctx){
     int currentUserID = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
     String photoTitle = ctx.request().getFormAttribute("title");
     String photoDate = ctx.request().getFormAttribute("taken");
-    System.out.println(photoTitle);
-    System.out.println(photoDate);
 
     if (photoTitle.trim().isEmpty()) {
       MainVerticle.response(ctx.response(), 400, new JsonObject()
