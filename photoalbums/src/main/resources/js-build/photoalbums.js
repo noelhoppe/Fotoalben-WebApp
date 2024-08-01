@@ -14,17 +14,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 function logout() {
     const logoutBtn = document.querySelector("#logout-btn");
     logoutBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
-        const res = yield fetch("http://localhost:8080/logout", {
-            method: "POST",
-            redirect: "follow",
-            credentials: "include"
-        });
-        if (res.redirected) {
-            window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
+        try {
+            const res = yield fetch("http://localhost:8080/logout", {
+                method: "POST",
+                redirect: "follow",
+                credentials: "include"
+            });
+            if (res.redirected) {
+                window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
+            }
+            else {
+                const data = yield res.json();
+                console.log(data.message);
+            }
         }
-        else {
-            const data = yield res.json();
-            console.log(data);
+        catch (error) {
+            console.error("Error POST /logout", error);
         }
     }));
 }
@@ -123,7 +128,6 @@ function attachAddTagListener() {
     document.addEventListener("DOMContentLoaded", () => {
         const submitAddTagInput = document.querySelector("#submitAddTagInput");
         submitAddTagInput.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
-            // console.log("called1");
             const tagName = document.querySelector("#addTagInput").value;
             const photoID = Number(document.querySelector("#modal-img").getAttribute("data-id"));
             yield handleTagAdd(photoID, tagName);
@@ -148,33 +152,37 @@ function handleTagAdd(photoID, tagName) {
             photoID: photoID,
             tag: tagName
         };
-        console.log(reqData);
-        const res = yield fetch("http://localhost:8080/tag", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(reqData)
-        });
-        if (res.status == 201) {
-            const data = yield res.json();
-            console.log(data.message);
-            document.querySelector("#error-edit-photo-container").classList.add("d-none");
-            const img = document.querySelector(`img[data-id='${photoID}']`);
-            let tags = img.dataset.tags;
-            if (tags.length == 0) {
-                tags = tagName;
+        try {
+            const res = yield fetch("http://localhost:8080/tag", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(reqData)
+            });
+            if (res.status == 201) {
+                const data = yield res.json();
+                console.log(data.message);
+                document.querySelector("#error-edit-photo-container").classList.add("d-none");
+                const img = document.querySelector(`img[data-id='${photoID}']`);
+                let tags = img.dataset.tags;
+                if (tags.length == 0) {
+                    tags = tagName;
+                }
+                else {
+                    tags = tags + `, ${tagName}`;
+                }
+                img.dataset.tags = tags;
+                updateModalUI(extractPhotoData(img));
             }
             else {
-                tags = tags + `, ${tagName}`;
+                const data = yield res.json();
+                renderErrorEditPhoto(false, data.message);
             }
-            img.dataset.tags = tags;
-            updateModalUI(extractPhotoData(img));
         }
-        else {
-            const data = yield res.json();
-            renderErrorEditPhoto(false, data.message);
+        catch (error) {
+            console.error("Error POST /tag", error);
         }
     });
 }
@@ -232,30 +240,34 @@ function handleTagDelete(delBtn, tag, colDiv) {
             photoID: imgId,
             tag: tag
         };
-        console.log(reqData);
-        const res = yield fetch("http://localhost:8080/tag", {
-            method: "DELETE",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(reqData)
-        });
-        if (res.status == 204) {
-            // Remove Element from DOM
-            colDiv.remove();
-            // Aktualisiere die Tags des Bildes
-            const imgElement = document.querySelector(`img[data-id='${imgId}']`);
-            if (imgElement) {
-                const currentTags = imgElement.getAttribute("data-tags");
-                if (currentTags) {
-                    const updatedTags = currentTags.split(", ").filter(t => t != tag).join(", ");
-                    imgElement.setAttribute("data-tags", updatedTags);
+        try {
+            const res = yield fetch("http://localhost:8080/tag", {
+                method: "DELETE",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(reqData)
+            });
+            if (res.status == 204) {
+                // Remove Element from DOM
+                colDiv.remove();
+                // Aktualisiere die Tags des Bildes
+                const imgElement = document.querySelector(`img[data-id='${imgId}']`);
+                if (imgElement) {
+                    const currentTags = imgElement.getAttribute("data-tags");
+                    if (currentTags) {
+                        const updatedTags = currentTags.split(", ").filter(t => t != tag).join(", ");
+                        imgElement.setAttribute("data-tags", updatedTags);
+                    }
                 }
             }
+            else {
+                console.log(yield res.json());
+            }
         }
-        else {
-            console.log(yield res.json());
+        catch (error) {
+            console.error("Error DELETE /tag", error);
         }
     });
 }
@@ -317,7 +329,7 @@ function fetchUsername() {
             renderUsername(data.username);
         }
         catch (error) {
-            console.error("Error fetching username", error);
+            console.error("Error GET /username", error);
         }
     });
 }
@@ -332,7 +344,7 @@ function fetchRole() {
             renderGoToAdminPage(data.role);
         }
         catch (error) {
-            console.error("Error fetching user  role" + error);
+            console.error("Error GET /role" + error);
         }
     });
 }
@@ -375,7 +387,7 @@ function fetchPhotos() {
             data.photos.forEach(photo => renderPhotos(photo));
         }
         catch (error) {
-            console.error("Error fetching photos", error);
+            console.error("Error GET /photos", error);
         }
     });
 }

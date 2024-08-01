@@ -14,17 +14,22 @@ interface Photo {
 function logout() {
   const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
   logoutBtn.addEventListener("click", async () => {
-    const res : Response = await fetch("http://localhost:8080/logout", {
-      method : "POST",
-      redirect : "follow",
-      credentials : "include"
-    });
+    try {
+      const res : Response = await fetch("http://localhost:8080/logout", {
+        method : "POST",
+        redirect : "follow",
+        credentials : "include"
+      });
 
-    if (res.redirected) {
-      window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
-    } else {
-      const data : string = await res.json();
-      console.log(data);
+      if (res.redirected) {
+        window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
+      } else {
+        const data : { message : string } = await res.json();
+        console.log(data.message);
+      }
+
+    } catch(error) {
+      console.error("Error POST /logout", error);
     }
   });
 }
@@ -141,7 +146,6 @@ function attachAddTagListener() {
   document.addEventListener("DOMContentLoaded", () => {
     const submitAddTagInput = document.querySelector("#submitAddTagInput") as HTMLButtonElement;
     submitAddTagInput.addEventListener("click", async () => {
-      // console.log("called1");
       const tagName = (document.querySelector("#addTagInput") as HTMLInputElement).value;
       const photoID = Number((document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id") as string);
       await handleTagAdd(photoID, tagName);
@@ -175,36 +179,39 @@ async function handleTagAdd(photoID: number, tagName: string) {
     photoID: photoID,
     tag: tagName
   };
-  console.log(reqData);
+  try {
+    const res: Response = await fetch("http://localhost:8080/tag", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(reqData)
+    });
 
-  const res: Response = await fetch("http://localhost:8080/tag", {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(reqData)
-  });
+    if (res.status == 201) {
 
-  if (res.status == 201) {
+      const data : ServerRes = await res.json();
+      console.log(data.message);
 
-    const data : ServerRes = await res.json();
-    console.log(data.message);
-
-    (document.querySelector("#error-edit-photo-container")  as HTMLDivElement).classList.add("d-none");
-    const img = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
-    let tags = img.dataset.tags as string;
-    if (tags.length == 0) {
-      tags = tagName;
+      (document.querySelector("#error-edit-photo-container")  as HTMLDivElement).classList.add("d-none");
+      const img = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
+      let tags = img.dataset.tags as string;
+      if (tags.length == 0) {
+        tags = tagName;
+      } else {
+        tags = tags + `, ${tagName}`;
+      }
+      img.dataset.tags = tags;
+      updateModalUI(extractPhotoData(img));
     } else {
-      tags = tags + `, ${tagName}`;
+      const data  = await res.json() as ServerRes;
+      renderErrorEditPhoto(false, data.message);
     }
-    img.dataset.tags = tags;
-    updateModalUI(extractPhotoData(img));
-  } else {
-    const data  = await res.json() as ServerRes;
-    renderErrorEditPhoto(false, data.message);
+  } catch(error) {
+    console.error("Error POST /tag", error);
   }
+
 }
 
 
@@ -266,32 +273,34 @@ async function handleTagDelete(delBtn: HTMLButtonElement, tag: string, colDiv: H
     tag: tag
   };
 
-  console.log(reqData)
+  try {
+    const res = await fetch("http://localhost:8080/tag", {
+      method: "DELETE",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(reqData)
+    });
 
-  const res = await fetch("http://localhost:8080/tag", {
-    method: "DELETE",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(reqData)
-  });
+    if (res.status == 204) {
+      // Remove Element from DOM
+      colDiv.remove();
 
-  if (res.status == 204) {
-    // Remove Element from DOM
-    colDiv.remove();
-
-    // Aktualisiere die Tags des Bildes
-    const imgElement = document.querySelector(`img[data-id='${imgId}']`) as HTMLImageElement;
-    if (imgElement) {
-      const currentTags = imgElement.getAttribute("data-tags");
-      if (currentTags) {
-        const updatedTags = currentTags.split(", ").filter(t => t != tag).join(", ");
-        imgElement.setAttribute("data-tags", updatedTags);
+      // Aktualisiere die Tags des Bildes
+      const imgElement = document.querySelector(`img[data-id='${imgId}']`) as HTMLImageElement;
+      if (imgElement) {
+        const currentTags = imgElement.getAttribute("data-tags");
+        if (currentTags) {
+          const updatedTags = currentTags.split(", ").filter(t => t != tag).join(", ");
+          imgElement.setAttribute("data-tags", updatedTags);
+        }
       }
+    } else {
+      console.log(await res.json())
     }
-  } else {
-    console.log(await res.json())
+  } catch(error) {
+    console.error("Error DELETE /tag", error);
   }
 }
 
@@ -363,7 +372,7 @@ async function fetchUsername() : Promise<void> {
     renderUsername(data.username);
 
   } catch (error) {
-    console.error("Error fetching username", error);
+    console.error("Error GET /username", error);
   }
 }
 
@@ -376,7 +385,7 @@ async function fetchRole()  {
     const data : { role : string } = await res.json()
     renderGoToAdminPage(data.role);
   } catch (error) {
-    console.error("Error fetching user  role" + error);
+    console.error("Error GET /role" + error);
   }
 }
 
@@ -422,7 +431,7 @@ async function fetchPhotos() : Promise<void> {
     data.photos.forEach(photo  => renderPhotos(photo));
 
   } catch (error) {
-    console.error("Error fetching photos", error);
+    console.error("Error GET /photos", error);
   }
 }
 
