@@ -124,7 +124,7 @@ public class PhotoHandler {
 	}
 
 	/**
-	 * Prüft, ob die photoID eine gültige Zahl ist<br>
+	 * Prüft, ob die photoID das folgende Format hat: int.jpg<br>
 	 * Wenn ja, rufe den nächsten Handler auf.<br>
 	 * Wenn nein, beende die http-Anfrage mit dem Statuscode 400 und einer entsprechenden Fehlermeldung.
 	 * @param ctx Routing Context
@@ -152,6 +152,12 @@ public class PhotoHandler {
 		}
 	}
 
+	/**
+	 * Prüft, ob das Feld tag leer ist, Leerzeichen enthält oder null ist. <br>
+	 * Wenn ja, gebe Statuscode 400 mit entsprechender Fehlermeldung zurück.<br>
+	 * Wenn nein, rufe den nächsten Handler auf.<br>
+	 * @param ctx Routing Context
+	 */
 	public void validateTagInputReq(RoutingContext ctx) {
 		System.out.println("called validateTagInputReq in PhotoHandler.java");
 		try {
