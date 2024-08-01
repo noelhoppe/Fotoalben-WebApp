@@ -87,6 +87,7 @@ public class PhotoHandler {
 	 */
 	public void photoExits(RoutingContext ctx) {
 		String photoID = (String) ctx.data().get("photoID");
+		System.out.println(photoID);
 		jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM Photos WHERE ID = ?")
 			.execute(Tuple.of(photoID), res -> {
 				if (res.succeeded() && res.result().iterator().next().getInteger("count") == 1) {

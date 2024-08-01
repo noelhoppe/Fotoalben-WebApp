@@ -115,38 +115,52 @@ public class MainVerticle extends AbstractVerticle {
     router.route(HttpMethod.POST, "/photos").handler(BodyHandler.create().setUploadsDirectory("img")); //BodyHandler für Photoupload
     router.route().handler(BodyHandler.create());
 
-    // Request logging
+    // --- REQUEST LOGGING ---
     router.route().handler(LoggerHandler.create());
+    // --- REQUEST LOGGING ---
 
-    // Session-Handler, um sich zu merken, ob ein Nutzer eingeloggt ist
+
+
+    // --- SESSION HANDLER ---
     router.route().handler(SessionHandler.create(
               LocalSessionStore.create(vertx)
     ));
+    //  --- SESSION HANDLER ---
 
-    // AuthorizationHandler authHandler = new AuthenticationHandler();
-    // router.route("/protected/admin.html").route(authHandler::authorize).route(handler)
 
-    // Static Handler, der sicherstellt, dass protected *.html Dateien nur für angemeldete Benutzer aufgerufen werden können
+
     AuthenticationHandler authenticationHandler = new AuthenticationHandler();
 
-    router.route("/protected/*").handler(authenticationHandler::isLoggedIn).handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views/protected")
-              .setCachingEnabled(false) // während Entwicklungsprozess
+
+
+    // --- STATIC HANDLER ---
+    // admin.html kann nur vom admin aufgerufen werden
+    router.get("/protected/admin.html")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(authenticationHandler::isAdmin)
+           .handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views/protected")
+                  .setCachingEnabled(false)
+           );
+
+    // photoalbums.html kann nur von eingeloggten Benutzern aufgerufen werden
+    router.get("/protected/photoalbums.html")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views/protected")
+                  .setCachingEnabled(false)
     );
 
     // Static Handler, um login.html OHNE AUTHENTIFIZIERUNG auszuliefern
-    router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views")
-              .setCachingEnabled(false)
-              .setIndexPage("login.html")
+    router.get()
+           .handler(StaticHandler.create(FileSystemAccess.RELATIVE, "views")
+                  .setCachingEnabled(false)
+                  .setIndexPage("login.html")
     );
 
-    // Static Handler, um login.js OHNE AUTHENTIFIZIERUNG auszuliefern
-    router.route().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "js-build")
-              .setCachingEnabled(false)
+    // Static Handler, um *.js OHNE AUTHENTIFIZIERUNG auszuliefern
+    router.get().handler(StaticHandler.create(FileSystemAccess.RELATIVE, "js-build")
+           .setCachingEnabled(false)
     );
-
-
-
-
+    // --- STATIC HANDLER ---
 
 
 
@@ -178,6 +192,8 @@ public class MainVerticle extends AbstractVerticle {
       }
     });
     // --- LOGOUT ---
+
+
 
     // -- PHOTO HANDLER ---
     PhotoHandler photoHandler = new PhotoHandler(jdbcPool);
