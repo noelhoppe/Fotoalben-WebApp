@@ -3,6 +3,7 @@ package de.thm.mni.photoalbums.handler;
 import de.thm.mni.photoalbums.MainVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -18,8 +19,9 @@ import java.time.format.DateTimeParseException;
 
 public class PhotoHandler {
 	JDBCPool jdbcPool;
+  Vertx vertx;
 
-	public PhotoHandler(JDBCPool jdbcPool) {
+	public PhotoHandler(JDBCPool jdbcPool, Vertx vertx) {
 		this.jdbcPool = jdbcPool;
 	}
 

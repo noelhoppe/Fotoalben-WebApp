@@ -203,7 +203,7 @@ public class MainVerticle extends AbstractVerticle {
 
 
     // -- PHOTO HANDLER ---
-    PhotoHandler photoHandler = new PhotoHandler(jdbcPool);
+    PhotoHandler photoHandler = new PhotoHandler(jdbcPool, vertx);
     router.get("/photos")
            .handler(authenticationHandler::isLoggedIn)
            .handler(photoHandler::getAllPhotosFromUser);
