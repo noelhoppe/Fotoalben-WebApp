@@ -303,6 +303,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::validatePhotoInputReq)
            .handler(photoHandler::photoExists)
            .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::deleteAllTagsTagsFromPhoto)
            .handler(photoHandler::deletePhoto);
 
 

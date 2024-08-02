@@ -59,37 +59,38 @@
 <!-- NAVBAR ENDE -->
 
 <!-- SEARCH PHOTOS IN ALBUM, DROPDOWN ADD PHOTOS/ALBUMS, OFFCAN TOGGLE ALBUMS BEGINN -->
-<div class="row">
-  <!-- offcan toggle -->
-  <button class="btn col-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#albumOffcans" aria-controls="open album offcans for dealing with albums">
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-journal-album" viewBox="0 0 16 16">
-      <path d="M5.5 4a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5v-5a.5.5 0 0 0-.5-.5zm1 7a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1z"/>
-      <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
-      <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
-    </svg>
-  </button>
-
-  <!-- Dropdwon um Alben und Fotos hinzuzufügen -->
-  <div class="dropdown col-1 d-flex justify-content-center align-items-center">
-    <button class="btn btn-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
-        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+<div class="container-fluid">
+  <div class="row">
+    <!-- offcan toggle -->
+    <button class="btn col-6 order-2 col-lg-1 order-lg-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#albumOffcans" aria-controls="open album offcans for dealing with albums">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-journal-album" viewBox="0 0 16 16">
+        <path d="M5.5 4a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5v-5a.5.5 0 0 0-.5-.5zm1 7a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1z"/>
+        <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
+        <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
       </svg>
     </button>
-    <ul class="dropdown-menu">
-      <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addPhotoModal">Foto in ausgewähltes Album hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
-      <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addAlbumModal">Album hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
-    </ul>
+
+    <!-- Dropdwon um Alben und Fotos hinzuzufügen -->
+    <div class="dropdown col-6 order-3 col-lg-1 order-lg-2 d-flex justify-content-center align-items-center">
+      <button class="btn btn-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+        </svg>
+      </button>
+      <ul class="dropdown-menu mt-3">
+        <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addPhotoModal">Foto in ausgewähltes Album hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
+        <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addAlbumModal">Album hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
+      </ul>
+    </div>
+
+    <!-- Search for photos in the specified album -->
+    <form id="searchPhotos" class="d-flex col-12 order-1 col-lg-10 order-lg-3" role="search">
+      <input id="searchPhotosQuery" type="search" class="form-control me-2" placeholder="Search photos in album" aria-label="Search in this album"> <!-- TODO: Server muss Einagbe verarbeiten -->
+      <button class="btn btn-outline-success" type="submit">Search</button>
+    </form>
   </div>
-
-  <!-- Search for photos in the specified album -->
-  <form id="searchPhotos" class="d-flex col-10" role="search">
-    <input id="searchPhotosQuery" type="search" class="form-control me-2" placeholder="Search photos in album" aria-label="Search in this album"> <!-- TODO: Server muss Einagbe verarbeiten -->
-    <button class="btn btn-outline-success" type="submit">Search</button>
-  </form>
-</div>
-<!-- SEARCH PHOTOS IN ALBUM, DROPDOWN ADD PHOTOS/ALBUMS, OFFCAN TOGGLE ALBUMS ENDE -->
-
+  <!-- SEARCH PHOTOS IN ALBUM, DROPDOWN ADD PHOTOS/ALBUMS, OFFCAN TOGGLE ALBUMS ENDE -->
+  </div>
 <!--MODALFENSTER ADD PHOTO -->
 <div class="modal fade" id = "addPhotoModal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
   <div class ="modal-dialog modal-dialog-centered">

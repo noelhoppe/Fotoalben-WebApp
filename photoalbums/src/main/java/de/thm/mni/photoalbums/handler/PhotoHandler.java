@@ -247,6 +247,29 @@ public class PhotoHandler {
 	}
 
 	/**
+	 * Ruft den nächsten Handler auf, wenn alle Tags erfolgreich vom Foto entfernt wurden. <br>
+	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
+	 * @param ctx Routing Context
+	 */
+	public void deleteAllTagsTagsFromPhoto(RoutingContext ctx) {
+		System.out.println("called deleteTag in PhotoHandler.java");
+		Integer photoID = Integer.valueOf(ctx.data().get("photoID").toString());
+
+		jdbcPool.preparedQuery("DELETE FROM PhotosTags WHERE Photos_ID = ?")
+			.execute(Tuple.of(photoID), res -> {
+				if (res.succeeded()) {
+					ctx.next();
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Fehler beim Löschen der Tags des Fotos")
+					);
+				}
+			});
+	}
+
+
+
+	/**
 	 * Handler für POST /tag <br>
 	 * Gibt Statuscode 201 mit entsprechender Erfolgsmeldung zurück, wenn der Tag erfolgreich zum Foto hinzugefügt wurde.<br>
 	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag Leerzeichen enthält.<br>
