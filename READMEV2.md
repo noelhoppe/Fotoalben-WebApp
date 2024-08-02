@@ -489,3 +489,69 @@ http-Anfrage:
   "message" : "Fehler beim Löschen des Fotos"
 }
 ```
+
+> POST /photos   
+> Gibt Statuscode 201 zurück, wenn das Foto erfolgreich hochgeladen wurde.
+
+1. Statuscode 400, wenn dass Datum ungültig ist (in der Zukunft oder falsch formatiert).
+```JSON
+{
+  "message" : "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen",
+}
+```
+
+2. Statuscode 400, wenn die hochgeladene Datei keine JPEG oder PNG Datei ist.
+```JSON
+{
+  "message" : "Die hochgeladene Datei muss eine Bilddatei des Typs JPEG oder PNG sein",
+}
+```
+
+3. Statuscode 500, wenn beim speichern der Datei ein Fehler auftritt.
+```JSON
+{
+  "message" : "Fehler beim speichern des Fotos auf dem Server",
+}
+```
+
+3. Statuscode 500, wenn beim anlegen der Datei ein Fehler auftritt.
+```JSON
+{
+  "message" : "Fehler beim Upload des Fotos",
+}
+```
+
+4. Statuscode 400, wenn keine Bilddatei mitgesendet wurde.
+```JSON
+{
+  "message" : "Es wurde keine Bilddatei mitgesendet",
+}
+```
+
+5. Statuscode 400, wenn der Titel leer ist.
+```JSON
+{
+  "message" : "Der Titel darf nicht leer sein",
+}
+```
+
+6. Statuscode 400, wenn der Titel länger als 30 Zeichen ist.
+```JSON
+{
+  "message" : "Der Titel darf maximal 30 Zeichen lang sein",
+}
+```
+
+7. Statuscode 500, wenn die validierung des Titels fehlschlägt (ungültiger Header).
+```JSON
+{
+  "message" : "Fehler bei Überprüfung des Titels",
+}
+```
+
+8. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen",
+}
+```

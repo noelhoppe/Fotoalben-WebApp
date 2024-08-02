@@ -359,7 +359,6 @@ public class PhotoHandler {
     } else if (contentType.contains("multipart/form-data")) {
       photoTitle = ctx.request().getFormAttribute("title");
     } else {
-      System.out.println("called Error case");
       MainVerticle.response(ctx.response(), 500, new JsonObject()
         .put("message", "Fehler bei Überprüfung des Titels")
       );
@@ -515,7 +514,7 @@ public void uploadPhoto(RoutingContext ctx){
     String photoDate = ctx.request().getFormAttribute("taken");
 
   if (!isValidDate(photoDate)) {  //prüfe ob Datum gültig ist
-    MainVerticle.response(ctx.response(), 404, new JsonObject()
+    MainVerticle.response(ctx.response(), 400, new JsonObject()
       .put("message", "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen")
     );
   }
@@ -556,7 +555,7 @@ public void uploadPhoto(RoutingContext ctx){
             if (moveResult.failed()) {
               System.err.println(moveResult.cause().getMessage());
               MainVerticle.response(ctx.response(), 500, new JsonObject()
-                .put("message", "Fehler beim speichern der Datei!"));
+                .put("message", "Fehler beim speichern des Fotos auf dem Server!"));
 
 
             }
