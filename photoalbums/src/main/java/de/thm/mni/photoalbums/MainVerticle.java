@@ -258,7 +258,12 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::editPhotoTitle);
 
-    router.post("/photos").handler(photoHandler::uploadPhoto);
+    router.post("/photos")
+      .handler(authenticationHandler::isLoggedIn)
+      .handler(photoHandler::containsUploadedFile)
+      .handler(photoHandler::validatePhotoTitleReq)
+      .handler(photoHandler::uploadPhoto);
+
 
     // router.route(HttpMethod.PATCH, "/photoData").handler(authenticationHandler::authenticate).handler(photoHandler::handleEditPhotoDate)
 
