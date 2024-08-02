@@ -600,7 +600,7 @@ addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
   formData.append("taken", photoDate);
   formData.append("photo", photoData[0]);
 
-
+//TODO: um res einen try-catch Block machen falls verbindung fehlschlägt
   const res : Response = await fetch("http://localhost:8080/photos", {
     method: "POST",
     credentials : "include",
