@@ -367,24 +367,43 @@ public class PhotoHandler {
 	}
 
 	/**
+   * Für Daten, die als JSON vorliegen <br>
 	 * Prüft, ob der Fototitel nur aus Leerzeichen besteht, also leer ist. <br>
+   * Prüft ob der Fototitel länger als 30 Zeichen ist. <br>
 	 * Wenn ja, gebe Statuscode 400 mit entsprechender Fehlermeldung zurück. <br>
 	 * Wenn nein, gebe die Anfrage an den nächsten Handler weiter <br>
 	 * @param ctx Routing Context
 	 */
 	public void validatePhotoTitleReq(RoutingContext ctx) {
-		System.out.println("called validatePhotoTitleReq in PhotoHandler.java");
+		String contentType = ctx.request().getHeader("Content-Type"); //Wähle ob JSON bzw. text oder FormData vorliegt
+    String photoTitle;
+    System.out.println(contentType);
+    if (contentType.contains("application/json") || contentType.contains("text/plain")){
+      photoTitle = ctx.data().get("photoTitle").toString();
+    } else if (contentType.contains("multipart/form-data")) {
+      photoTitle = ctx.request().getFormAttribute("title");
+    } else {
+      System.out.println("called Error case");
+      MainVerticle.response(ctx.response(), 500, new JsonObject()
+        .put("message", "Fehler bei Überprüfung des Titels")
+      );
+      return;
+    }
 
-		String photoTitle = ctx.data().get("photoTitle").toString();
 
-		if (photoTitle.trim().isEmpty()) {
+    if (photoTitle.trim().isEmpty()) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Titel darf nicht leer sein")
 			);
-		} else {
+		} else if (photoTitle.length() > 30) {
+      MainVerticle.response(ctx.response(), 400, new JsonObject()
+        .put("message", "Der Titel darf maximal 30 Zeichen lang sein")
+      );
+    } else {
 			ctx.next();
 		}
 	}
+
 
 
 	/**
@@ -480,7 +499,26 @@ public class PhotoHandler {
 			});
 	}
 
+  /**
+   * Prüft ob eine Datei hochgeladen wurde <br>
+   * Wenn nein: gebe eine Fehlermeldung (400 Bad Request) aus
+   * @param ctx Routing Context
+   */
+  public void containsUploadedFile(RoutingContext ctx) {
+    if (ctx.fileUploads().isEmpty()){
+      MainVerticle.response(ctx.response(), 400, new JsonObject()
+        .put("message", "Es wurde keine Bilddatei mitgesendet"));
 
+    }else {
+      ctx.next();
+    }
+
+  }
+
+  private boolean isValidImage(FileUpload fileUpload) {
+    String mimeType = fileUpload.contentType();
+    return mimeType.equals("image/png") || mimeType.equals("image/jpeg");
+  }
 
 public void uploadPhoto(RoutingContext ctx){
 
@@ -488,41 +526,22 @@ public void uploadPhoto(RoutingContext ctx){
     String photoTitle = ctx.request().getFormAttribute("title");
     String photoDate = ctx.request().getFormAttribute("taken");
 
-    if (photoTitle.trim().isEmpty()) {
-      MainVerticle.response(ctx.response(), 400, new JsonObject()
-        .put("message", "Der Titel darf nicht leer sein"));
-      return;
-    }
-
-    if (photoTitle.contains(" ")) {
-    MainVerticle.response(ctx.response(), 400, new JsonObject()
-      .put("message", "Der Titel darf keine Leerzeichen entahlten"));
-    return;
+  if (!isValidDate(photoDate)) {
+    MainVerticle.response(ctx.response(), 404, new JsonObject()
+      .put("message", "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen")
+    );
   }
 
-  if (photoTitle.length() >= 30) {
-    MainVerticle.response(ctx.response(), 400, new JsonObject()
-      .put("message", "Der Titel darf maximal 30 Zeichen lang sein!"));
-    return;
-  }
+    //TODO: TAGS implementieren!!
 
-    //TODO: Datum überprüfen, TAGS implementieren!!
-
-
-    if (ctx.fileUploads().isEmpty()){
-      MainVerticle.response(ctx.response(), 400, new JsonObject()
-        .put("message", "Es wurde keine Bilddatei mitgesendet"));
-      return;
-    }
 
     for (FileUpload file : ctx.fileUploads()) {
       String fileNameOriginal = file.fileName();
       String fileNameUpload = file.uploadedFileName();
       String fileExtension = fileNameOriginal.substring(fileNameOriginal.lastIndexOf("."));
-      String mimeType = file.contentType();
 
 
-      if (!mimeType.equals("image/png") && !mimeType.equals("image/jpeg")) {
+      if (!isValidImage(file)) {
         vertx.fileSystem().delete(fileNameUpload, deleteResult -> {
           if (deleteResult.failed()) {
             System.err.println(deleteResult.cause().getMessage()); //gebe Fehlermeldung aus
@@ -586,7 +605,6 @@ public void uploadPhoto(RoutingContext ctx){
 
 
     }
-  // TODO: ist nutzer angemeldet???, Fehlerbehandlung auslagern
 }
 
 }
