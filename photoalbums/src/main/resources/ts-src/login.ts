@@ -1,7 +1,8 @@
 /**
  * Wechsele die Sichtbarkeit des Passwortes
  */
-function togglePasswordVisibility() {
+export default function togglePasswordVisibility() {
+    console.log("called");
     const checkbox = document.getElementById("togglePasswordVisibility") as HTMLInputElement;
     checkbox.addEventListener("change", () => {
         const inputField = document.getElementById("password") as HTMLInputElement;

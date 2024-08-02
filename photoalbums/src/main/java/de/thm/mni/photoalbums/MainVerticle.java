@@ -1,4 +1,5 @@
 package de.thm.mni.photoalbums;
+import de.thm.mni.photoalbums.handler.AdminHandler;
 import de.thm.mni.photoalbums.handler.AuthenticationHandler;
 import de.thm.mni.photoalbums.handler.LoginHandler;
 import de.thm.mni.photoalbums.handler.PhotoHandler;
@@ -303,6 +304,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::validatePhotoInputReq)
            .handler(photoHandler::photoExists)
            .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::deleteAllTagsTagsFromPhoto)
            .handler(photoHandler::deletePhoto);
 
 
@@ -314,8 +316,15 @@ public class MainVerticle extends AbstractVerticle {
       .handler(photoHandler::uploadPhoto);
 
 
+    // --- ADMIN HANDLER ---
+    AdminHandler adminHandler = new AdminHandler(jdbcPool);
+
+    router.get("/users") // auch: /users?username=Benutzername
+       .handler(authenticationHandler::isLoggedIn)
+       .handler(adminHandler::getUsers);
 
 
+    // --- ADMIN HANDLER ---
 
 
     return Future.succeededFuture(router);
