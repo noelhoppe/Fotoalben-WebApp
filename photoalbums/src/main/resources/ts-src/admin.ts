@@ -17,7 +17,6 @@ initializePage();
 
 function searchUser() {
     const queryUsernameForm = document.querySelector("#queryUsername") as HTMLFormElement;
-    console.log(queryUsernameForm);
     queryUsernameForm.addEventListener("submit", async(evt : SubmitEvent) => {
         evt.preventDefault();
         const usernameInput = (document.querySelector("#queryUsernameInput") as HTMLInputElement).value;
