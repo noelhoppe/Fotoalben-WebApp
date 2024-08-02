@@ -14,6 +14,7 @@ import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import io.vertx.ext.web.FileUpload;
 
+import java.awt.desktop.SystemSleepEvent;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -228,6 +229,7 @@ public class PhotoHandler {
 								.put("message", "Tag erfolgreich zum Foto hinzugefügt")
 							);
 						} else {
+							System.out.println(dbRes.cause().getMessage());
 							MainVerticle.response(ctx.response(), 409, new JsonObject()
 								.put("message", "Der Tag existiert bereits")
 							);
@@ -237,12 +239,13 @@ public class PhotoHandler {
 				addTagToTableTags(tag).onComplete(ar -> {
 					if (ar.succeeded()) {
 						jdbcPool.preparedQuery("INSERT INTO  PhotosTags VALUES (?, ?)")
-							.execute(Tuple.of(photoID, res.result()), dbRes -> {
+							.execute(Tuple.of(photoID, ar.result()), dbRes -> {
 								if (dbRes.succeeded()) {
 									MainVerticle.response(ctx.response(), 201, new JsonObject()
 										.put("message", "Tag erfolgreich zum Foto hinzugefügt")
 									);
 								} else {
+									System.out.println(dbRes.cause().getMessage());
 									MainVerticle.response(ctx.response(), 409, new JsonObject()
 										.put("message", "Der Tag existiert bereits")
 									);
@@ -355,7 +358,7 @@ public class PhotoHandler {
 		String date = ctx.body().asJsonObject().getString("date");
 
 		if (!isValidDate(date)) {
-			MainVerticle.response(ctx.response(), 404, new JsonObject()
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen")
 			);
 			return;

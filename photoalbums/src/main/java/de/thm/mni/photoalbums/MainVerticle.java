@@ -276,6 +276,8 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::handleEditPhotoDate);
 
 
+
+
     router.post("/photos").handler(photoHandler::uploadPhoto);
 
 
