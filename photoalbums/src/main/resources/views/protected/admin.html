@@ -6,28 +6,30 @@
   <title>Admin-Page</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" defer></script>
+  <script src="/admin.js"  type="module" defer></script>
 </head>
 <body>
 
 <!-- TODO: Fehleranzeige im Frontend -->
 <header class="container my-4">
 
-  <div class="row">
+  <div class="row gy-3">
 
-    <div class="col text-start">
-      <button class="btn btn-secondary">
-        Zurück zur Fotogaliere
+    <div class="col-12 d-flex justify-content-center
+    col-lg justify-content-lg-start">
+      <button id="redirect-to-photoalbums" class="btn btn-secondary">
+        Zurück zur Fotogalerie
       </button>
     </div>
 
-    <div class="col">
-      <form class="d-flex" role="search">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+    <div class="col-9 col-lg-6">
+      <form id="queryUsername" class="d-flex" role="search">
+        <input id="queryUsernameInput" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
         <button class="btn btn-outline-success" type="submit">Search</button>
       </form>
     </div>
 
-    <div class="col text-end">
+    <div class="col-3 col-lg text-end">
       <button class="btn btn-dark" type="button" data-bs-toggle="modal" data-bs-target="#addModal" aria-expanded="false">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
           <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
@@ -45,18 +47,20 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form>
+          <form class="was-validated">
             <div class="mb-3">
               <label for="field-username" class="form-label">Benutzername</label>
               <input type="text" class="form-control" id="field-username" required>
+              <p class="invalid-feedback">Ein Nutzer muss einen Benutzernamen haben</p>
             </div>
             <div class="mb-3">
               <label for="field-password" class="form-label">Passwort</label>
-              <input type="text" class="form-control" id="field-password"> <!-- TODO: toggle password visibility -->
+              <input type="text" class="form-control" id="field-password" required>
+              <p class="invalid-feedback">Ein Nutzer muss ein Passwort haben</p>
             </div>
             <div class="mb-3">
               <label for="field-role" class="form-label">Rolle</label>
-              <select class="form-select" id="field-role">
+              <select class="form-select" id="field-role" required>
                 <option disabled>Admin</option>
                 <option value="User">User</option>
               </select>
@@ -78,24 +82,23 @@
     <thead>
       <tr>
         <th scope="col">Benutzername</th>
-        <th scope="col">Passwort</th>
         <th scope="col">Rolle</th>
         <th scope="col">Bearbeiten</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="tbody-display-users">
 
       <!-- *.ts inserts here -->
-      <tr>
+      <!--
+      <tr data-Users_ID = "1">
         <td>admin</td>
-        <td>root</td>
         <td>Admin</td>
         <td>
-          <div class="row">
-            <div class="col">
+          <div class="row gy-3">
+            <div class="col d-flex align-items-center">
               <button class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#editModal">Bearbeiten</button>
             </div>
-            <div class="col">
+            <div class="col d-flex align-items-center">
               <button class="btn btn-danger w-100">
                 Benutzer löschen
               </button>
@@ -103,6 +106,7 @@
           </div>
         </td>
       </tr>
+      -->
 
     </tbody>
   </table>
@@ -116,27 +120,32 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form>
+          <!-- Formular für den Benutzernamen -->
+          <form id="username-form">
             <div class="mb-3">
               <label for="username" class="form-label">Benutzername</label>
-              <input type="text" class="form-control" id="username" value="current username">
+              <input type="text" class="form-control" id="username" value="current username"> <!-- Aktuellen Benutzernamen als value einfügen -->
             </div>
+            <button type="submit" class="btn btn-primary">Benutzernamen speichern</button>
+          </form>
+
+          <!-- Formular für das Passwort -->
+          <form id="password-form">
             <div class="mb-3">
               <label for="password" class="form-label">Passwort</label>
-              <input type="text" class="form-control" id="password" value="current password"> <!-- TODO: toggle password visibility -->
+              <input type="password" class="form-control" id="password" value="current password"> <!-- Aktuelles Passwort einfügen -->
+              <section class="form-check">
+                <input class="form-check-input" type="checkbox" id="togglePasswordVisibility">
+                <label class="form-check-label" for="togglePasswordVisibility">
+                  Show password
+                </label>
+              </section>
             </div>
-            <div class="mb-3">
-              <label for="role" class="form-label">Rolle</label>
-              <select class="form-select" id="role">
-                <option disabled>Admin</option>
-                <option value="User">User</option>
-              </select>
-            </div>
+            <button type="submit" class="btn btn-primary">Passwort speichern</button>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-          <button type="button" class="btn btn-primary">Speichern</button>
         </div>
       </div>
     </div>
