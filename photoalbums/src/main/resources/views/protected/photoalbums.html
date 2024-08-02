@@ -83,8 +83,8 @@
   </div>
 
   <!-- Search for photos in the specified album -->
-  <form action="" class="d-flex col-10" role="search">
-    <input type="search" class="form-control me-2" placeholder="Search photos in album" aria-label="Search in this album"> <!-- TODO: Server muss Einagbe verarbeiten -->
+  <form id="searchPhotos" class="d-flex col-10" role="search">
+    <input id="searchPhotosQuery" type="search" class="form-control me-2" placeholder="Search photos in album" aria-label="Search in this album"> <!-- TODO: Server muss Einagbe verarbeiten -->
     <button class="btn btn-outline-success" type="submit">Search</button>
   </form>
 </div>
@@ -261,7 +261,7 @@
 
 
 
-<!-- MAIN CONTEMT SHOWS PHOTOS IN THE SPECIFIED ALBUM -->
+<!-- MAIN CONTENT SHOWS PHOTOS IN THE SPECIFIED ALBUM -->
 <!-- https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes -->
 <main id="main-photos-container" class="container-lg mt-4">
   <div class="row gy-4">
@@ -336,7 +336,7 @@
               <input id="edit-date" type="date" class="form-control me-2" aria-label="Aufnahmedatum ändern">
             </div>
             <div class="col">
-              <button class="btn btn-primary" type="submit">Speichern</button>
+              <button id="submit-edit-date" class="btn btn-primary" type="submit">Speichern</button>
             </div>
           </div>
 
@@ -359,7 +359,7 @@
 
       <!-- Foto löschen -->
       <div class="modal-footer">
-        <button type="button" class="btn btn-danger">Foto löschen</button>
+        <button id="del-photo-btn" type="button" class="btn btn-danger">Foto löschen</button>
       </div>
     </div>
   </div>

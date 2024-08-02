@@ -429,13 +429,24 @@ function renderUsername(username : string) {
   usernameField.textContent = username;
 }
 
+function addSearchPhotosListener() {
+  (document.querySelector("#searchPhotos") as HTMLFormElement).addEventListener("submit", async(evt : SubmitEvent) => {
+    evt.preventDefault()
+    const query = (document.querySelector("#searchPhotosQuery") as HTMLInputElement).value;
+    await fetchPhotos(query);
+  })
+}
+addSearchPhotosListener();
+
+
 /**
  * GET /photos <br>
  * Funktion zum Abrufen aller Fotos eines Benutzers vom Server
  */
-async function fetchPhotos() : Promise<void> {
+async function fetchPhotos(searchVal? : string) : Promise<void> {
   try {
-    const res : Response = await fetch("/photos", {
+    console.log(searchVal);
+    const res : Response = await fetch("/photos?" +(searchVal ? new URLSearchParams({photoTitle : searchVal, tag : searchVal}).toString() : ""), {
       method : "GET",
       credentials : "include"
     });
@@ -446,6 +457,7 @@ async function fetchPhotos() : Promise<void> {
 
     const data : { photos : Photo[] } = await res.json();
 
+    clearImages(document.querySelector("#main-photos-container .row") as HTMLDivElement);
     data.photos.forEach(photo  => renderPhotos(photo));
 
   } catch (error) {
@@ -464,6 +476,20 @@ function initializePage() : void {
   });
 }
 initializePage();
+
+/**
+ * Entfernt die Bilder aus dem DOM
+ * @param element Das entsprechende Element
+ */
+function clearImages(element : HTMLElement) {
+
+  if (!element) {
+    console.error("Container not found");
+    return;
+  }
+
+  element.innerHTML = "";
+}
 
 /**
  * Fügt ein Bild in den DOM ein.
@@ -514,7 +540,6 @@ function renderPhotos(photo : Photo) : void {
 
 
 
-
 /**
  * PATCH /photoDate
  * {
@@ -522,8 +547,67 @@ function renderPhotos(photo : Photo) : void {
  *     "date" : ___
  * }
  */
-async function handleEditPhotoDate() {
+async function handleEditPhotoDate(date : string) {
+  const photoID = (document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string;
+  try {
+    const reqData = {
+      photoID : photoID,
+      date : date
+    }
 
+    const res = await fetch("http://localhost:8080/photoDate", {
+      method : "PATCH",
+      credentials : "include",
+      body : JSON.stringify(reqData)
+    })
+
+    const data   : { message : string, newDate ?: string } = await res.json();
+
+    if (res.status == 200) {
+      const imgElement = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
+      imgElement.dataset.date = data.newDate;
+      updateModalUI(extractPhotoData(imgElement));
+      renderErrorEditPhoto(true);
+    } else {
+      renderErrorEditPhoto(false, data.message);
+    }
+  } catch (error) {
+    console.error("Error PATCH /photoDate")
+  }
+}
+
+function editDateListener() {
+  document.addEventListener("DOMContentLoaded", () => {
+    (document.querySelector("#submit-edit-date") as HTMLButtonElement).addEventListener("click", async() => {
+      await handleEditPhotoDate((document.querySelector("#edit-date") as HTMLInputElement).value);
+    })
+  })
+}
+editDateListener();
+
+
+function editDelPhotoBtnListener() {
+  (document.querySelector("#del-photo-btn") as HTMLButtonElement).addEventListener("click", async () => {
+    await handlePhotoDelete((document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string);
+  })
+}
+editDelPhotoBtnListener();
+
+async function handlePhotoDelete(photoID : string) {
+  const res = await fetch(`http://localhost:8080/img/${photoID}`, {
+    method : "DELETE",
+    credentials : "include"
+  })
+
+  if (res.status == 204) {
+    renderErrorEditPhoto(true);
+    await fetchPhotos()
+    window.location.reload();
+  } else {
+    const data : { message : string } = await res.json();
+    console.log(data.message);
+    renderErrorEditPhoto(false, data.message);
+  }
 }
 
 
@@ -554,6 +638,7 @@ addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
 const addPhotoDate = document.getElementById("addPhotoDate") as HTMLInputElement;
 let today = new Date().toISOString().split("T")[0];
 addPhotoDate.setAttribute("max", today);
+
 
 const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
 addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {

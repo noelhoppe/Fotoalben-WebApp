@@ -110,9 +110,12 @@ public class MainVerticle extends AbstractVerticle {
   Future<Router> configureRouter(Void unused) {
     Router router = Router.router(vertx);
 
-    // Body-Handler, um body des http-req zu parsen und an den RoutingContext weiterzugeben
-    router.route(HttpMethod.POST, "/photos").handler(BodyHandler.create().setUploadsDirectory("img")); //BodyHandler für Photoupload
+    // --- BODY HANDLER ---
+    router.post().handler(BodyHandler.create().setUploadsDirectory("img")); //BodyHandler für Photoupload
     router.route().handler(BodyHandler.create());
+    // --- BODY HANDLER ---
+
+
 
     // --- REQUEST LOGGING ---
     router.route().handler(LoggerHandler.create());
@@ -204,14 +207,35 @@ public class MainVerticle extends AbstractVerticle {
 
     // -- PHOTO HANDLER ---
     PhotoHandler photoHandler = new PhotoHandler(jdbcPool, vertx);
-    router.get("/photos")
+    router.get("/photos") // auch: /photos?photoTitle=Bild1?tag=tagName
            .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+                  ctx.data().put("parameters", ctx.request().params()); // Speichere mögliche Suchparameter im ctx
+                  ctx.next();
+           })
            .handler(photoHandler::getAllPhotosFromUser);
+
+    router.get("/test").handler(ctx -> {
+           MultiMap parameters = ctx.request().params();
+
+           ctx.response()
+                  .setStatusCode(200)
+                  .putHeader("Content-Type", "application/json")
+                  .end(
+                         new JsonObject()
+                                .put("a", parameters.get("a"))
+                                .put("b", parameters.get("b"))
+                                .encodePrettily()
+                  );
+    });
+
 
     router.get("/img/:photoID")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
-             ctx.data().put("photoID", ctx.pathParam("photoID").substring(0, ctx.pathParam("photoID").length() - 4)); // "1.jpg" => "1"
+             String fileExtension = ctx.pathParam("photoID").substring(ctx.pathParam("photoID").lastIndexOf('.'));
+             ctx.data().put("fileExtension", fileExtension);
+             ctx.data().put("photoID", ctx.pathParam("photoID").substring(0, ctx.pathParam("photoID").lastIndexOf('.'))); // "1.jpg" => "1"
              ctx.next();
            })
            .handler(photoHandler::validatePhotoInputReq)
@@ -258,6 +282,31 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::editPhotoTitle);
 
+    router.patch("/photoDate")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+             ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
+             ctx.data().put("photoDate", ctx.body().asJsonObject().getString("date"));
+             ctx.next();
+           })
+           .handler(photoHandler::validatePhotoInputReq)
+           .handler(photoHandler::photoExists)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::handleEditPhotoDate);
+
+    router.delete("/img/:photoID")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(ctx -> {
+                  ctx.data().put("photoID", ctx.pathParam("photoID"));
+                  ctx.next();
+           })
+           .handler(photoHandler::validatePhotoInputReq)
+           .handler(photoHandler::photoExists)
+           .handler(photoHandler::photoIsUser)
+           .handler(photoHandler::deletePhoto);
+
+
+    router.post("/photos").handler(photoHandler::uploadPhoto);
     router.post("/photos")
       .handler(authenticationHandler::isLoggedIn)
       .handler(photoHandler::containsUploadedFile)
@@ -265,7 +314,8 @@ public class MainVerticle extends AbstractVerticle {
       .handler(photoHandler::uploadPhoto);
 
 
-    // router.route(HttpMethod.PATCH, "/photoData").handler(authenticationHandler::authenticate).handler(photoHandler::handleEditPhotoDate)
+
+
 
 
     return Future.succeededFuture(router);

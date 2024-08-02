@@ -1,7 +1,9 @@
 package de.thm.mni.photoalbums.handler;
 
+import com.sun.tools.javac.Main;
 import de.thm.mni.photoalbums.MainVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
@@ -13,17 +15,21 @@ import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import io.vertx.ext.web.FileUpload;
 
+import java.awt.desktop.SystemSleepEvent;
+import java.sql.Array;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PhotoHandler {
 	JDBCPool jdbcPool;
-  Vertx vertx;
+	Vertx vertx;
 
 	public PhotoHandler(JDBCPool jdbcPool, Vertx vertx) {
 		this.jdbcPool = jdbcPool;
-    this.vertx = vertx;
+    		this.vertx = vertx;
 	}
 
 	/**
@@ -34,18 +40,56 @@ public class PhotoHandler {
 	 */
 	public void getAllPhotosFromUser(RoutingContext ctx) {
 		System.out.print("called getAllPhotosFromUsers in PhotoHandler.java");
+
+		// Get userId from session
 		Integer userIdStr = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
-		jdbcPool.preparedQuery("""
-				SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
-    				FROM Photos p
-    				LEFT JOIN PhotosTags pt
-        					ON pt.Photos_ID = p.ID
-    				LEFT JOIN Tags t
-        					ON pt.TAGS_ID = t.ID
-    				WHERE p.Users_ID = ?
-    				GROUP BY p.ID, p.title, p.taken, p.url
-				""")
-			.execute(Tuple.of(userIdStr), res -> {
+
+		// Get query parameters
+		MultiMap parameters = (MultiMap) ctx.data().get("parameters");
+		String tag = parameters.get("tag");
+		String photoTitle = parameters.get("photoTitle");
+
+		// Build the SQL query
+		StringBuilder sql = new StringBuilder("""
+                      SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
+                      FROM Photos p
+                      LEFT JOIN PhotosTags pt
+                                ON pt.Photos_ID = p.ID
+                      LEFT JOIN Tags t
+                                 ON pt.TAGS_ID = t.ID
+                     WHERE p.ID IN (
+                     SELECT p_inner.ID
+                                FROM Photos p_inner
+                                LEFT JOIN PhotosTags pt_inner
+                                       ON pt_inner.Photos_ID = p_inner.ID
+                                LEFT JOIN Tags t_inner
+                                       ON pt_inner.TAGS_ID = t_inner.ID
+                                WHERE p_inner.Users_ID = ?
+                  """);
+
+		List<Object> params = new ArrayList<>();
+		params.add(userIdStr);
+
+		if (tag != null && !tag.trim().isEmpty()) {
+			sql.append("AND t_inner.name = ?");
+			params.add(tag);
+		}
+
+		if (photoTitle != null && !photoTitle.trim().isEmpty()) {
+			sql.append("OR p_inner.title = ?");
+			params.add(photoTitle);
+		}
+
+		sql.append("""
+                                 GROUP BY p_inner.ID
+                      )
+                      GROUP BY p.ID, p.title, p.taken, p.url
+                  """);
+
+
+
+		jdbcPool.preparedQuery(sql.toString())
+			.execute(Tuple.from(params), res -> {
 				if (res.succeeded()) {
 					RowSet<Row> rows = res.result();
 					JsonArray photos = new JsonArray();
@@ -73,7 +117,7 @@ public class PhotoHandler {
 	 */
 	public void servePhotos(RoutingContext ctx) {
 		System.out.println("called servePhotos in PhotoHandler.java");
-		ctx.response().sendFile("img/" + ctx.data().get("photoID") + ".jpg");
+		ctx.response().sendFile("img/" + ctx.data().get("photoID") + ctx.data().get("fileExtension"));
 	}
 
 
@@ -227,6 +271,7 @@ public class PhotoHandler {
 								.put("message", "Tag erfolgreich zum Foto hinzugefügt")
 							);
 						} else {
+							System.out.println(dbRes.cause().getMessage());
 							MainVerticle.response(ctx.response(), 409, new JsonObject()
 								.put("message", "Der Tag existiert bereits")
 							);
@@ -236,12 +281,13 @@ public class PhotoHandler {
 				addTagToTableTags(tag).onComplete(ar -> {
 					if (ar.succeeded()) {
 						jdbcPool.preparedQuery("INSERT INTO  PhotosTags VALUES (?, ?)")
-							.execute(Tuple.of(photoID, res.result()), dbRes -> {
+							.execute(Tuple.of(photoID, ar.result()), dbRes -> {
 								if (dbRes.succeeded()) {
 									MainVerticle.response(ctx.response(), 201, new JsonObject()
 										.put("message", "Tag erfolgreich zum Foto hinzugefügt")
 									);
 								} else {
+									System.out.println(dbRes.cause().getMessage());
 									MainVerticle.response(ctx.response(), 409, new JsonObject()
 										.put("message", "Der Tag existiert bereits")
 									);
@@ -342,6 +388,8 @@ public class PhotoHandler {
 	 * @param ctx
 	 */
 	public void  editPhotoTitle(RoutingContext ctx) {
+		System.out.println("called editPhotoTitle in PhotoHandler.java");
+
 		String photoTitle = ctx.data().get("photoTitle").toString();
 
 		jdbcPool.preparedQuery("UPDATE Photos SET title = ? WHERE Photos.ID = ?")
@@ -361,35 +409,35 @@ public class PhotoHandler {
 
 	/**
 	 * Handler für PATCH /photoDate <br>
-	 * Gebe Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Nutzer gehört, der die Route aufruft. <br>
-	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht in der Datenbank existiert. <br>
 	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn date nicht korrekt nach folgenden Schema formatiert ist 'YYYY-MM-DD' <br>
 	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Feld photoID kein gültiger Wert ist. <br>
 	 * @param ctx Routing Context
 	 */
 	public void handleEditPhotoDate(RoutingContext ctx) {
-		Integer photoID;
-		try {
-			photoID = ctx.body().asJsonObject().getInteger("photoID");
-		} catch(Exception e) {
-			MainVerticle.response(ctx.response(), 404, new JsonObject()
-				.put("message", "Ungültiges Feld photoID: Die photoID muss eine gültige Zahl vom Typ number sein")
+		System.out.println("called handleEditPhotoDate in PhotoHandler.java");
+
+		String date = ctx.body().asJsonObject().getString("date");
+
+		if (!isValidDate(date)) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen")
 			);
 			return;
 		}
 
-		String date = ctx.body().asJsonObject().getString("date");
-		if (!isValidDate(date)) {
-			MainVerticle.response(ctx.response(), 404, new JsonObject()
-				.put("message", "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen")
-			);
-		}
-
-
-
-
-
-
+		jdbcPool.preparedQuery("UPDATE Photos SET taken = ? WHERE Photos.ID = ?")
+			.execute(Tuple.of(date, ctx.data().get("photoID")), res -> {
+				if (res.succeeded()) {
+					MainVerticle.response(ctx.response(), 200, new JsonObject()
+						.put("message", "Das Datum des Fotos wurde erfolgreich geändert")
+						.put("newDate", date)
+					);
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Ein interner Serverfehler ist aufgetreten")
+					);
+				}
+			});
 	}
 
 	/**
@@ -398,12 +446,34 @@ public class PhotoHandler {
 	 * @return true, wenn das Datum im Format YYYY-MMM-DD vorliegt und in der Vergangenheit liegt; false sonst
 	 */
 	private boolean isValidDate(String date) {
+		System.out.println("called isValidDate in PhotoHandler.java");
+
 		try {
 			LocalDate parsedDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
-			return parsedDate.isBefore(LocalDate.now());
+			return !parsedDate.isAfter(LocalDate.now());
 		} catch(DateTimeParseException e) {
 			return false;
 		}
+	}
+
+	/**
+	 * Löscht das Foto mit der entsprechenden ID und gibt bei Erfolg Statuscode 204 zurück.<br>
+	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
+	 * @param ctx Routing Context
+	 */
+	public void deletePhoto(RoutingContext ctx) {
+		jdbcPool.preparedQuery("DELETE FROM Photos WHERE ID = ?")
+			.execute(Tuple.of(ctx.data().get("photoID")), res -> {
+				if (res.succeeded()) {
+					ctx.response()
+						.setStatusCode(204)
+						.end();
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Fehler beim Löschen des Fotos")
+					);
+				}
+			});
 	}
 
   /**

@@ -12,7 +12,7 @@ import io.vertx.sqlclient.Tuple;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class LoginHandler {
-	private JDBCPool jdbcPool;
+	final private JDBCPool jdbcPool;
 
 	public LoginHandler(JDBCPool jdbcPool) {
 		this.jdbcPool = jdbcPool;
