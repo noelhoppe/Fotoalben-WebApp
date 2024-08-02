@@ -110,9 +110,12 @@ public class MainVerticle extends AbstractVerticle {
   Future<Router> configureRouter(Void unused) {
     Router router = Router.router(vertx);
 
-    // Body-Handler, um body des http-req zu parsen und an den RoutingContext weiterzugeben
-    router.route(HttpMethod.POST, "/photos").handler(BodyHandler.create().setUploadsDirectory("img")); //BodyHandler für Photoupload
+    // --- BODY HANDLER ---
+    router.post().handler(BodyHandler.create().setUploadsDirectory("img")); //BodyHandler für Photoupload
     router.route().handler(BodyHandler.create());
+    // --- BODY HANDLER ---
+
+
 
     // --- REQUEST LOGGING ---
     router.route().handler(LoggerHandler.create());
