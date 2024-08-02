@@ -344,7 +344,6 @@ public class PhotoHandler {
 	}
 
 	/**
-   * Für Daten, die als JSON vorliegen <br>
 	 * Prüft, ob der Fototitel nur aus Leerzeichen besteht, also leer ist. <br>
    * Prüft ob der Fototitel länger als 30 Zeichen ist. <br>
 	 * Wenn ja, gebe Statuscode 400 mit entsprechender Fehlermeldung zurück. <br>
@@ -478,7 +477,7 @@ public class PhotoHandler {
 
   /**
    * Prüft ob eine Datei hochgeladen wurde <br>
-   * Wenn nein: gebe eine Fehlermeldung (400 Bad Request) aus
+   * Wenn nein: gebe eine Fehlermeldung (400 Bad Request) aus, ansonsten gebe Anfrage an nächsten Handler weiter
    * @param ctx Routing Context
    */
   public void containsUploadedFile(RoutingContext ctx) {
@@ -492,18 +491,30 @@ public class PhotoHandler {
 
   }
 
+  /**
+   * Prüft ob es sich um ein gültiges Foto handelt
+   * @param FileUpload fileUpload
+   * @return true wenn es sich um eine Bilddatei des  Typs png oder jpeg handelt, ansonsten false
+   */
   private boolean isValidImage(FileUpload fileUpload) {
     String mimeType = fileUpload.contentType();
     return mimeType.equals("image/png") || mimeType.equals("image/jpeg");
   }
 
+  /**
+   * Verwaltet Foto-Uploads <br>
+   * Legt das Foto in der Datenbank an <br>
+   * Wenn es sich um ein Foto handelt: Bennene die Datei nach der ID und passe den Datebankeintrag entsprechend an <br>
+   * Wenn es sich nicht um ein Foto handelt: Lösche Datei
+   * @param RoutingContext ctx
+   */
 public void uploadPhoto(RoutingContext ctx){
 
     int currentUserID = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
     String photoTitle = ctx.request().getFormAttribute("title");
     String photoDate = ctx.request().getFormAttribute("taken");
 
-  if (!isValidDate(photoDate)) {
+  if (!isValidDate(photoDate)) {  //prüfe ob Datum gültig ist
     MainVerticle.response(ctx.response(), 404, new JsonObject()
       .put("message", "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen")
     );
@@ -512,13 +523,13 @@ public void uploadPhoto(RoutingContext ctx){
     //TODO: TAGS implementieren!!
 
 
-    for (FileUpload file : ctx.fileUploads()) {
+    for (FileUpload file : ctx.fileUploads()) { //verarbeite FileUpload
       String fileNameOriginal = file.fileName();
       String fileNameUpload = file.uploadedFileName();
       String fileExtension = fileNameOriginal.substring(fileNameOriginal.lastIndexOf("."));
 
 
-      if (!isValidImage(file)) {
+      if (!isValidImage(file)) {  //lösche Datei, wenn es sich nicht um ein Bild handelt
         vertx.fileSystem().delete(fileNameUpload, deleteResult -> {
           if (deleteResult.failed()) {
             System.err.println(deleteResult.cause().getMessage()); //gebe Fehlermeldung aus
@@ -530,7 +541,7 @@ public void uploadPhoto(RoutingContext ctx){
       }
 
       // --DATABASE--
-
+      //Lege Eintrag in der Datenbank an
       jdbcPool.preparedQuery("""
                        			INSERT INTO photos
                         		     (Users_ID, title, taken, url)
@@ -539,7 +550,7 @@ public void uploadPhoto(RoutingContext ctx){
       ).execute(Tuple.of(currentUserID, photoTitle, photoDate, fileNameUpload.substring(0, 29)), res -> { //TODO: evtl. in DB die max Länge für url erhöhen damit man hier den ganzen namen nehmen kann
         if (res.succeeded()) {
           int photoID = res.result().property(JDBCPool.GENERATED_KEYS).getInteger(0); //generate new File name
-          String fileNameNew = photoID + fileExtension;
+          String fileNameNew = photoID + fileExtension; //neuer Dateiname ist ID + Endung der ursprünglichen Datei
 
           vertx.fileSystem().move(fileNameUpload, "img/" + fileNameNew, moveResult -> { //rename File
             if (moveResult.failed()) {
@@ -547,9 +558,10 @@ public void uploadPhoto(RoutingContext ctx){
               MainVerticle.response(ctx.response(), 500, new JsonObject()
                 .put("message", "Fehler beim speichern der Datei!"));
 
+
             }
           });
-
+          //passe Datenbank-Eintrag (URL) an neuen Namen an
           jdbcPool.preparedQuery("""
                        		          UPDATE photos
                                      SET url = ?

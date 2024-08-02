@@ -576,12 +576,16 @@ addPhotoSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void
     formData.append("title", photoName);
     formData.append("taken", photoDate);
     formData.append("photo", photoData[0]);
-    //TODO: um res einen try-catch Block machen falls verbindung fehlschlägt
-    const res = yield fetch("http://localhost:8080/photos", {
-        method: "POST",
-        credentials: "include",
-        headers: {},
-        body: formData
-    });
-    const data = yield res.json();
+    try {
+        const res = yield fetch("http://localhost:8080/photos", {
+            method: "POST",
+            credentials: "include",
+            headers: {},
+            body: formData
+        });
+        const data = yield res.json();
+    }
+    catch (error) {
+        console.log("ERROR at POST /photos");
+    }
 }));
