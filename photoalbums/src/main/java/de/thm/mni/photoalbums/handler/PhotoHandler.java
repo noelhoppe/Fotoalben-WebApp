@@ -306,14 +306,14 @@ public class PhotoHandler {
 	 * @param ctx Routing Context
 	 */
 	public void validatePhotoTitleReq(RoutingContext ctx) {
-		String contentType = ctx.request().getHeader("Content-Type"); //Wähle ob JSON oder FormData vorliegt
+		String contentType = ctx.request().getHeader("Content-Type"); //Wähle ob JSON bzw. text oder FormData vorliegt
     String photoTitle;
     System.out.println(contentType);
-    if (contentType.contains("application/json")){
+    if (contentType.contains("application/json") || contentType.contains("text/plain")){
       photoTitle = ctx.data().get("photoTitle").toString();
     } else if (contentType.contains("multipart/form-data")) {
       photoTitle = ctx.request().getFormAttribute("title");
-    }else {
+    } else {
       System.out.println("called Error case");
       MainVerticle.response(ctx.response(), 500, new JsonObject()
         .put("message", "Fehler bei Überprüfung des Titels")
