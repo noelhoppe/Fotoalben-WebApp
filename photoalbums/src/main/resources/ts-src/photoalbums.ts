@@ -429,13 +429,24 @@ function renderUsername(username : string) {
   usernameField.textContent = username;
 }
 
+function addSearchPhotosListener() {
+  (document.querySelector("#searchPhotos") as HTMLFormElement).addEventListener("submit", async(evt : SubmitEvent) => {
+    evt.preventDefault()
+    const query = (document.querySelector("#searchPhotosQuery") as HTMLInputElement).value;
+    await fetchPhotos(query);
+  })
+}
+addSearchPhotosListener();
+
+
 /**
  * GET /photos <br>
  * Funktion zum Abrufen aller Fotos eines Benutzers vom Server
  */
-async function fetchPhotos() : Promise<void> {
+async function fetchPhotos(searchVal? : string) : Promise<void> {
   try {
-    const res : Response = await fetch("/photos", {
+    console.log(searchVal);
+    const res : Response = await fetch("/photos?" +(searchVal ? new URLSearchParams({photoTitle : searchVal, tag : searchVal}).toString() : ""), {
       method : "GET",
       credentials : "include"
     });
@@ -446,6 +457,7 @@ async function fetchPhotos() : Promise<void> {
 
     const data : { photos : Photo[] } = await res.json();
 
+    clearImages(document.querySelector("#main-photos-container .row") as HTMLDivElement);
     data.photos.forEach(photo  => renderPhotos(photo));
 
   } catch (error) {
@@ -464,6 +476,20 @@ function initializePage() : void {
   });
 }
 initializePage();
+
+/**
+ * Entfernt die Bilder aus dem DOM
+ * @param element Das entsprechende Element
+ */
+function clearImages(element : HTMLElement) {
+
+  if (!element) {
+    console.error("Container not found");
+    return;
+  }
+
+  element.innerHTML = "";
+}
 
 /**
  * Fügt ein Bild in den DOM ein.

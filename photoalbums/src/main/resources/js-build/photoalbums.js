@@ -384,14 +384,23 @@ function renderUsername(username) {
     const usernameField = document.querySelector("#username");
     usernameField.textContent = username;
 }
+function addSearchPhotosListener() {
+    document.querySelector("#searchPhotos").addEventListener("submit", (evt) => __awaiter(this, void 0, void 0, function* () {
+        evt.preventDefault();
+        const query = document.querySelector("#searchPhotosQuery").value;
+        yield fetchPhotos(query);
+    }));
+}
+addSearchPhotosListener();
 /**
  * GET /photos <br>
  * Funktion zum Abrufen aller Fotos eines Benutzers vom Server
  */
-function fetchPhotos() {
+function fetchPhotos(searchVal) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const res = yield fetch("/photos", {
+            console.log(searchVal);
+            const res = yield fetch("/photos?" + (searchVal ? new URLSearchParams({ photoTitle: searchVal, tag: searchVal }).toString() : ""), {
                 method: "GET",
                 credentials: "include"
             });
@@ -399,6 +408,7 @@ function fetchPhotos() {
                 console.error("Error fetching photos");
             }
             const data = yield res.json();
+            clearImages(document.querySelector("#main-photos-container .row"));
             data.photos.forEach(photo => renderPhotos(photo));
         }
         catch (error) {
@@ -417,6 +427,17 @@ function initializePage() {
     }));
 }
 initializePage();
+/**
+ * Entfernt die Bilder aus dem DOM
+ * @param element Das entsprechende Element
+ */
+function clearImages(element) {
+    if (!element) {
+        console.error("Container not found");
+        return;
+    }
+    element.innerHTML = "";
+}
 /**
  * Fügt ein Bild in den DOM ein.
  * Dabei werden die Attribute src, title, date-date und data-tags gesetzt https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes

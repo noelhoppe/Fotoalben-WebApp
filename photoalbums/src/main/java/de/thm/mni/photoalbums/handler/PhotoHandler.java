@@ -3,6 +3,7 @@ package de.thm.mni.photoalbums.handler;
 import com.sun.tools.javac.Main;
 import de.thm.mni.photoalbums.MainVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
@@ -15,17 +16,20 @@ import io.vertx.sqlclient.Tuple;
 import io.vertx.ext.web.FileUpload;
 
 import java.awt.desktop.SystemSleepEvent;
+import java.sql.Array;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PhotoHandler {
 	JDBCPool jdbcPool;
-  Vertx vertx;
+	Vertx vertx;
 
 	public PhotoHandler(JDBCPool jdbcPool, Vertx vertx) {
 		this.jdbcPool = jdbcPool;
-    this.vertx = vertx;
+    		this.vertx = vertx;
 	}
 
 	/**
@@ -36,18 +40,56 @@ public class PhotoHandler {
 	 */
 	public void getAllPhotosFromUser(RoutingContext ctx) {
 		System.out.print("called getAllPhotosFromUsers in PhotoHandler.java");
+
+		// Get userId from session
 		Integer userIdStr = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
-		jdbcPool.preparedQuery("""
-				SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
-    				FROM Photos p
-    				LEFT JOIN PhotosTags pt
-        					ON pt.Photos_ID = p.ID
-    				LEFT JOIN Tags t
-        					ON pt.TAGS_ID = t.ID
-    				WHERE p.Users_ID = ?
-    				GROUP BY p.ID, p.title, p.taken, p.url
-				""")
-			.execute(Tuple.of(userIdStr), res -> {
+
+		// Get query parameters
+		MultiMap parameters = (MultiMap) ctx.data().get("parameters");
+		String tag = parameters.get("tag");
+		String photoTitle = parameters.get("photoTitle");
+
+		// Build the SQL query
+		StringBuilder sql = new StringBuilder("""
+                      SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
+                      FROM Photos p
+                      LEFT JOIN PhotosTags pt
+                                ON pt.Photos_ID = p.ID
+                      LEFT JOIN Tags t
+                                 ON pt.TAGS_ID = t.ID
+                     WHERE p.ID IN (
+                     SELECT p_inner.ID
+                                FROM Photos p_inner
+                                LEFT JOIN PhotosTags pt_inner
+                                       ON pt_inner.Photos_ID = p_inner.ID
+                                LEFT JOIN Tags t_inner
+                                       ON pt_inner.TAGS_ID = t_inner.ID
+                                WHERE p_inner.Users_ID = ?
+                  """);
+
+		List<Object> params = new ArrayList<>();
+		params.add(userIdStr);
+
+		if (tag != null && !tag.trim().isEmpty()) {
+			sql.append("AND t_inner.name = ?");
+			params.add(tag);
+		}
+
+		if (photoTitle != null && !photoTitle.trim().isEmpty()) {
+			sql.append("OR p_inner.title = ?");
+			params.add(photoTitle);
+		}
+
+		sql.append("""
+                                 GROUP BY p_inner.ID
+                      )
+                      GROUP BY p.ID, p.title, p.taken, p.url
+                  """);
+
+
+
+		jdbcPool.preparedQuery(sql.toString())
+			.execute(Tuple.from(params), res -> {
 				if (res.succeeded()) {
 					RowSet<Row> rows = res.result();
 					JsonArray photos = new JsonArray();

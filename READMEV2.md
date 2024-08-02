@@ -152,6 +152,13 @@ http-Response
 ---
 
 
+> photos?photoTitle=searchQuery&tag=serachQuery  
+> Route, um Fotos zu durchsuchen. Es können diesleben Fehler wie oben auftreten.  
+
+
+---
+
+
 > GET /img/:photoID
 > Sendet das Bild mit der entsprechenden ID.  
 > Namenskonvention. Jedes Bild ist mit ID.jpg gespeichert.
