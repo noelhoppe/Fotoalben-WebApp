@@ -560,6 +560,31 @@ function editDateListener() {
 editDateListener();
 
 
+function editDelPhotoBtnListener() {
+  (document.querySelector("#del-photo-btn") as HTMLButtonElement).addEventListener("click", async () => {
+    await handlePhotoDelete((document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string);
+  })
+}
+editDelPhotoBtnListener();
+
+async function handlePhotoDelete(photoID : string) {
+  const res = await fetch(`http://localhost:8080/img/${photoID}`, {
+    method : "DELETE",
+    credentials : "include"
+  })
+
+  if (res.status == 204) {
+    renderErrorEditPhoto(true);
+    await fetchPhotos()
+    window.location.reload();
+  } else {
+    const data : { message : string } = await res.json();
+    console.log(data.message);
+    renderErrorEditPhoto(false, data.message);
+  }
+}
+
+
 
 
 const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;

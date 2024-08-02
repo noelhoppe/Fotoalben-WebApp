@@ -395,6 +395,26 @@ public class PhotoHandler {
 		}
 	}
 
+	/**
+	 * Löscht das Foto mit der entsprechenden ID und gibt bei Erfolg Statuscode 204 zurück.<br>
+	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
+	 * @param ctx Routing Context
+	 */
+	public void deletePhoto(RoutingContext ctx) {
+		jdbcPool.preparedQuery("DELETE FROM Photos WHERE ID = ?")
+			.execute(Tuple.of(ctx.data().get("photoID")), res -> {
+				if (res.succeeded()) {
+					ctx.response()
+						.setStatusCode(204)
+						.end();
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Fehler beim Löschen des Fotos")
+					);
+				}
+			});
+	}
+
 
 
 public void uploadPhoto(RoutingContext ctx){

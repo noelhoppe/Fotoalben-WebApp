@@ -500,6 +500,30 @@ function editDateListener() {
     });
 }
 editDateListener();
+function editDelPhotoBtnListener() {
+    document.querySelector("#del-photo-btn").addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+        yield handlePhotoDelete(document.querySelector("#modal-img").dataset.id);
+    }));
+}
+editDelPhotoBtnListener();
+function handlePhotoDelete(photoID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const res = yield fetch(`http://localhost:8080/img/${photoID}`, {
+            method: "DELETE",
+            credentials: "include"
+        });
+        if (res.status == 204) {
+            renderErrorEditPhoto(true);
+            yield fetchPhotos();
+            window.location.reload();
+        }
+        else {
+            const data = yield res.json();
+            console.log(data.message);
+            renderErrorEditPhoto(false, data.message);
+        }
+    });
+}
 const addAlbumSubmit = document.getElementById("addAlbumSubmit");
 addAlbumSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void 0, function* () {
     const albumName = document.getElementById("addAlbumName").value;
