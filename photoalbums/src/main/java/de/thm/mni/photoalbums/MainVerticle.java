@@ -348,6 +348,7 @@ public class MainVerticle extends AbstractVerticle {
       .handler(loginHandler::grabData)
       .handler(loginHandler::validateUsernameInput)
       .handler(loginHandler::validatePasswordInput)
+      .handler(adminHandler::usernameIsUnique)
       .handler(adminHandler::addUser);
 
     // --- ADMIN HANDLER ---

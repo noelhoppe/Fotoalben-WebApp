@@ -121,7 +121,11 @@ public class AdminHandler {
 		}
 	}
 
-
+  /**
+   * Fügt einen Nutzer zur Datenbak hinzu
+   * Passwort wird mit Bcrypt gehashed
+   * @param ctx
+   */
   public void addUser(RoutingContext ctx) {
     String username = ctx.body().asJsonObject().getString("username");
     String password = ctx.body().asJsonObject().getString("password");

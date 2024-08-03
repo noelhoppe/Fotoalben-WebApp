@@ -29,7 +29,6 @@ public class LoginHandler {
 		try {
 			String username = ctx.body().asJsonObject().getString("username");
 			String password = ctx.body().asJsonObject().getString("password");
-      System.out.println("username: " + username + " password: " + password);
 
 			if (username == null || password == null) {
 				throw new IllegalArgumentException();
@@ -37,7 +36,6 @@ public class LoginHandler {
 
 			ctx.put("username", username);
 			ctx.put("password", password);
-      System.out.println("grabData called successfully");
 			ctx.next();
 		} catch(IllegalArgumentException iae) {
 			MainVerticle.response(ctx.response(), 500, new JsonObject()
