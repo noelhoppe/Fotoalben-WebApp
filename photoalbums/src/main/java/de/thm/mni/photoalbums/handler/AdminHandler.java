@@ -66,7 +66,6 @@ public class AdminHandler {
   public void addUser(RoutingContext ctx) {
     String username = ctx.body().asJsonObject().getString("username")
     String password = ctx.body().asJsonObject().getString("password");
-    
   }
 
 }
