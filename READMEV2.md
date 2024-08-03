@@ -210,7 +210,7 @@ http-Response
 
 
 
-> DELETE /tag  
+> DELETE photos/tag  
 > Statuscode 204, wenn der Tag erfolgreich gelöscht wurde.
 
 http-Request
@@ -275,7 +275,7 @@ http-Request
 
 
 
-> POST /tag  
+> POST /photos/tag  
 > Gebe Statuscode 201 mit entsprechender Erfolgsmelsung zurück, wenn Tag erfolgreich angelegt wurde.  
 
 http-Anfrage
@@ -345,7 +345,7 @@ http-Anfrage
 
 
 
-> PATCH /photoTitle
+> PATCH /photos/photoTitle
 
 http-Anfrage
 
@@ -402,7 +402,7 @@ http-Anfrage
 
 ---
 
-> PATCH /photoDate
+> PATCH /photos/photoDate
 
 http-Anfrage:
 ```JSON

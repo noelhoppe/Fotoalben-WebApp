@@ -175,13 +175,13 @@ public class MainVerticle extends AbstractVerticle {
            .handler(loginHandler::validatePasswordInput)
            .handler(loginHandler::checkUsernamePasswordPair);
 
-    router.get( "/username").handler(authenticationHandler::isLoggedIn).handler(ctx -> {
+    router.get( "/username").handler(authenticationHandler::isLoggedIn).handler(ctx -> { // TODO: GET /users/username?
       MainVerticle.response(ctx.response(), 200, new JsonObject()
              .put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER))
       );
     });
 
-    router.get("/role").handler(authenticationHandler::isLoggedIn).handler(ctx -> {
+    router.get("/role").handler(authenticationHandler::isLoggedIn).handler(ctx -> { // TODO: GET /users/role?
       MainVerticle.response(ctx.response(), 200, new JsonObject()
              .put("role", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ROLE))
       );
@@ -216,21 +216,6 @@ public class MainVerticle extends AbstractVerticle {
            })
            .handler(photoHandler::getAllPhotosFromUser);
 
-    router.get("/test").handler(ctx -> {
-           MultiMap parameters = ctx.request().params();
-
-           ctx.response()
-                  .setStatusCode(200)
-                  .putHeader("Content-Type", "application/json")
-                  .end(
-                         new JsonObject()
-                                .put("a", parameters.get("a"))
-                                .put("b", parameters.get("b"))
-                                .encodePrettily()
-                  );
-    });
-
-
     router.get("/img/:photoID")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
@@ -244,7 +229,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::servePhotos); // "1" => "1.jpg"
 
-    router.delete("/tag")
+    router.delete("/photos/tag")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
              ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
@@ -257,7 +242,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::deleteTag);
 
-    router.post("/tag") // TODO: /photos/tag?
+    router.post("/photos/tag")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
              ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
@@ -270,7 +255,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::addTagToPhoto);
 
-    router.patch( "/photoTitle")
+    router.patch( "/photos/photoTitle")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
              ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
@@ -283,7 +268,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::editPhotoTitle);
 
-    router.patch("/photoDate")
+    router.patch("/photos/photoDate")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
              ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
