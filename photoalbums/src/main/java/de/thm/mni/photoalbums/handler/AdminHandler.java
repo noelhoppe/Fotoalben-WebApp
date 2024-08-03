@@ -9,6 +9,7 @@ import io.vertx.jdbcclient.JDBCPool;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -119,7 +120,7 @@ public class AdminHandler {
 		}
 	}
   public void addUser(RoutingContext ctx) {
-    String username = ctx.body().asJsonObject().getString("username")
+    String username = ctx.body().asJsonObject().getString("username");
     String password = ctx.body().asJsonObject().getString("password");
   }
 
@@ -205,6 +206,26 @@ public class AdminHandler {
 				} else {
 					MainVerticle.response(ctx.response(), 500, new JsonObject()
 						.put("message", "Ein interner Serverfehler ist aufgetreten")
+					);
+				}
+			});
+	}
+
+	public void handlerPatchPassword(RoutingContext ctx) {
+		Integer userId = Integer.parseInt(ctx.pathParam("userID"));
+		String password = ctx.body().asJsonObject().getString("password");
+
+		String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(10));
+
+		jdbcPool.preparedQuery("UPDATE Users SET password = ? WHERE ID = ?")
+			.execute(Tuple.of(hashedPassword, userId), ar -> {
+				if (ar.succeeded()) {
+					MainVerticle.response(ctx.response(), 200, new JsonObject()
+						.put("message", "Passwort erfolgreich geändert")
+					);
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
 					);
 				}
 			});

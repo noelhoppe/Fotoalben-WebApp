@@ -342,6 +342,17 @@ public class MainVerticle extends AbstractVerticle {
            .handler(adminHandler::usernameIsUnique)
            .handler(adminHandler::handlePatchUsername);
 
+    router.patch("/users/password/:userID")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(authenticationHandler::isAdmin)
+           .blockingHandler(adminHandler::userIDIsNumber)
+           .handler(ctx -> {
+                  ctx.data().put("password", ctx.body().asJsonObject().getString("password"));
+                  ctx.next();
+           })
+           .handler(loginHandler::validatePasswordInput)
+           .handler(adminHandler::handlerPatchPassword);
+
 
     // --- ADMIN HANDLER ---
 
