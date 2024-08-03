@@ -102,6 +102,33 @@ function fetchUserDelete(userID) {
         }
     });
 }
+function addUser() {
+    const addUserBtn = document.getElementById("addUserBtn");
+    addUserBtn.addEventListener("click", (MouseEvent) => __awaiter(this, void 0, void 0, function* () {
+        const username = document.getElementById("field-username").value;
+        const passwd = document.getElementById("field-password").value;
+        const reqData = {
+            user: {
+                name: username,
+                password: passwd
+            }
+        };
+        try {
+            const res = yield fetch("http://localhost:8080/users", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(reqData),
+            });
+        }
+        catch (error) {
+            console.log("ERROR at POST /users");
+        }
+    }));
+}
+addUser();
 function redirectToPhotoalbumsPage() {
     document.querySelector("#redirect-to-photoalbums").addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
         try {
