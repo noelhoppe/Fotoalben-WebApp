@@ -78,6 +78,38 @@ function renderSingleUserRow(user : User) {
 }
 // renderSingleUserRow({id : 1, username : "Noel", password : "0610", role : "ADMIN"});
 
+function addUser() {
+  const addUserBtn = (document.getElementById("addUserBtn") as HTMLButtonElement);
+  addUserBtn.addEventListener("click", async (MouseEvent) => {
+
+    const username = (document.getElementById("field-username") as HTMLInputElement).value;
+    const passwd = (document.getElementById("field-password") as HTMLInputElement).value;
+    const reqData = {
+      user : {
+        name : username,
+        password : passwd
+
+      }
+    };
+
+    try {
+      const res : Response = await fetch( "http://localhost:8080/users", {
+        method: "POST",
+        credentials : "include",
+        headers : {
+          "Content-Type" : "application/json"
+        },
+        body : JSON.stringify(reqData),
+      });
+    } catch(error){
+      console.log("ERROR at POST /users")
+    }
+  });
+
+
+}
+addUser();
+
 function redirectToPhotoalbumsPage() {
     (document.querySelector("#redirect-to-photoalbums") as HTMLButtonElement).addEventListener("click", async() => {
         try {
