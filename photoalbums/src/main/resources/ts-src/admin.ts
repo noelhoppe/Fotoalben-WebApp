@@ -1,5 +1,4 @@
 // TODO: Use of modules ES/CJS, um togglePasswordVisibility zu nutzen
-
 interface User {
     id : number
     username : string,
@@ -203,3 +202,4 @@ async function fetchEditUsername(userID : number, username : string) {
         console.error(err);
     }
 }
+
