@@ -173,7 +173,7 @@ async function handleTagAdd(photoID: number, tagName: string) {
     tag: tagName
   };
   try {
-    const res: Response = await fetch("http://localhost:8080/tag", {
+    const res: Response = await fetch("http://localhost:8080/photos/tag", {
       method: "POST",
       credentials: "include",
       headers: {
@@ -268,7 +268,7 @@ async function handleTagDelete(delBtn: HTMLButtonElement, tag: string, colDiv: H
   };
 
   try {
-    const res = await fetch("http://localhost:8080/tag", {
+    const res = await fetch("http://localhost:8080/photos/tag", {
       method: "DELETE",
       credentials: "include",
       headers: {
@@ -320,7 +320,7 @@ function editPhotoTitle() {
           photoTitle : (document.querySelector("#edit-name") as HTMLInputElement).value
         }
 
-        const res = await fetch("http://localhost:8080/photoTitle", {
+        const res = await fetch("http://localhost:8080/photos/photoTitle", {
           method : "PATCH",
           credentials : "include",
           body : JSON.stringify(reqData)
@@ -535,7 +535,7 @@ function renderPhotos(photo : Photo) : void {
 
 
 /**
- * PATCH /photoDate
+ * PATCH /photos/photoDate
  * {
  *     "photoID" : ___,
  *     "date" : ___
@@ -549,7 +549,7 @@ async function handleEditPhotoDate(date : string) {
       date : date
     }
 
-    const res = await fetch("http://localhost:8080/photoDate", {
+    const res = await fetch("http://localhost:8080/photos/photoDate", {
       method : "PATCH",
       credentials : "include",
       body : JSON.stringify(reqData)

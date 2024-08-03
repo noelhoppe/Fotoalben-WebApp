@@ -153,7 +153,7 @@ function handleTagAdd(photoID, tagName) {
             tag: tagName
         };
         try {
-            const res = yield fetch("http://localhost:8080/tag", {
+            const res = yield fetch("http://localhost:8080/photos/tag", {
                 method: "POST",
                 credentials: "include",
                 headers: {
@@ -241,7 +241,7 @@ function handleTagDelete(delBtn, tag, colDiv) {
             tag: tag
         };
         try {
-            const res = yield fetch("http://localhost:8080/tag", {
+            const res = yield fetch("http://localhost:8080/photos/tag", {
                 method: "DELETE",
                 credentials: "include",
                 headers: {
@@ -287,7 +287,7 @@ function editPhotoTitle() {
                     photoID: photoID,
                     photoTitle: document.querySelector("#edit-name").value
                 };
-                const res = yield fetch("http://localhost:8080/photoTitle", {
+                const res = yield fetch("http://localhost:8080/photos/photoTitle", {
                     method: "PATCH",
                     credentials: "include",
                     body: JSON.stringify(reqData)
@@ -478,7 +478,7 @@ function renderPhotos(photo) {
     mainContainer.appendChild(colDiv);
 }
 /**
- * PATCH /photoDate
+ * PATCH /photos/photoDate
  * {
  *     "photoID" : ___,
  *     "date" : ___
@@ -492,7 +492,7 @@ function handleEditPhotoDate(date) {
                 photoID: photoID,
                 date: date
             };
-            const res = yield fetch("http://localhost:8080/photoDate", {
+            const res = yield fetch("http://localhost:8080/photos/photoDate", {
                 method: "PATCH",
                 credentials: "include",
                 body: JSON.stringify(reqData)

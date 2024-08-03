@@ -105,7 +105,7 @@ async function fetchUserDelete(userID : number) {
     }
 }
 
-function resetModalInputs(modal : HTMLElement) {
+function resetModalInputs(modal : HTMLElement) { // FIXME: TS2393: Duplicate function implementation
     (document.querySelector("#field-username") as HTMLInputElement).value = "";
     (document.querySelector("#field-password") as HTMLInputElement).value = "";
 }
