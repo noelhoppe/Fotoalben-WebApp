@@ -89,10 +89,10 @@ public class LoginHandler {
 				.put("message", "Das Passwort darf nicht leer sein")
 			);
 		} else if (ctx.data().get("password").toString().length() <4 || ctx.data().get("password").toString().length() > 30){
-        MainVerticle.response(ctx.response(), 400, new JsonObject()
-          .put("message", "Das Passwort muss zwischen 4 und 30 Zeichen lang sein")
-        );
-      } else {
+        		MainVerticle.response(ctx.response(), 400, new JsonObject()
+          			.put("message", "Das Passwort muss zwischen 4 und 30 Zeichen lang sein")
+        		);
+      		} else {
 			ctx.next();
 		}
 	}

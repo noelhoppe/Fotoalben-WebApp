@@ -1,5 +1,4 @@
 "use strict";
-// TODO: Use of modules ES/CJS, um togglePasswordVisibility zu nutzen
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -129,23 +128,6 @@ function addUser() {
     }));
 }
 addUser();
-function redirectToPhotoalbumsPage() {
-    document.querySelector("#redirect-to-photoalbums").addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
-        try {
-            const res = yield fetch("http://localhost:8080/protected/photoalbums.html");
-            if (res.ok) {
-                window.location.href = res.url;
-            }
-            else {
-                throw new Error(`HTTP Error! Status: ${res.status}`);
-            }
-        }
-        catch (error) {
-            console.error("Error redirecting to /protected/photoalbums.html.", error);
-        }
-    }));
-}
-redirectToPhotoalbumsPage();
 function giveUserIDToModal() {
     const editBtns = document.querySelectorAll(".edit-user-btn");
     editBtns.forEach(editBtn => {
@@ -155,6 +137,7 @@ function giveUserIDToModal() {
             const editUsersModalContainer = document.querySelector("#editModal");
             editUsersModalContainer.setAttribute("data-user-id", userID);
             editUsername();
+            editPassword();
         });
     });
 }
@@ -165,6 +148,35 @@ function editUsername() {
         const editUserModalContainer = document.querySelector("#editModal");
         const userID = editUserModalContainer.getAttribute("data-user-id");
         fetchEditUsername(parseInt(userID), newUsername);
+    });
+}
+function editPassword() {
+    document.querySelector("#password-form").addEventListener("submit", (evt) => {
+        evt.preventDefault();
+        const newPassword = document.querySelector("#password").value;
+        const editUserModalContainer = document.querySelector("#editModal");
+        const userID = editUserModalContainer.getAttribute("data-user-id");
+        fetchEditPassword(parseInt(userID), newPassword);
+    });
+}
+function fetchEditPassword(userID, password) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/users/password/" + userID, {
+                method: "PATCH",
+                credentials: "include",
+                body: JSON.stringify({ password: password })
+            });
+            const data = yield res.json();
+            if (res.ok) {
+                window.location.reload();
+            }
+            console.log(res.status);
+            console.log(data.message);
+        }
+        catch (err) {
+            console.error(err);
+        }
     });
 }
 function fetchEditUsername(userID, username) {
@@ -187,3 +199,20 @@ function fetchEditUsername(userID, username) {
         }
     });
 }
+function redirectToPhotoalbumsPage() {
+    document.querySelector("#redirect-to-photoalbums").addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/protected/photoalbums.html");
+            if (res.ok) {
+                window.location.href = res.url;
+            }
+            else {
+                throw new Error(`HTTP Error! Status: ${res.status}`);
+            }
+        }
+        catch (error) {
+            console.error("Error redirecting to /protected/photoalbums.html.", error);
+        }
+    }));
+}
+redirectToPhotoalbumsPage();
