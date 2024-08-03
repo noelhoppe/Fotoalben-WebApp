@@ -786,4 +786,94 @@ http-Request
 }
 ```
 
+> POST /users   
+> Gibt Statuscode 201 zurück, wenn der Nutzer erfolgreich anglegt wurde
 
+http-Request
+```JSON
+{
+ "username" : ____ ,
+  "password" : ____
+}
+```
+
+http-Response
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statusode 403, wenn der angemeldete Benutzer kein Admin ist.
+```JSON
+{
+  "message" : "Der angemeldete Benutzer ist kein Admin."
+}
+```
+
+3. Statuscode 500,  wenn der Username oder das Passwort null sind oder die Anfrage an die Route falsch formatiert ist.
+```JSON
+{
+  "message": "Die Anfrage muss folgendes Format haben und die keys username und password sind nicht null-Werte",
+  "username": "___",
+  "password": "___"
+}
+```
+
+4. Statusode 400, wenn der Username Leerzeichen enthält.
+```JSON
+{
+  "message" : "Der Nutzername darf keine Leerzeichen enthalten"
+}
+```
+
+5. Statusode 400, wenn der Username leer ist.
+```JSON
+{
+  "message" : "Der Nutzername darf nicht leer sein"
+}
+```
+
+6. Statusode 400, wenn der Username länger als 30 Zeichen ist.
+```JSON
+{
+  "message" : "Der Nutzername darf höchstens 30 Zeichen lang sein."
+}
+```
+
+7. Statusode 400, wenn das Passwort Leerzeichen enthält.
+```JSON
+{
+  "message" : "Das Passwort darf keine Leerzeichen enthalten"
+}
+```
+
+8. Statusode 400, wenn das Passwort leer ist.
+```JSON
+{
+  "message" : "Das Passwort darf nicht leer sein"
+}
+```
+
+9. Statusode 400, wenn das Passwort kürzer als 4 oder länger als 30 Zeichen ist.
+```JSON
+{
+  "message" : "Das Passwort muss zwischen 4 und 30 Zeichen lang sein"
+}
+```
+
+10. Statusode 409, wenn der Nutzername bereits vergeben ist
+```JSON
+{
+  "message" : "Der Nutzername existiert bereits"
+}
+```
+
+11. Statusode 500, wenn ein Server- oder Datenbankfehler auftritt
+```JSON
+{
+  "message" : "Fehler beim erstellen des Nutzers"
+}
+```
