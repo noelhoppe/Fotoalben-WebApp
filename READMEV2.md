@@ -504,6 +504,8 @@ http-Anfrage:
 }
 ```
 
+---
+
 > POST /photos   
 > Gibt Statuscode 201 zurück, wenn das Foto erfolgreich hochgeladen wurde.
 
@@ -569,3 +571,219 @@ http-Anfrage:
   "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
 }
 ```
+
+---
+
+> GET /users
+
+http-Response: 
+```JSON
+{
+  "users" : [
+    {
+      "id" : 1,
+      "username" : "admin",
+      "passwort" : "root",
+      "role" : "ADMIN"
+    },
+    {
+      "id" : 2,
+      "username" : "noel",
+      "passwort" : "0610",
+      "role" : "USER"
+    }
+  ]
+}
+```
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statusode 403, wenn der angemeldete Benutzer kein Admin ist.  
+```JSON
+{
+  "message" : "Der angemeldete Benutzer ist kein Admin."
+}
+```
+
+3. Statuscode 500, wenn ein Server- und /oder Datenbankfehler aufgetreten ist.
+```JSON
+{
+  "message" : "Ein interner Server- und/oder Datenbankfehler ist aufgetreten "
+}
+```
+
+---
+
+> DELETE /users/:userID
+> Gibt bei erfolgt Statuscode 204 zurück.
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statusode 403, wenn der angemeldete Benutzer kein Admin ist.
+```JSON
+{
+  "message" : "Der angemeldete Benutzer ist kein Admin."
+}
+```
+
+3. Statuscode 400, wenn der Pfadparameter keine gültige Zahl ist.
+```JSON
+{
+  "message" : "userID muss eine gültige Zahl sein"
+}
+```
+
+4. Statuscode 403, wenn veruscht wird, den Admin zu löschen.
+```JSON
+{
+  "message" : "Der Admin darf nicht gelöscht werden"
+}
+```
+
+5. Statuscode 500, wenn ein Server- und/oder Datenbankfehler auftritt.
+```JSON
+{
+  "message" : "Ein interner Server- und/oder Datenbankfehler ist aufgetreten"
+}
+```
+
+---
+
+> PATCH /users/username/:userID
+
+http-Request
+```JSON
+{
+  "username" : "Benutzername hier"
+}
+```
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statusode 403, wenn der angemeldete Benutzer kein Admin ist.
+```JSON
+{
+  "message" : "Der angemeldete Benutzer ist kein Admin."
+}
+```
+
+3. Statuscode 400, wenn der Pfadparameter keine gültige Zahl ist.
+```JSON
+{
+  "message" : "userID muss eine gültige Zahl sein"
+}
+```
+
+4. Statuscode 400, wenn der Nutzername leer ist oder nur aus Leerzeichen besteht.
+```JSON
+{
+  "message" : "Der Nutzername darf nicht leer sein"
+}
+```
+
+5. Statuscode 400, wenn der Nutzername Leerzeichen enthält
+```JSON
+{
+  "message" : "Der Nutzername darf keine Leerzeichen enthalten"
+}
+```
+
+6. Statuscode 400, wenn der Nutzername merh als 30 Zeichen hat
+```JSON
+{
+  "message" : "Der Nutzername darf höchstens 30 Zeichen lang sein"
+}
+```
+
+7. Statuscode 409, wenn der Nutzername bereits existiert
+```JSON
+{
+  "message" : "Der Nutzername existiert bereits"
+}
+```
+
+8. Statuscode 500, wenn ein Server- und/oder Datenbankfehler auftritt
+```JSON
+{
+  "message" : "Ein interner Serverfehler ist aufgetreten"
+}
+```
+
+
+---
+
+
+> PATCH /users/password/:userID
+
+http-Request
+````JSON
+{
+  "password" : "password"
+}
+````
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statusode 403, wenn der angemeldete Benutzer kein Admin ist.
+```JSON
+{
+  "message" : "Der angemeldete Benutzer ist kein Admin."
+}
+```
+
+3. Statuscode 400, wenn der Pfadparameter keine gültige Zahl ist.
+```JSON
+{
+  "message" : "userID muss eine gültige Zahl sein"
+}
+```
+
+4. Statuscode 400, wenn das Passwort leer ist oder nur aus Leerzeichen besteht
+```JSON
+{
+  "message" : "Das Passwort darf nicht leer sein"
+}
+```
+
+5. Statuscode 400, wenn das Passwort mehr als 30 Zeichen enthält
+```JSON
+{
+  "message" : "Das Passwort muss zwischen 4 und 30 Zeichen lang sein"
+}
+```
+
+6. Statuscode 400, wenn das Passwort Leerzeichen enthält
+```JSON
+{
+  "message" : "Das Passwort darf keine Leerzeichen enthalten"
+}
+```
+
+7. Statuscode 500, wenn ein interner Server- und/oder Datenbankfehler aufgetreten ist
+```JSON
+{
+  "message" : "Ein interner Server- und/oder Datenbankfehler ist aufgetreten"
+}
+```
+
+
