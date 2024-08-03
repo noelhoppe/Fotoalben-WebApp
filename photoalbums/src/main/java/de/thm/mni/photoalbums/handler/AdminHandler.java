@@ -13,6 +13,8 @@ import io.vertx.sqlclient.Tuple;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 public class AdminHandler {
 	private final JDBCPool jdbcPool;
 
@@ -118,9 +120,32 @@ public class AdminHandler {
 			);
 		}
 	}
+
+
   public void addUser(RoutingContext ctx) {
-    String username = ctx.body().asJsonObject().getString("username")
+    String username = ctx.body().asJsonObject().getString("username");
     String password = ctx.body().asJsonObject().getString("password");
+
+    String pwdHash = BCrypt.hashpw(password, BCrypt.gensalt(10));
+
+    jdbcPool.preparedQuery("""
+                       		          INSERT INTO Users
+                                  (Username, Password)
+                                  VALUES (?, ?)
+                        			      """
+    ).execute(Tuple.of(username, pwdHash), res -> {
+      if (res.succeeded()) {
+        String response = "Nutzer " + username + " erfolgreich angelegt";
+        MainVerticle.response(ctx.response(), 201, new JsonObject()
+          .put("message", response));
+
+      } else {
+        System.err.println("Error: " + res.cause().getMessage());
+        MainVerticle.response(ctx.response(), 500, new JsonObject()
+          .put("message", "Fehler beim erstellen des Nutzers")
+        );
+      }
+    });
   }
 
 	/**
