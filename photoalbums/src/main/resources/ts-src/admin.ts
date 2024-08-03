@@ -105,10 +105,15 @@ async function fetchUserDelete(userID : number) {
     }
 }
 
+function resetModalInputs(modal : HTMLElement) {
+    (document.querySelector("#field-username") as HTMLInputElement).value = "";
+    (document.querySelector("#field-password") as HTMLInputElement).value = "";
+}
+(document.querySelector("#open-modal") as HTMLButtonElement).addEventListener("click", resetModalInputs);
+
 function addUser() {
   const addUserBtn = (document.getElementById("addUserBtn") as HTMLButtonElement);
   addUserBtn.addEventListener("click", async (MouseEvent) => {
-
     const username = (document.getElementById("field-username") as HTMLInputElement).value;
     const passwd = (document.getElementById("field-password") as HTMLInputElement).value;
     const reqData = {

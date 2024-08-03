@@ -101,6 +101,11 @@ function fetchUserDelete(userID) {
         }
     });
 }
+function resetModalInputs(modal) {
+    document.querySelector("#field-username").value = "";
+    document.querySelector("#field-password").value = "";
+}
+document.querySelector("#open-modal").addEventListener("click", resetModalInputs);
 function addUser() {
     const addUserBtn = document.getElementById("addUserBtn");
     addUserBtn.addEventListener("click", (MouseEvent) => __awaiter(this, void 0, void 0, function* () {
