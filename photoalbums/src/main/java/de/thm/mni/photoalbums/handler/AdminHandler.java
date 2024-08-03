@@ -36,7 +36,7 @@ public class AdminHandler {
 		List<Object> params = new ArrayList<>();
 
 		if (username != null && !username.trim().isEmpty()) {
-			sbSql.append(" WHERE username = ?");
+			sbSql.append(" WHERE username LIKE CONCAT('%', ?, '%')");
 			params.add(username);
 		}
 
@@ -58,6 +58,149 @@ public class AdminHandler {
 				} else {
 					MainVerticle.response(ctx.response(), 500, new JsonObject()
 						.put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
+					);
+				}
+			});
+	}
+
+	/**
+	 * Entfernt alle Fotos des Benutzers und leitet die Anfrage an den nächsten Handler weiter.<br>
+	 * Gibt Statuscode 500 mit Fehlermeldung zurück, wen ein Server - und/oder Datenbankfehler aufgetreten ist.<br>
+	 */
+	public void deleteAllPhotosFromUser(RoutingContext ctx) {
+		System.out.println("called deleteAllPhotosFromUser in AdminHandler");
+
+		Integer userID = Integer.parseInt(ctx.pathParam("userID"));
+		jdbcPool.preparedQuery("DELETE FROM Photos WHERE Users_ID = ?")
+			.execute(Tuple.of(userID), ar -> {
+				if (ar.succeeded()) {
+					ctx.next();
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
+					);
+				}
+			});
+
+	}
+
+	/**
+	 * Entfernt alle Alben des Benutzers und leitet die Anfrage an den nächsten Handler weiter.<br>
+	 * Gibt Statuscode 500 mit Fehlermeldung zurück, wen ein Server - und/oder Datenbankfehler aufgetreten ist.<br>
+	 */
+	public void deleteAllAlbumsFromUser(RoutingContext ctx) {
+		System.out.println("called deleteAllAlbumsFromUser in AdminHandler");
+
+		Integer userID = Integer.parseInt(ctx.pathParam("userID"));
+		jdbcPool.preparedQuery("DELETE FROM Albums WHERE Users_ID = ?")
+			.execute(Tuple.of(userID), ar -> {
+				if (ar.succeeded()) {
+					ctx.next();
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "EIn interner Server- und/oder Datenbankfehler ist aufgetreten")
+					);
+				}
+			});
+	}
+
+	/**
+	 * Prüft, ob die userID eine gültige Zahl ist und gibt ggf. Statuscode 400 zurück.<br>
+	 */
+	public void userIDIsNumber(RoutingContext ctx) {
+		System.out.println("called userIDIsNumber in AdminHandler.java");
+		try {
+			Integer.parseInt(ctx.pathParam("userID"));
+			ctx.next();
+		} catch(NumberFormatException e) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "userID muss eine gültige Zahl sein")
+			);
+		}
+	}
+
+	/**
+	 * Prüft, ob versucht wird, den Admin zu löschen.<br>
+	 * Wenn ja, gebe Statuscode 403 zurück<br>
+	 * wenn nein, gebe die Anfrage an den nächsten Handler weiter.
+	 * @param ctx
+	 */
+	public void tryToDelAdmin(RoutingContext ctx) {
+		System.out.println("called tryToDelAdmin in AdminHandler.java");
+
+		Integer userID = Integer.parseInt(ctx.pathParam("userID"));
+
+		jdbcPool.preparedQuery("SELECT * FROM Users WHERE ID = ?")
+			.execute(Tuple.of(userID), ar -> {
+				if (ar.succeeded() && ar.result().size() > 0) {
+					if (ar.result().iterator().next().getString("role").equals("ADMIN")) {
+						MainVerticle.response(ctx.response(), 403, new JsonObject()
+							.put("message", "Der Admin darf nicht gelöscht werden")
+						);
+					} else {
+						ctx.next();
+					}
+				}  else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Ein interner Serverfehler ist aufgetreten")
+					);
+				}
+			});
+	}
+
+	/**
+	 * Entfernt einen Benutzer und gibt bei Erfolg Statuscode 204 zurück.<br>
+	 * Gibt Statuscode 500 mit Fehlermeldung zurück, wen ein Server - und/oder Datenbankfehler aufgetreten ist.<br>
+	 * @param ctx
+	 */
+	public void delUser(RoutingContext ctx) {
+		System.out.println("called delUser in AdminHandler.java");
+
+		Integer userID = Integer.parseInt(ctx.pathParam("userID"));
+		jdbcPool.preparedQuery("DELETE FROM Users WHERE ID = ?")
+			.execute(Tuple.of(userID), ar -> {
+				if (ar.succeeded()) {
+					MainVerticle.response(ctx.response(), 204, new JsonObject()
+						.put("message", "User wurde erfolgreich gelöscht")
+					);
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
+					);
+				}
+			});
+	}
+
+	public void usernameIsUnique(RoutingContext ctx) {
+		String username = ctx.body().asJsonObject().getString("username");
+		jdbcPool.preparedQuery("SELECT * FROM Users WHERE username = ?")
+			.execute(Tuple.of(username), ar -> {
+				if (ar.succeeded() && ar.result().size() > 0) {
+					MainVerticle.response(ctx.response(), 409, new JsonObject()
+						.put("message", "Der Nutzername existiert bereits")
+					);
+				} else {
+					ctx.next();
+				}
+			});
+	}
+
+
+	public void handlePatchUsername(RoutingContext ctx) {
+		System.out.println("called handlePatchUsername in AdminHandler.java");
+
+		Integer userId = Integer.parseInt(ctx.pathParam("userID"));
+		String username = ctx.body().asJsonObject().getString("username");
+
+		jdbcPool.preparedQuery("UPDATE Users SET username = ? WHERE ID = ?")
+			.execute(Tuple.of(username, userId), ar -> {
+				if (ar.succeeded()) {
+					MainVerticle.response(ctx.response(), 200, new JsonObject()
+						.put("message", "Username erfolgreich geändert")
+					);
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Ein interner Serverfehler ist aufgetreten")
 					);
 				}
 			});

@@ -10,9 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 function initializePage() {
-    document.addEventListener("DOMContentLoaded", () => __awaiter(this, void 0, void 0, function* () {
+    return __awaiter(this, void 0, void 0, function* () {
         yield fetchUsers();
-    }));
+        addUserDeleteListener();
+        giveUserIDToModal();
+    });
 }
 initializePage();
 function searchUser() {
@@ -49,19 +51,19 @@ function fetchUsers(searchParam) {
 }
 function renderSingleUserRow(user) {
     const tbodyContainer = document.querySelector("#tbody-display-users");
-    const { id, username, password, role } = user; // DESTRUCTURING
+    const { id, username, role } = user; // DESTRUCTURING
     const newRow = tbodyContainer.insertRow();
-    newRow.setAttribute("data-Users_ID", id.toString());
+    newRow.setAttribute("data-users-id", id.toString());
     newRow.insertCell().textContent = username;
     newRow.insertCell().textContent = role;
     const actionCell = newRow.insertCell();
     actionCell.innerHTML = `
           <div class="row gy-3">
             <div class="col d-flex align-items-center">
-              <button class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#editModal">Bearbeiten</button>
+              <button class="btn btn-warning w-100 edit-user-btn" data-bs-toggle="modal" data-bs-target="#editModal">Bearbeiten</button>
             </div>
             <div class="col d-flex align-items-center">
-              <button class="btn btn-danger w-100">
+              <button class="btn btn-danger w-100 del-user-btn">
                 Benutzer löschen
               </button>
             </div>
@@ -69,6 +71,37 @@ function renderSingleUserRow(user) {
     `;
 }
 // renderSingleUserRow({id : 1, username : "Noel", password : "0610", role : "ADMIN"});
+function addUserDeleteListener() {
+    const deleteButtons = document.querySelectorAll(".del-user-btn");
+    deleteButtons.forEach((delBtn) => {
+        delBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+            const trElement = delBtn.closest("tr");
+            const userID = trElement.getAttribute("data-users-id");
+            yield fetchUserDelete(parseInt(userID));
+        }));
+    });
+}
+function fetchUserDelete(userID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/users/" + userID, {
+                method: "DELETE",
+                credentials: "include"
+            });
+            console.log(res.status);
+            if (res.status == 204) {
+                yield fetchUsers();
+            }
+            else {
+                const data = yield res.json();
+                console.log(data.message);
+            }
+        }
+        catch (error) {
+            console.error(error);
+        }
+    });
+}
 function redirectToPhotoalbumsPage() {
     document.querySelector("#redirect-to-photoalbums").addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -86,3 +119,44 @@ function redirectToPhotoalbumsPage() {
     }));
 }
 redirectToPhotoalbumsPage();
+function giveUserIDToModal() {
+    const editBtns = document.querySelectorAll(".edit-user-btn");
+    editBtns.forEach(editBtn => {
+        editBtn.addEventListener("click", () => {
+            const tr = editBtn.closest("tr");
+            const userID = tr.getAttribute("data-users-id");
+            const editUsersModalContainer = document.querySelector("#editModal");
+            editUsersModalContainer.setAttribute("data-user-id", userID);
+            editUsername();
+        });
+    });
+}
+function editUsername() {
+    document.querySelector("#username-form").addEventListener("submit", (evt) => {
+        evt.preventDefault();
+        const newUsername = document.querySelector("#username").value;
+        const editUserModalContainer = document.querySelector("#editModal");
+        const userID = editUserModalContainer.getAttribute("data-user-id");
+        fetchEditUsername(parseInt(userID), newUsername);
+    });
+}
+function fetchEditUsername(userID, username) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/users/username/" + userID, {
+                method: "PATCH",
+                credentials: "include",
+                body: JSON.stringify({ username: username })
+            });
+            const data = yield res.json();
+            if (res.ok) {
+                window.location.reload();
+            }
+            console.log(res.status);
+            console.log(data.message);
+        }
+        catch (err) {
+            console.error(err);
+        }
+    });
+}

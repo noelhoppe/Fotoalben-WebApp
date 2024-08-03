@@ -257,7 +257,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::deleteTag);
 
-    router.post("/tag")
+    router.post("/tag") // TODO: /photos/tag?
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
              ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
@@ -313,7 +313,6 @@ public class MainVerticle extends AbstractVerticle {
       .handler(photoHandler::validatePhotoTitleReq)
       .handler(photoHandler::uploadPhoto);
 
-
     // --- ADMIN HANDLER ---
     AdminHandler adminHandler = new AdminHandler(jdbcPool);
 
@@ -321,6 +320,27 @@ public class MainVerticle extends AbstractVerticle {
            .handler(authenticationHandler::isLoggedIn)
            .handler(authenticationHandler::isAdmin)
            .handler(adminHandler::getUsers);
+
+    router.delete("/users/:userID")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(authenticationHandler::isAdmin)
+           .handler(adminHandler::userIDIsNumber)
+           .handler(adminHandler::tryToDelAdmin)
+           .handler(adminHandler::deleteAllPhotosFromUser)
+           .handler(adminHandler::deleteAllAlbumsFromUser)
+           .handler(adminHandler::delUser);
+
+    router.patch("/users/username/:userID")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(authenticationHandler::isAdmin)
+           .handler(adminHandler::userIDIsNumber)
+           .handler(ctx -> {
+                  ctx.data().put("username", ctx.body().asJsonObject().getString("username"));
+                  ctx.next();
+           })
+           .handler(loginHandler::validateUsernameInput)
+           .handler(adminHandler::usernameIsUnique)
+           .handler(adminHandler::handlePatchUsername);
 
 
     // --- ADMIN HANDLER ---

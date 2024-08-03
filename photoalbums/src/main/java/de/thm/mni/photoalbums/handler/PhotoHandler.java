@@ -71,12 +71,12 @@ public class PhotoHandler {
 		params.add(userIdStr);
 
 		if (tag != null && !tag.trim().isEmpty()) {
-			sql.append("AND t_inner.name = ?");
+			sql.append("AND t_inner.name LIKE CONCAT('%', ?, '%')");
 			params.add(tag);
 		}
 
 		if (photoTitle != null && !photoTitle.trim().isEmpty()) {
-			sql.append("OR p_inner.title = ?");
+			sql.append("OR p_inner.title LIKE CONCAT('%', ?, '%')");
 			params.add(photoTitle);
 		}
 
