@@ -49,14 +49,28 @@ http-Response
 }
 ```
 
-6. Gibt Statuscode 400 zurück, wenn der Nutzername _oder_ das Passwort falsch ist.
+6. Gibt Statuscode 400 zurück, wenn das Password kürzer als 4 oder länger als 30 Zeichen ist.
+```JSON
+{
+  "message": "Das Passwort muss zwischen 4 und 30 Zeichen lang sein"
+}
+```
+
+7. Gibt Statuscode 400 zurück, wenn der Benutzername länger als 30 Zeichen ist.
+```JSON
+{
+  "message": "Der Nutzername darf höchstens 30 Zeichen lang sein"
+}
+```
+
+8. Gibt Statuscode 400 zurück, wenn der Nutzername _oder_ das Passwort falsch ist.
 ```JSON
 {
   "message": "Nutzername oder Passwort falsch"
 }
 ```
 
-7. Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
+9. Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
 
 
 
