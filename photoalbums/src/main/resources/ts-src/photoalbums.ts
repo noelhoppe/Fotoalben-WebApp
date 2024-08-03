@@ -613,7 +613,6 @@ addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
   const reqData = {
     album : {
       title : albumName
-
     }
   };
 
@@ -655,6 +654,7 @@ addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
     const data : { message : string } = await res.json();
 
     if (res.status == 201) {
+      window.location.reload();
       renderError(document.querySelector("#error-add-photo-container") as HTMLDivElement, true );
     } else {
       renderError(document.querySelector("#error-add-photo-container") as HTMLDivElement, false, data.message);

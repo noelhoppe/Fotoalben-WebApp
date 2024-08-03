@@ -585,6 +585,7 @@ addPhotoSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void
         });
         const data = yield res.json();
         if (res.status == 201) {
+            window.location.reload();
             renderError(document.querySelector("#error-add-photo-container"), true);
         }
         else {
