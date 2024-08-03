@@ -216,21 +216,6 @@ public class MainVerticle extends AbstractVerticle {
            })
            .handler(photoHandler::getAllPhotosFromUser);
 
-    router.get("/test").handler(ctx -> {
-           MultiMap parameters = ctx.request().params();
-
-           ctx.response()
-                  .setStatusCode(200)
-                  .putHeader("Content-Type", "application/json")
-                  .end(
-                         new JsonObject()
-                                .put("a", parameters.get("a"))
-                                .put("b", parameters.get("b"))
-                                .encodePrettily()
-                  );
-    });
-
-
     router.get("/img/:photoID")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {

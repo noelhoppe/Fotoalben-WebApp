@@ -176,6 +176,9 @@ public class AdminHandler {
 			});
 	}
 
+	/**
+	 * Prüft, ob der Nutzername bereits existiert und gibt ggf. Statuscode 409 zurück. Ansonsten rufe den nächsten Handler auf
+	 */
 	public void usernameIsUnique(RoutingContext ctx) {
 		String username = ctx.body().asJsonObject().getString("username");
 		jdbcPool.preparedQuery("SELECT * FROM Users WHERE username = ?")
@@ -190,7 +193,10 @@ public class AdminHandler {
 			});
 	}
 
-
+	/**
+	 * Ändert den Usernamen eines Benutzers<br>
+	 * @param ctx
+	 */
 	public void handlePatchUsername(RoutingContext ctx) {
 		System.out.println("called handlePatchUsername in AdminHandler.java");
 
@@ -211,6 +217,10 @@ public class AdminHandler {
 			});
 	}
 
+	/**
+	 * Ändert das Passwort eines Benutzers.
+	 * @param ctx
+	 */
 	public void handlerPatchPassword(RoutingContext ctx) {
 		Integer userId = Integer.parseInt(ctx.pathParam("userID"));
 		String password = ctx.body().asJsonObject().getString("password");
