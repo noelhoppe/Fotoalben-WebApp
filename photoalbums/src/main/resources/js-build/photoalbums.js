@@ -178,7 +178,7 @@ function handleTagAdd(photoID, tagName) {
             }
             else {
                 const data = yield res.json();
-                renderErrorEditPhoto(false, data.message);
+                renderError(document.querySelector("#error-edit-photo-container"), false, data.message);
             }
         }
         catch (error) {
@@ -191,9 +191,9 @@ function handleTagAdd(photoID, tagName) {
  * @param resetErrorMessage true, wenn die Fehlermeldung zurückgesetzt werden soll und der container versteckt werden soll; false sonst
  * @param message Die Fehlermeldung, die gerendert werden soll
  */
-function renderErrorEditPhoto(resetErrorMessage, message) {
-    const errorContainer = document.querySelector("#error-edit-photo-container");
-    const errorParagraph = document.querySelector("#error-edit-photo");
+function renderError(errorContainer, resetErrorMessage, message) {
+    // const errorContainer = document.querySelector("#error-edit-photo-container") as HTMLDivElement;
+    const errorParagraph = errorContainer.querySelector("p");
     if (resetErrorMessage) {
         // Wenn resetErrorMessage true ist, leeren wir die Fehlermeldung und verstecken den Container
         if (errorParagraph) {
@@ -296,12 +296,12 @@ function editPhotoTitle() {
                 if (res.status == 200) {
                     const img = document.querySelector(`img[data-id='${photoID}']`);
                     img.setAttribute("title", data.photoTitle);
-                    renderErrorEditPhoto(true);
+                    renderError(document.querySelector("#error-edit-photo-container"), true);
                     updateModalUI(extractPhotoData(img));
                 }
                 else {
                     console.log("called");
-                    renderErrorEditPhoto(false, data.message);
+                    renderError(document.querySelector("#error-edit-photo-container"), false, data.message);
                 }
             }
             catch (error) {
@@ -502,10 +502,10 @@ function handleEditPhotoDate(date) {
                 const imgElement = document.querySelector(`img[data-id='${photoID}']`);
                 imgElement.dataset.date = data.newDate;
                 updateModalUI(extractPhotoData(imgElement));
-                renderErrorEditPhoto(true);
+                renderError(document.querySelector("#error-edit-photo-container"), true);
             }
             else {
-                renderErrorEditPhoto(false, data.message);
+                renderError(document.querySelector("#error-edit-photo-container"), false, data.message);
             }
         }
         catch (error) {
@@ -534,14 +534,14 @@ function handlePhotoDelete(photoID) {
             credentials: "include"
         });
         if (res.status == 204) {
-            renderErrorEditPhoto(true);
+            renderError(document.querySelector("#error-edit-photo-container"), true);
             yield fetchPhotos();
             window.location.reload();
         }
         else {
             const data = yield res.json();
             console.log(data.message);
-            renderErrorEditPhoto(false, data.message);
+            renderError(document.querySelector("#error-edit-photo-container"), false, data.message);
         }
     });
 }
@@ -584,6 +584,12 @@ addPhotoSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void
             body: formData
         });
         const data = yield res.json();
+        if (res.status == 201) {
+            renderError(document.querySelector("#error-add-photo-container"), true);
+        }
+        else {
+            renderError(document.querySelector("#error-add-photo-container"), false, data.message);
+        }
     }
     catch (error) {
         console.log("ERROR at POST /photos");

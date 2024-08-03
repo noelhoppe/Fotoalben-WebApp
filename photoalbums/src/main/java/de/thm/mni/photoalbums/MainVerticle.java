@@ -307,8 +307,6 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::deleteAllTagsTagsFromPhoto)
            .handler(photoHandler::deletePhoto);
 
-
-    router.post("/photos").handler(photoHandler::uploadPhoto);
     router.post("/photos")
       .handler(authenticationHandler::isLoggedIn)
       .handler(photoHandler::containsUploadedFile)
@@ -320,8 +318,9 @@ public class MainVerticle extends AbstractVerticle {
     AdminHandler adminHandler = new AdminHandler(jdbcPool);
 
     router.get("/users") // auch: /users?username=Benutzername
-       .handler(authenticationHandler::isLoggedIn)
-       .handler(adminHandler::getUsers);
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(authenticationHandler::isAdmin)
+           .handler(adminHandler::getUsers);
 
 
     // --- ADMIN HANDLER ---
