@@ -112,11 +112,8 @@ function addUser() {
     const username = (document.getElementById("field-username") as HTMLInputElement).value;
     const passwd = (document.getElementById("field-password") as HTMLInputElement).value;
     const reqData = {
-      user : {
-        name : username,
+        username : username,
         password : passwd
-
-      }
     };
 
     try {
@@ -128,6 +125,7 @@ function addUser() {
         },
         body : JSON.stringify(reqData),
       });
+      if (res.status == 201) window.location.reload();
     } catch(error){
       console.log("ERROR at POST /users")
     }
@@ -219,6 +217,7 @@ async function fetchEditUsername(userID : number, username : string) {
         console.error(err);
     }
 }
+
 
 
 function redirectToPhotoalbumsPage() {

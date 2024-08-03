@@ -107,10 +107,8 @@ function addUser() {
         const username = document.getElementById("field-username").value;
         const passwd = document.getElementById("field-password").value;
         const reqData = {
-            user: {
-                name: username,
-                password: passwd
-            }
+            username: username,
+            password: passwd
         };
         try {
             const res = yield fetch("http://localhost:8080/users", {
@@ -121,6 +119,8 @@ function addUser() {
                 },
                 body: JSON.stringify(reqData),
             });
+            if (res.status == 201)
+                window.location.reload();
         }
         catch (error) {
             console.log("ERROR at POST /users");
