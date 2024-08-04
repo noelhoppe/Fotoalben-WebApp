@@ -592,7 +592,6 @@ public void uploadPhoto(RoutingContext ctx){
           ).execute(Tuple.of(fileNameNew, photoID), res2 -> {
             if (res2.succeeded()) {
 
-              System.out.println("Filename " + file.fileName());
               MainVerticle.response(ctx.response(), 201, new JsonObject()
                 .put("message", "Foto wurde erfolgreich hochgeladen!"));
 
