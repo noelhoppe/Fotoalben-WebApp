@@ -1,8 +1,6 @@
 package de.thm.mni.photoalbums;
-import de.thm.mni.photoalbums.handler.AdminHandler;
+import de.thm.mni.photoalbums.handler.*;
 import de.thm.mni.photoalbums.handler.AuthenticationHandler;
-import de.thm.mni.photoalbums.handler.LoginHandler;
-import de.thm.mni.photoalbums.handler.PhotoHandler;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -350,6 +348,12 @@ public class MainVerticle extends AbstractVerticle {
 
     // --- ADMIN HANDLER ---
 
+
+    // --- ALBUM HANDLER ---
+
+    AlbumHandler albumHandler = new AlbumHandler(jdbcPool);
+
+    // --- ALBUM HANDLER ---
 
     return Future.succeededFuture(router);
   }
