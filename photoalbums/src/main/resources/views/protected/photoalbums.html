@@ -187,13 +187,17 @@
       <input type="search" class="form-control me-2" placeholder="Search photos in album" aria-label="Search in this album"> <!-- TODO: Server muss Einagbe verarbeiten -->
       <button class="btn btn-outline-success" type="submit">Search</button>
     </form>
-    <ul class="list-group">
+    <ul id="display-albums" class="list-group d-flex flex-column gap-3">
+      <li class="list-group-item d-flex align-items-center">
+        <button class="btn w-100 d-flex justify-content-start">Alle Fotos</button>
+      </li>
+
 
       <!--TODO: Insert albums here like this conzept
       TODO: Sollen die Schlagworte der Alben angezeigt werden?
       -->
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        Alle Fotos
+      <li data-album-id="" data-tags="" class="list-group-item d-flex align-items-center"> <!-- Insert album id in parent container -->
+       <button class="btn w-75 d-flex justify-content-start">Album 1</button> <!-- Albumtitel hier einfügen -->
         <span>
             <!-- Edit Button - OPENS EDIT MODAL ALBUM -->
             <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editAlbumModal">
@@ -221,35 +225,57 @@
 <div class="modal fade" id = "editAlbumModal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
   <div class ="modal-dialog modal-dialog-centered">
     <div class ="modal-content">
-      <!-- Title -->
+      <!-- Photo's title -->
       <div class="modal-header">
-        <h1 class="modal-title">Album bearbeiten</h1>
+        <h1 class="modal-title" id="album-title">Album 1</h1> <!-- *.js/*.ts inserts albums's title here -->
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <!-- Edit Album -->
       <div class="modal-body w-100">
         <div class="d-flex flex-column gap-3">
-          <!-- Name of Album -->
-          <div>
-            <h2>Hier Album Name</h2> <!-- TODO:Album Name einfügen -->
+
+          <div id="album-tags"> <!-- display tags -->
+            <p class="fw-bold">Schlagworte</p>
+            <div class="row gy-2">
+              <div class="col">
+                <p class="badge bg-light text-dark">
+                  Testtag
+                  <button class="btn btn-close" aria-label="Tag entfernen">
+                  </button>
+                </p>
+              </div>
+              <!-- Insert tags -->
+            </div>
           </div>
-          <!-- Edit Album-->
-          <div>
-            <label for="albumName"></label>
-            <input id="albumName" class="w-100" type="text" placeholder="Neuer Albumname">
-            <!-- TODO: TAGS bearbeiten -->
+
+          <!-- EDIT ALBUMTITLE -->
+          <div class="row"> <!-- Albumtitel ändern -->
+            <div class="col">
+              <input id="edit-album-name" type="text" class="form-control me-2" placeholder="Albumname ändern" aria-label="Albumname ändern">
+            </div>
+            <div class="col">
+              <button id="submit-edit-album-name" class="btn btn-primary" type="submit">Speichern</button>
+            </div>
           </div>
+
+          <!-- ADD TAG -->
+
+          <div class="row"> <!-- Schlagworte hinzufügen -->
+            <div class="col">
+              <input id="addTagToAlbumInput" type="text" class="form-control me-2" placeholder="Schlagwort hinzufügen" aria-label="Schlagwort hinzufügen">
+            </div>
+            <div class="col">
+              <button class="btn btn-primary" id="submitAddTagToAlbumInput">Speichern</button>
+            </div>
+          </div>
+
         </div>
       </div>
-      <!-- Save Button -->
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary">Änderungen speichern</button>
-      </div>
-
     </div>
   </div>
 </div>
+
+
 
 
 
@@ -316,7 +342,7 @@
           <!-- EDIT PHOTO -->
           <div class="row"> <!-- Fototitel ändern -->
             <div class="col">
-              <input id="edit-name" type="text" class="form-control me-2" placeholder="Fototitel ändern" aria-label="Search in this album">
+              <input id="edit-name" type="text" class="form-control me-2" placeholder="Fototitel ändern" aria-label="Fototitel ändern">
             </div>
             <div class="col">
               <button id="submit-edit-name" class="btn btn-primary" type="submit">Speichern</button>
