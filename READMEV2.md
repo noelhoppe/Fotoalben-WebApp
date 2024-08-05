@@ -797,7 +797,7 @@ http-Request
 }
 ```
 
-http-Response
+mögliche Fehler:
 
 1. Statuscode 401, wenn kein Nutzer angemeldet ist.
 ```JSON
@@ -877,3 +877,45 @@ http-Response
   "message" : "Fehler beim erstellen des Nutzers"
 }
 ```
+
+> POST /albums   
+> Gibt Statuscode 201 zurück, wenn das Album erfolgreich anglegt wurde
+
+http-Request
+```JSON
+{
+ "title" : ____
+}
+```
+
+mögliche Fehler:
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statusode 400, wenn der Titel leer ist oder nur aus Leerzeichen besteht
+```JSON
+{
+  "message" : "Der Titel darf nicht leer sein"
+}
+```
+
+3. Statusode 400, wenn der Titel länger als 30 Zeichen ist
+```JSON
+{
+  "message" : "Der Titel darf maximal 30 Zeichen lang sein"
+}
+```
+
+4. Statusode 500, wenn ein Server- oder Datenbankfehler auftritt
+```JSON
+{
+  "message" : "Fehler beim erstellen des Albums"
+}
+```
+
+
