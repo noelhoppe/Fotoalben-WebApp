@@ -352,6 +352,9 @@ public class MainVerticle extends AbstractVerticle {
     // --- ALBUM HANDLER ---
 
     AlbumHandler albumHandler = new AlbumHandler(jdbcPool);
+    router.get("/albums") // auch /albums?searchParam=test
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(albumHandler::getAllAlbumsFromUser);
 
     // --- ALBUM HANDLER ---
 

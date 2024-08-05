@@ -422,6 +422,7 @@ function initializePage() {
     document.addEventListener("DOMContentLoaded", () => __awaiter(this, void 0, void 0, function* () {
         yield fetchUsername();
         yield fetchPhotos();
+        yield fetchAlbums();
         yield fetchRole();
     }));
 }
@@ -603,17 +604,27 @@ function searchAlbums() {
     });
 }
 searchAlbums();
-// TODO: Funktion fertigstellen
 /**
  * GET /albums <br>
  * Optional mit Suchparameter <br>
  */
 function fetchAlbums(searchParam) {
-    try {
-    }
-    catch (error) {
-        console.error(error);
-    }
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/albums?" + (searchParam ? new URLSearchParams({ searchParam: searchParam }).toString() : ""), {
+                method: "GET",
+                credentials: "include"
+            });
+            if (res.ok) {
+                const data = yield res.json();
+                console.log(data);
+                renderAlbums(data.albums);
+            }
+        }
+        catch (error) {
+            console.error(error);
+        }
+    });
 }
 function renderAlbums(albums) {
     const displayAlbumsContainer = document.querySelector("#display-albums");
