@@ -595,7 +595,20 @@ addPhotoSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void
         console.log("ERROR at POST /photos");
     }
 }));
-function fetchAlbums() {
+function searchAlbums() {
+    const searchInAlbumsInputEl = document.querySelector("#searchInAlbums");
+    document.querySelector("#searchInAlbumsSubmitBtn").addEventListener("submit", (evt) => {
+        evt.preventDefault();
+        fetchAlbums(searchInAlbumsInputEl.value);
+    });
+}
+searchAlbums();
+// TODO: Funktion fertigstellen
+/**
+ * GET /albums <br>
+ * Optional mit Suchparameter <br>
+ */
+function fetchAlbums(searchParam) {
     try {
     }
     catch (error) {
@@ -604,34 +617,76 @@ function fetchAlbums() {
 }
 function renderAlbums(albums) {
     const displayAlbumsContainer = document.querySelector("#display-albums");
+    // reset container
+    displayAlbumsContainer.innerHTML = "";
     albums.forEach(album => {
         const { id, title, tags } = album;
         const albumChild = document.createElement("li");
         albumChild.setAttribute("data-album-id", id.toString()); // Insert album id in parent container
         if (typeof tags == "string") {
-            albumChild.setAttribute("data-tags", tags);
+            albumChild.setAttribute("data-tags", tags); //Füge tags als kommaseparierter String in das parent Element ein
         }
         albumChild.className = "list-group-item d-flex align-items-center";
         albumChild.innerHTML = `
-      <button class="btn w-75 d-flex justify-content-start">${title}</button> <!-- Albumtitel hier einfügen -->
-        <span>
-            <!-- Edit Button - OPENS EDIT MODAL ALBUM -->
-            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editAlbumModal">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-              </svg>
-            </button>
-            <!-- Delete Button - Deletes album -->
-            <button class="btn btn-sm btn-outline-danger">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-              </svg>
-            </button>
-         </span>
-      <button>
+      <button class="btn w-75 d-flex justify-content-start album-title">${title}</button> <!-- Albumtitel hier einfügen -->
+      <span>
+          <!-- Edit Button - OPENS EDIT MODAL ALBUM -->
+          <button class="btn btn-sm btn-outline-secondary edit-btns" data-bs-toggle="modal" data-bs-target="#editAlbumModal"> <!-- KONVENTION: Jeder Edit Button bekommt die Klasse edit-btns -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+              <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+              <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+            </svg>
+          </button>
+          <!-- Delete Button - Deletes album -->
+          <button class="btn btn-sm btn-outline-danger del-btns"> <!-- KONVENTION: Jeder Delete Button bekommt die Klasse del-btns -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+              <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+            </svg>
+          </button>
+      </span>
     `;
         displayAlbumsContainer.appendChild(albumChild);
     });
 }
+renderAlbums([
+    { id: 1, title: "Album 5", tags: "Testtag1, Testtag 2" },
+    { id: 12, title: "Album 29" }
+]);
+function renderAlbumsEditModal() {
+    // attach event listener to edit btns in albums list
+    const editBtns = document.querySelectorAll(".edit-btns");
+    editBtns.forEach(editBtn => {
+        editBtn.addEventListener("click", () => {
+            // pick attributes from album
+            const closestLiElement = editBtn.closest("li");
+            const data_album_id = closestLiElement.getAttribute("data-album-id");
+            const title = closestLiElement.querySelector(".album-title").textContent;
+            const data_tags = closestLiElement.hasAttribute("data-tags") ? closestLiElement.getAttribute("data-tags") : undefined;
+            // reset an update input fields, album title and tags
+            const editAlbumModalContainer = document.querySelector("#editAlbumModal");
+            editAlbumModalContainer.setAttribute("data-album-id", data_album_id);
+            const editAlbumNameInput = document.querySelector("#edit-album-name");
+            editAlbumNameInput.value = "";
+            const addTagToAlbumInput = document.querySelector("#addTagToAlbumInput");
+            addTagToAlbumInput.value = "";
+            document.querySelector("#album-title").textContent = title;
+            const tagsContainer = document.querySelector("#album-tags .row");
+            tagsContainer.innerHTML = "";
+            data_tags === null || data_tags === void 0 ? void 0 : data_tags.split(", ").forEach(tag => {
+                const tagContainer = document.createElement("div");
+                tagContainer.className = "col";
+                tagContainer.innerHTML = `
+        <p class="badge bg-light text-dark">
+            ${tag}
+            <button class="btn btn-close" aria-label="Tag entfernen">
+            </button>
+        </p>
+      `;
+                tagsContainer.append(tagContainer);
+            });
+        });
+    });
+}
+renderAlbumsEditModal();
+// --- ALBEN ---
