@@ -38,7 +38,7 @@ public class LoginHandler {
 			ctx.put("password", password);
 			ctx.next();
 		} catch(IllegalArgumentException iae) {
-			MainVerticle.response(ctx.response(), 500, new JsonObject()
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Die Anfrage muss folgendes Format haben und die keys username und password sind nicht null-Werte")
 				.put("username", "___")
 				.put("password", "___")

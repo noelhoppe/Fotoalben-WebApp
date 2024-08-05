@@ -13,7 +13,7 @@ http-Request
 ```
 
 http-Response
-1. Gibt Statuscode 500 zurück, wenn der username oder das password null sind oder die Anfrage an die Route falsch formatiert ist.
+1. Gibt Statuscode 400 zurück, wenn der username oder das password null sind oder die Anfrage an die Route falsch formatiert ist.
 ```JSON
 {
   "message": "Die Anfrage muss folgendes Format haben und die keys username und password sind nicht null-Werte",	  
@@ -813,7 +813,7 @@ mögliche Fehler:
 }
 ```
 
-3. Statuscode 500,  wenn der Username oder das Passwort null sind oder die Anfrage an die Route falsch formatiert ist.
+3. Statuscode 400,  wenn der Username oder das Passwort null sind oder die Anfrage an die Route falsch formatiert ist.
 ```JSON
 {
   "message": "Die Anfrage muss folgendes Format haben und die keys username und password sind nicht null-Werte",
