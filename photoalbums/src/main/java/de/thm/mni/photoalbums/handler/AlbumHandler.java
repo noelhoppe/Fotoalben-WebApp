@@ -92,4 +92,51 @@ public class AlbumHandler {
              }
            });
   }
+
+  /**
+   * Prüft, ob der Albumtitel nur aus Leerzeichen besteht, also leer ist. <br>
+   * Prüft ob der Albumtitel länger als 30 Zeichen ist. <br>
+   * Wenn ja, gebe Statuscode 400 mit entsprechender Fehlermeldung zurück. <br>
+   * Wenn nein, gebe die Anfrage an den nächsten Handler weiter <br>
+   * @param ctx Routing Context
+   */
+  public void validateAlbumTitleReq(RoutingContext ctx) {
+    String albumTitle = ctx.data().get("title").toString();
+
+    if (albumTitle.trim().isEmpty()) {
+      MainVerticle.response(ctx.response(), 400, new JsonObject()
+        .put("message", "Der Titel darf nicht leer sein")
+      );
+    } else if (albumTitle.length() > 30) {
+      MainVerticle.response(ctx.response(), 400, new JsonObject()
+        .put("message", "Der Titel darf maximal 30 Zeichen lang sein")
+      );
+    } else {
+      ctx.next();
+    }
+  }
+
+  public void createAlbum(RoutingContext ctx){
+
+    int currentUserID = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
+    String title = ctx.body().asJsonObject().getString("title");
+
+    jdbcPool.preparedQuery("""
+                                INSERT INTO Albums
+                                (Users_ID, title)
+                                VALUES (?, ?)
+                                """)
+      .execute(Tuple.of(currentUserID, title), res -> {
+        if (res.succeeded()) {
+          MainVerticle.response(ctx.response(), 201, new JsonObject()
+            .put("message", "ALbum erfolgreich angelegt!")
+          );
+        } else {
+          System.err.println(res.cause().getMessage());
+          MainVerticle.response(ctx.response(), 500, new JsonObject()
+            .put("message", "Fehler beim erstellen des Albums")
+          );
+        }
+      });
+  }
 }

@@ -356,6 +356,16 @@ public class MainVerticle extends AbstractVerticle {
            .handler(authenticationHandler::isLoggedIn)
            .handler(albumHandler::getAllAlbumsFromUser);
 
+    router.post("/albums")
+      .handler(authenticationHandler::isLoggedIn)
+      .handler(ctx -> {
+        System.out.println(ctx.body().asJsonObject().getString("title"));
+        ctx.data().put("title", ctx.body().asJsonObject().getString("title"));
+        ctx.next();
+      })
+      .handler(albumHandler::validateAlbumTitleReq)
+      .handler(albumHandler::createAlbum);
+
     // --- ALBUM HANDLER ---
 
     return Future.succeededFuture(router);

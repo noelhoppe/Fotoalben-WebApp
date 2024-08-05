@@ -549,9 +549,7 @@ const addAlbumSubmit = document.getElementById("addAlbumSubmit");
 addAlbumSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void 0, function* () {
     const albumName = document.getElementById("addAlbumName").value;
     const reqData = {
-        album: {
-            title: albumName
-        }
+        title: albumName
     };
     const res = yield fetch("http://localhost:8080/albums", {
         method: "POST",
@@ -561,7 +559,9 @@ addAlbumSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void
         },
         body: JSON.stringify(reqData),
     });
-    // const data = await res.json(-);
+    if (res.status == 201) {
+        window.location.reload();
+    }
 }));
 //Don't allow Dates that are in the future for Image Date of creation
 const addPhotoDate = document.getElementById("addPhotoDate");

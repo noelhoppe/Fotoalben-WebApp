@@ -610,10 +610,9 @@ async function handlePhotoDelete(photoID : string) {
 const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;
 addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
   const albumName = (document.getElementById("addAlbumName")as HTMLInputElement).value;
+
   const reqData = {
-    album : {
       title : albumName
-    }
   };
 
   const res : Response = await fetch( "http://localhost:8080/albums", {
@@ -624,7 +623,9 @@ addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
     },
     body : JSON.stringify(reqData),
   });
-  // const data = await res.json(-);
+  if (res.status == 201){
+    window.location.reload();
+  }
 });
 
 //Don't allow Dates that are in the future for Image Date of creation

@@ -494,7 +494,7 @@ public class PhotoHandler {
             vertx.fileSystem().delete("img/" + photoURL, deleteResult -> {  //lösche Foto von Server
               if (deleteResult.succeeded()) {
 
-                jdbcPool.preparedQuery("DELETE FROM photostags WHERE Photos_ID = ?")
+                jdbcPool.preparedQuery("DELETE FROM photostags WHERE Photos_ID = ?")  //entferne Referenzen von Tags
                     .execute(Tuple.of(ctx.data().get("photoID")), res2 -> {
                       if (res2.failed()) {
                         MainVerticle.response(ctx.response(), 500, new JsonObject()
