@@ -545,57 +545,69 @@ function handlePhotoDelete(photoID) {
         }
     });
 }
-const addAlbumSubmit = document.getElementById("addAlbumSubmit");
-addAlbumSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void 0, function* () {
-    const albumName = document.getElementById("addAlbumName").value;
-    const reqData = {
-        title: albumName
-    };
-    const res = yield fetch("http://localhost:8080/albums", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(reqData),
-    });
-    if (res.status == 201) {
-        window.location.reload();
-    }
-}));
 //Don't allow Dates that are in the future for Image Date of creation
 const addPhotoDate = document.getElementById("addPhotoDate");
 let today = new Date().toISOString().split("T")[0];
 addPhotoDate.setAttribute("max", today);
-const addPhotoSubmit = document.getElementById("addPhotoSubmit");
-addPhotoSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void 0, function* () {
-    const photoName = document.getElementById("addPhotoName").value;
-    const photoDate = document.getElementById("addPhotoDate").value;
-    const photoData = document.getElementById("photoUploadBtn").files;
-    const formData = new FormData();
-    formData.append("title", photoName);
-    formData.append("taken", photoDate);
-    formData.append("photo", photoData[0]);
-    try {
-        const res = yield fetch("http://localhost:8080/photos", {
-            method: "POST",
-            credentials: "include",
-            headers: {},
-            body: formData
-        });
-        const data = yield res.json();
-        if (res.status == 201) {
-            window.location.reload();
-            renderError(document.querySelector("#error-add-photo-container"), true);
+function addPhoto() {
+    const addPhotoSubmit = document.getElementById("addPhotoSubmit");
+    addPhotoSubmit.addEventListener("click", (evt) => __awaiter(this, void 0, void 0, function* () {
+        const photoName = document.getElementById("addPhotoName").value;
+        const photoDate = document.getElementById("addPhotoDate").value;
+        const photoData = document.getElementById("photoUploadBtn").files;
+        const formData = new FormData();
+        formData.append("title", photoName);
+        formData.append("taken", photoDate);
+        formData.append("photo", photoData[0]);
+        try {
+            const res = yield fetch("http://localhost:8080/photos", {
+                method: "POST",
+                credentials: "include",
+                headers: {},
+                body: formData
+            });
+            const data = yield res.json();
+            if (res.status == 201) {
+                window.location.reload();
+                renderError(document.querySelector("#error-add-photo-container"), true);
+            }
+            else {
+                renderError(document.querySelector("#error-add-photo-container"), false, data.message);
+            }
         }
-        else {
-            renderError(document.querySelector("#error-add-photo-container"), false, data.message);
+        catch (error) {
+            console.log("ERROR at POST /photos");
         }
-    }
-    catch (error) {
-        console.log("ERROR at POST /photos");
-    }
-}));
+    }));
+}
+addPhoto();
+// --- ALBEN ---
+function addAlbum() {
+    const addAlbumSubmit = document.getElementById("addAlbumSubmit");
+    addAlbumSubmit.addEventListener("click", (evt) => __awaiter(this, void 0, void 0, function* () {
+        const albumName = document.getElementById("addAlbumName").value;
+        const reqData = {
+            title: albumName
+        };
+        try {
+            const res = yield fetch("http://localhost:8080/albums", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(reqData),
+            });
+            if (res.status == 201) {
+                window.location.reload();
+            }
+        }
+        catch (error) {
+            console.log("ERROR at POST /Albums");
+        }
+    }));
+}
+addAlbum();
 function searchAlbums() {
     const searchInAlbumsInputEl = document.querySelector("#searchInAlbums");
     document.querySelector("#searchInAlbumsSubmitBtn").addEventListener("submit", (evt) => {

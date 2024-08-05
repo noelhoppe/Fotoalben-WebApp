@@ -604,69 +604,77 @@ async function handlePhotoDelete(photoID : string) {
   }
 }
 
-
-
-
-const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;
-addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
-  const albumName = (document.getElementById("addAlbumName")as HTMLInputElement).value;
-
-  const reqData = {
-      title : albumName
-  };
-
-  const res : Response = await fetch( "http://localhost:8080/albums", {
-    method: "POST",
-    credentials : "include",
-    headers : {
-      "Content-Type" : "application/json"
-    },
-    body : JSON.stringify(reqData),
-  });
-  if (res.status == 201){
-    window.location.reload();
-  }
-});
-
 //Don't allow Dates that are in the future for Image Date of creation
 const addPhotoDate = document.getElementById("addPhotoDate") as HTMLInputElement;
 let today = new Date().toISOString().split("T")[0];
 addPhotoDate.setAttribute("max", today);
 
+function addPhoto(){
+  const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
+  addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
+    const photoName = (document.getElementById("addPhotoName")as HTMLInputElement).value;
+    const photoDate = (document.getElementById("addPhotoDate") as HTMLInputElement).value;
+    const photoData =((document.getElementById("photoUploadBtn") as HTMLInputElement).files as FileList);
+    const formData = new FormData();
 
-const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
-addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
-  const photoName = (document.getElementById("addPhotoName")as HTMLInputElement).value;
-  const photoDate = (document.getElementById("addPhotoDate") as HTMLInputElement).value;
-  const photoData =((document.getElementById("photoUploadBtn") as HTMLInputElement).files as FileList);
-  const formData = new FormData();
+    formData.append("title", photoName);
+    formData.append("taken", photoDate);
+    formData.append("photo", photoData[0]);
 
-  formData.append("title", photoName);
-  formData.append("taken", photoDate);
-  formData.append("photo", photoData[0]);
+    try {
+      const res: Response = await fetch("http://localhost:8080/photos", {
+        method: "POST",
+        credentials: "include",
+        headers: {},
+        body: formData
+      });
+      const data : { message : string } = await res.json();
 
-  try {
-    const res: Response = await fetch("http://localhost:8080/photos", {
-      method: "POST",
-      credentials: "include",
-      headers: {},
-      body: formData
-    });
-    const data : { message : string } = await res.json();
-
-    if (res.status == 201) {
-      window.location.reload();
-      renderError(document.querySelector("#error-add-photo-container") as HTMLDivElement, true );
-    } else {
-      renderError(document.querySelector("#error-add-photo-container") as HTMLDivElement, false, data.message);
+      if (res.status == 201) {
+        window.location.reload();
+        renderError(document.querySelector("#error-add-photo-container") as HTMLDivElement, true );
+      } else {
+        renderError(document.querySelector("#error-add-photo-container") as HTMLDivElement, false, data.message);
+      }
     }
-  }
-  catch (error){
-    console.log("ERROR at POST /photos");
-  }
-});
+    catch (error){
+      console.log("ERROR at POST /photos");
+    }
+  });
+}
+
+addPhoto();
+
 
 // --- ALBEN ---
+
+function addAlbum(){
+  const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;
+  addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {
+    const albumName = (document.getElementById("addAlbumName")as HTMLInputElement).value;
+
+    const reqData = {
+      title : albumName
+    };
+    try {
+      const res: Response = await fetch("http://localhost:8080/albums", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(reqData),
+      });
+      if (res.status == 201) {
+        window.location.reload();
+      }
+    }catch(error){
+      console.log("ERROR at POST /Albums")
+    }
+  });
+}
+
+addAlbum()
 
 interface Album {
   id : number,
