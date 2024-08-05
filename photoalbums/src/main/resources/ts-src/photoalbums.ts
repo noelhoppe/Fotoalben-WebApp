@@ -465,6 +465,7 @@ function initializePage() : void {
   document.addEventListener("DOMContentLoaded", async () : Promise<void> => {
     await fetchUsername();
     await fetchPhotos();
+    await fetchAlbums();
     await fetchRole();
   });
 }
@@ -681,13 +682,24 @@ function searchAlbums() {
 }
 searchAlbums();
 
-// TODO: Funktion fertigstellen
+
 /**
  * GET /albums <br>
  * Optional mit Suchparameter <br>
  */
-function fetchAlbums(searchParam ?: string) {
+async function fetchAlbums(searchParam ?: string) {
   try {
+    const res : Response = await fetch("http://localhost:8080/albums?" + (searchParam ? new URLSearchParams({searchParam : searchParam}).toString() : ""), {
+     method : "GET",
+     credentials : "include"
+    });
+
+    if (res.ok) {
+      const data : { albums : Album[] } = await res.json();
+      console.log(data);
+      renderAlbums(data.albums);
+    }
+
 
   } catch (error) {
     console.error(error);

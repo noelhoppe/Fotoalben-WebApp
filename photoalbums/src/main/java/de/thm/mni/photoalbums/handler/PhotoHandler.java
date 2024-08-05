@@ -39,13 +39,14 @@ public class PhotoHandler {
 	 * @param ctx Routing Context
 	 */
 	public void getAllPhotosFromUser(RoutingContext ctx) {
-		System.out.print("called getAllPhotosFromUsers in PhotoHandler.java");
+		System.out.println("called getAllPhotosFromUsers in PhotoHandler.java");
 
 		// Get userId from session
 		Integer userIdStr = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
 
 		// Get query parameters
 		MultiMap parameters = (MultiMap) ctx.data().get("parameters");
+		System.out.println(parameters);
 		String tag = parameters.get("tag");
 		String photoTitle = parameters.get("photoTitle");
 
