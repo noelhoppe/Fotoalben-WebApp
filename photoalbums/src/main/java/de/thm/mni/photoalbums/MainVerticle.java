@@ -356,6 +356,12 @@ public class MainVerticle extends AbstractVerticle {
            .handler(authenticationHandler::isLoggedIn)
            .handler(albumHandler::getAllAlbumsFromUser);
 
+    router.delete("/albums/:albumID")
+           .handler(authenticationHandler::isLoggedIn)
+           .handler(albumHandler::deleteAlbumsPhotosConnections)
+           .handler(albumHandler::deleteAlbumsTagsConnections)
+           .handler(albumHandler::deleteFromAlbums);
+
     // --- ALBUM HANDLER ---
 
     return Future.succeededFuture(router);

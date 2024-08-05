@@ -71,7 +71,6 @@ public class AlbumHandler {
                   """);
 
 
-    System.out.println(sql);
     jdbcPool.preparedQuery(sql.toString())
            .execute(Tuple.from(params), res -> {
              if (res.succeeded()) {
@@ -88,6 +87,62 @@ public class AlbumHandler {
              } else {
                MainVerticle.response(ctx.response(), 500, new JsonObject()
                       .put("message", "Ein interner Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut")
+               );
+             }
+           });
+  }
+
+  /**
+   * Wenn ein Album gelöscht wird, werden alle Fotos des Albums aus der Verbindungstabelle gelöscht und der nächste Handler wird aufgerufen<br>
+   * Gebe Statuscode 500 mit Fehlermeldung zurück, wenn ein Server - und/oder Datenbankfehler aufgetreten ist<br>
+   */
+  public void deleteAlbumsPhotosConnections(RoutingContext ctx) {
+    String albumID = ctx.pathParam("albumID");
+    jdbcPool.preparedQuery("DELETE FROM AlbumsPhotos WHERE Albums_ID = ?")
+           .execute(Tuple.of(albumID), res -> {
+             if (res.succeeded()) {
+               ctx.next();
+             } else {
+               MainVerticle.response(ctx.response(), 500, new JsonObject()
+                      .put("message", "Ein interner Serverfehler ist aufgetreten.")
+               );
+             }
+           });
+  }
+
+  /**
+   * Wenn ein Album gelöscht wird, werden alle Tags des Albums aus der Verbindungstabelle gelöscht und der nächste Handler wird aufgerufen<br>
+   * Gebe Statuscode 500 mit Fehlermeldung zurück, wenn ein Server - und/oder Datenbankfehler aufgetreten ist<br>
+   */
+  public void deleteAlbumsTagsConnections(RoutingContext ctx) {
+    String albumID = ctx.pathParam("albumID");
+    jdbcPool.preparedQuery("DELETE FROM AlbumsTags WHERE Alben_ID = ?")
+           .execute(Tuple.of(albumID), res -> {
+             if (res.succeeded()) {
+               ctx.next();
+             } else {
+               MainVerticle.response(ctx.response(), 500, new JsonObject()
+                      .put("message", "Ein interner Serverfehler ist aufgetreten.")
+               );
+             }
+           });
+  }
+
+  /**
+   * Lösche dsa entsprechende Album <br>
+   * Gebe Statuscode 500 mit Fehlermeldung zurück, wenn ein Server - und/oder Datenbankfehler aufgetreten ist<br>
+   */
+  public void deleteFromAlbums(RoutingContext ctx) {
+    String albumID = ctx.pathParam("albumID");
+    jdbcPool.preparedQuery("DELETE FROM Albums WHERE ID = ?")
+           .execute(Tuple.of(albumID), res -> {
+             if (res.succeeded()) {
+               ctx.response()
+                      .setStatusCode(204)
+                      .end();
+             } else {
+               MainVerticle.response(ctx.response(), 500, new JsonObject()
+                      .put("message", "Ein interner Serverfehler ist aufgetreten.")
                );
              }
            });

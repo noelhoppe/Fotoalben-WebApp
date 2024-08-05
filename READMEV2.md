@@ -877,3 +877,52 @@ http-Response
   "message" : "Fehler beim erstellen des Nutzers"
 }
 ```
+
+
+---
+
+> GET /albums
+> Diese Route wird auch für die Suche mit Suchparametern gematcht
+
+http-Response
+```JSON
+{
+  "albums": [
+    {
+      "id": 1,
+      "title": "Album ohne tags",
+      "tags": null
+    },
+    {
+      "id" : 2,
+      "title" : "Album mit tags",
+      "tags" : "Testtag, Spaß, Weiterer Testtag"
+    }
+  ]
+}
+```
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statuscode 500 mit Fehlermeldung wenn ein Server- und/oder Datenbankfehler aufgetreten ist
+
+
+---
+
+> DELETE /albums/:albumID
+> Gebe bei Erfolg Statuscode 204 zurück
+ 
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statuscode 500 mit Fehlermeldung wenn ein Server- und/oder Datenbankfehler aufgetreten ist
+

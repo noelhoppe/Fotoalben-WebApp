@@ -596,12 +596,16 @@ addPhotoSubmit.addEventListener("click", (evt) => __awaiter(void 0, void 0, void
         console.log("ERROR at POST /photos");
     }
 }));
+/**
+ * Wartet auf das Submit Event des entsprechenden Formulars und extrahiere den Wert des Input-Feldes <br>
+ * Gebe den Wert des Input-Feldes als Suchparameter an die entsprechende Funktion, die die http-Anfrage tätigt {@link fetchAlbums}
+ */
 function searchAlbums() {
-    const searchInAlbumsInputEl = document.querySelector("#searchInAlbums");
-    document.querySelector("#searchInAlbumsSubmitBtn").addEventListener("submit", (evt) => {
+    document.querySelector("#searchAlbums").addEventListener("submit", (evt) => __awaiter(this, void 0, void 0, function* () {
         evt.preventDefault();
-        fetchAlbums(searchInAlbumsInputEl.value);
-    });
+        const query = document.querySelector("#searchAlbumsQuery").value;
+        yield fetchAlbums(query);
+    }));
 }
 searchAlbums();
 /**
@@ -617,8 +621,11 @@ function fetchAlbums(searchParam) {
             });
             if (res.ok) {
                 const data = yield res.json();
-                console.log(data);
                 renderAlbums(data.albums);
+            }
+            else {
+                const data = yield res.json();
+                console.log(res.status + " " + data.message);
             }
         }
         catch (error) {
@@ -626,16 +633,26 @@ function fetchAlbums(searchParam) {
         }
     });
 }
+/**
+ * Render die Alben mit folgenden Besonderheiten.
+ * 1. Setze den Container zurück
+ * 2. Iteriere durch die Alben und füge disee hinzu.
+ * 3. Speichere die Album_ID und die tags als kommaseparierter String als data-attribute im entsprechenden html Element
+ * 4. Füge jedem edit button die Klasse .edit-btns hinzu
+ * 5. Füge jedem delete button die Klasse .del-btns hinzu.
+ * 6. Rufe {@link renderAlbumsEditModal} und {@link attachDelAlbumListener } auf
+ * @param albums Ein Array vom Typ Album {@link Album}
+ */
 function renderAlbums(albums) {
     const displayAlbumsContainer = document.querySelector("#display-albums");
     // reset container
     displayAlbumsContainer.innerHTML = "";
     albums.forEach(album => {
-        const { id, title, tags } = album;
+        const { id, title, tags } = album; // DESTRUCTURING
         const albumChild = document.createElement("li");
         albumChild.setAttribute("data-album-id", id.toString()); // Insert album id in parent container
-        if (typeof tags == "string") {
-            albumChild.setAttribute("data-tags", tags); //Füge tags als kommaseparierter String in das parent Element ein
+        if (typeof tags == "string") { // Wenn das Album Tags besitzt
+            albumChild.setAttribute("data-tags", tags); // Füge tags als kommaseparierter String in das parent Element ein
         }
         albumChild.className = "list-group-item d-flex align-items-center";
         albumChild.innerHTML = `
@@ -659,11 +676,57 @@ function renderAlbums(albums) {
     `;
         displayAlbumsContainer.appendChild(albumChild);
     });
+    renderAlbumsEditModal();
+    attachDelAlbumListener();
+    // TODO: attachEditAlbumListener();
 }
-renderAlbums([
-    { id: 1, title: "Album 5", tags: "Testtag1, Testtag 2" },
-    { id: 12, title: "Album 29" }
-]);
+/**
+ * Selektiere alle Buttons mit der js-target Klasse .del-btns und füge jedem Button ein Event-Listener hinzu (click).<br>
+ * Selektiere beim Klick, die ID des Albums, welche als data-attribute im übergeordneten Element gespeichert ist<br>
+ * Rufe mit der selektierten Album ID die Funktion auf, die die http-Anfrage an den Server stellt, ein Album zu löschen {@link handleAlbumDelete }
+ *
+ */
+function attachDelAlbumListener() {
+    document.querySelectorAll(".del-btns").forEach(delBtn => {
+        delBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+            const closetLi = delBtn.closest("li");
+            const albumID = closetLi.getAttribute("data-album-id");
+            yield handleAlbumDelete(albumID);
+        }));
+    });
+}
+/**
+ * DELETE /albums/:albumID
+ *
+ * Ruft bei Erfolg (Statuscode 204) {@link fetchAlbums} auf.
+ * Gibt bei Misserfolg den Statuscode und die Fehlermeldung in der Konsole aus
+ *
+ * @param albumID Die ID des Albums, die als Pfadparameter dem http-Req übergeben wird.
+ */
+function handleAlbumDelete(albumID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/albums/" + albumID, {
+                method: "DELETE",
+                credentials: "include"
+            });
+            if (res.status == 204) {
+                yield fetchAlbums();
+            }
+            else {
+                const data = yield res.json();
+                console.log(res.status + " " + data.message);
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
+    });
+}
+/**
+ * Überträgt die Daten des entsprechenden Albums an das Modal, d.h Titel, ID, Tags als kommaseparierter String (wenn vorhanden) an das Modal<br>
+ * Setzt die Input-Felder des Modals zurück.<br>
+ */
 function renderAlbumsEditModal() {
     // attach event listener to edit btns in albums list
     const editBtns = document.querySelectorAll(".edit-btns");
@@ -699,5 +762,4 @@ function renderAlbumsEditModal() {
         });
     });
 }
-renderAlbumsEditModal();
 // --- ALBEN ---
