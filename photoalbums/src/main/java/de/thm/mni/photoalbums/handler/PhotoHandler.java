@@ -492,10 +492,20 @@ public class PhotoHandler {
           if (photoURL != null) {
             vertx.fileSystem().delete("img/" + photoURL, deleteResult -> {  //lösche Foto von Server
               if (deleteResult.succeeded()) {
-                jdbcPool.preparedQuery("DELETE FROM Photos WHERE ID = ?") //lösche Foto aus Datenbank
-                  .execute(Tuple.of(ctx.data().get("photoID")), res2 -> {
 
-                    if (res2.succeeded()) {
+                jdbcPool.preparedQuery("DELETE FROM photostags WHERE Photos_ID = ?")
+                    .execute(Tuple.of(ctx.data().get("photoID")), res2 -> {
+                      if (res2.failed()) {
+                        MainVerticle.response(ctx.response(), 500, new JsonObject()
+                          .put("message", "Fehler beim Löschen des Fotos")
+                        );
+                      }
+                    });
+
+                jdbcPool.preparedQuery("DELETE FROM Photos WHERE ID = ?") //lösche Foto aus Datenbank
+                  .execute(Tuple.of(ctx.data().get("photoID")), res3 -> {
+
+                    if (res3.succeeded()) {
                       ctx.response()
                         .setStatusCode(204)
                         .end();
@@ -504,6 +514,7 @@ public class PhotoHandler {
                         .put("message", "Fehler beim Löschen des Fotos")
                       );
                     }
+
                   });
               } else {
                 System.err.println(deleteResult.cause().getMessage());
