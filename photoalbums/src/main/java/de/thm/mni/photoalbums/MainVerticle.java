@@ -293,6 +293,10 @@ public class MainVerticle extends AbstractVerticle {
     router.post("/photos")
       .handler(authenticationHandler::isLoggedIn)
       .handler(photoHandler::containsUploadedFile)
+      .handler(ctx -> {
+        ctx.data().put("photoTitle", ctx.request().getFormAttribute("title"));
+        ctx.next();
+      })
       .handler(photoHandler::validatePhotoTitleReq)
       .handler(photoHandler::uploadPhoto);
 
@@ -359,7 +363,6 @@ public class MainVerticle extends AbstractVerticle {
     router.post("/albums")
       .handler(authenticationHandler::isLoggedIn)
       .handler(ctx -> {
-        System.out.println(ctx.body().asJsonObject().getString("title"));
         ctx.data().put("title", ctx.body().asJsonObject().getString("title"));
         ctx.next();
       })

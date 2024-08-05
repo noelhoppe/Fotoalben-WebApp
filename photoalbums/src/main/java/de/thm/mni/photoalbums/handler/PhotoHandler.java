@@ -375,21 +375,8 @@ public class PhotoHandler {
 	 * @param ctx Routing Context
 	 */
 	public void validatePhotoTitleReq(RoutingContext ctx) {
-		String contentType = ctx.request().getHeader("Content-Type"); //Wähle ob JSON bzw. text oder FormData vorliegt
-    String photoTitle;
-    System.out.println(contentType);
-    if (contentType.contains("application/json") || contentType.contains("text/plain")){
-      photoTitle = ctx.data().get("photoTitle").toString();
-    } else if (contentType.contains("multipart/form-data")) {
-      photoTitle = ctx.request().getFormAttribute("title");
-    } else {
-      MainVerticle.response(ctx.response(), 500, new JsonObject()
-        .put("message", "Fehler bei Überprüfung des Titels")
-      );
-      return;
-    }
-
-
+    String photoTitle = ctx.data().get("photoTitle").toString();
+    
     if (photoTitle.trim().isEmpty()) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Titel darf nicht leer sein")
