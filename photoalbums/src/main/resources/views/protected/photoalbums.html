@@ -180,9 +180,9 @@
   <div class="offcanvas-body">
 
     <!-- Alben durchsucchen -->
-    <form class="d-flex mb-5" role="search">
-      <input id="searchInAlbums" type="search" class="form-control me-2" placeholder="Search photos in album" aria-label="Search in this album"> <!-- *js/*ts targets this input -->
-      <button id="searchInAlbumsSubmitBtn" class="btn btn-outline-success" type="submit">Search</button> <!-- *js/*ts listens here -->
+    <form id="searchAlbums" class="d-flex mb-5" role="search">
+      <input id="searchAlbumsQuery" type="search" class="form-control me-2" placeholder="Search photos in album" aria-label="Search in this album"> <!-- *js/*ts targets this input -->
+      <button class="btn btn-outline-success" type="submit">Search</button> <!-- *js/*ts listens here -->
     </form>
     <ul id="display-albums" class="list-group d-flex flex-column gap-3">
       <!-- Alle Fotos -->
