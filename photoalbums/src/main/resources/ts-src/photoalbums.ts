@@ -647,7 +647,11 @@ addPhoto();
 
 
 // --- ALBEN ---
-
+/**
+ * POST /albums
+ * Sendet Daten zur Erstellung eines Albums an den Server
+ * Lädt die Seite neu wenn Album erfolgreich erstellt wurde
+ */
 function addAlbum(){
   const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;
   addAlbumSubmit.addEventListener("click", async (evt: MouseEvent)=> {

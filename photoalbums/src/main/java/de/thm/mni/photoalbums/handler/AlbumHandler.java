@@ -116,10 +116,17 @@ public class AlbumHandler {
     }
   }
 
+  /**
+   * Handler für POST /albums <br>
+   * Erstellt ein Album mit dem im RoutingContext hinterlegten title <br>
+   * Gibt Statuscode 201 zurück wenn erfolgreich <br>
+   * Gibt Statuscode 500 mit entprechender Meldung zurück wenn ein Server- oder Datenbankfehler auftritt <br>
+   * @param ctx
+   */
   public void createAlbum(RoutingContext ctx){
 
     int currentUserID = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
-    String title = ctx.body().asJsonObject().getString("title");
+    String title = ctx.data().get("title").toString();
 
     jdbcPool.preparedQuery("""
                                 INSERT INTO Albums
