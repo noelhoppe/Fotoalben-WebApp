@@ -448,6 +448,30 @@ public class AlbumHandler {
       });
   }
 
+  public void validatePhotoIsInAlbum(RoutingContext ctx) {
+    System.out.println("called validatePhotoIsInAlbum in albumHandler.java");
+    jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM AlbumsPhotos WHERE Albums_ID = ? AND Photos_ID = ?")
+      .execute(Tuple.of(ctx.data().get("albumID"), ctx.data().get("photoID")), res -> {
+        if (res.succeeded()) {
+          Row row = res.result().iterator().next();
+          int count = row.getInteger("count");
+          if (count > 0) {
+            ctx.next();
+          }else {
+            MainVerticle.response(ctx.response(), 409, new JsonObject()
+              .put("message", "Das gewählte Foto ist bereits in diesem Album")
+            );
+          }
+
+          } else {
+          System.err.println(res.cause().getMessage());
+          MainVerticle.response(ctx.response(), 500, new JsonObject()
+            .put("message", "Ein interner Serverfehler ist aufgetreten")
+          );
+        }
+      });
+  }
+
   /**
    * Fügt Foto zu einem Album hinzu (Tabelle AlbumsPhotos)
    * Gibt Statuscode 201 zurück, wenn erfolgreich
@@ -474,5 +498,27 @@ public class AlbumHandler {
 
   }
 
-}
+  public void removePhotoFromAlbum(RoutingContext ctx) {
+    int albumID = Integer.parseInt(ctx.data().get("albumID").toString());
+    int photoID = Integer.parseInt(ctx.data().get("photoID").toString());
+    System.out.println(albumID + " " + photoID);
+
+    jdbcPool.preparedQuery("DELETE FROM AlbumsPhotos WHERE Photos_ID = ? AND Albums_ID = ?")
+      .execute(Tuple.of(photoID, albumID), res -> {
+        if (res.succeeded()) {
+          System.out.println("called it");
+          ctx.response()
+            .setStatusCode(204)
+            .end();
+        } else {
+          System.err.println(res.cause().getMessage());
+          MainVerticle.response(ctx.response(), 500, new JsonObject()
+            .put("message", "Ein interner Serverfehler ist aufgetreten")
+          );
+        }
+      });
+
+
+  }
+  }
 
