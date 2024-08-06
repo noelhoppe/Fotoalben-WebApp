@@ -80,7 +80,7 @@ function extractPhotoData(target: HTMLElement) : Photo {
  *
  * @param photoData Ein Photo Objekt, welches die Fotodaten beinhaltet
  */
-function updateModalUI(photoData: Photo) {
+async function updateModalUI(photoData: Photo) {
   const { id, title, taken, imgUrl, tags } = photoData; // DESTRUCTURING
 
   // Aktualisiere die Modal Elemente
@@ -104,14 +104,14 @@ function updateModalUI(photoData: Photo) {
   resetModalInputs();
 
   try {
-    const data = await photoIsInAlbum(parseInt(id))
+    const data = await photoIsInAlbum(parseInt(id));
+
     if (Array.isArray(data)) {
       createAlbumList(data);
-    } else {
-      console.log(data.message);
     }
+
   } catch (err) {
-    console.log(err);
+    console.error("Fehler bei updateModalUI:", err);
   }
 }
 
@@ -1125,7 +1125,7 @@ async function fetchPhotosFromAlbum(albumID : number) {
 
 
 
-function createAlbumList(albums : [{id : number, name : string, containsPhoto : boolean}]): void {
+function createAlbumList(albums : {id : number, title : string, contains : boolean}[]): void {
   const albumMenu = document.getElementById('albumMenu') as HTMLUListElement;
   albumMenu.innerHTML = ''; // Clear existing items
 
@@ -1138,13 +1138,13 @@ function createAlbumList(albums : [{id : number, name : string, containsPhoto : 
     input.className = 'form-check-input';
     input.type = 'checkbox';
     input.id = `switch-${album.id}`;
-    input.checked = album.containsPhoto;
+    input.checked = album.contains;
     input.addEventListener('change', (event ) => handleSwitchChange(event, album.id));
 
     const label = document.createElement('label');
     label.className = 'form-check-label';
     label.htmlFor = input.id;
-    label.textContent = `In Album ${album.name}`;
+    label.textContent = `In ${album.title}`;
 
     formCheck.appendChild(input);
     formCheck.appendChild(label);
@@ -1155,14 +1155,13 @@ function createAlbumList(albums : [{id : number, name : string, containsPhoto : 
 }
 
 async function photoIsInAlbum(photoID : number) {
-  const res = await fetch("http://localhost:8080/albums/contains", {
+  const res = await fetch("http://localhost:8080/albums/contains/"+ photoID, {
     method : "GET",
     credentials : "include",
-    body : JSON.stringify(photoID)
   })
 
   if (res.ok) {
-    const data : [{id : number, name : string, containsPhoto : boolean}] = await res.json();
+    const data: { id: number, title: string, contains: boolean }[] = await res.json();
     return data;
   } else {
     const data : { message : string } = await res.json();
@@ -1213,10 +1212,6 @@ async function handleSwitchChange(evt : Event, albumID : number) {
   }
 
 }
-
-
-
-
 
 
 // --- ALBEN ---

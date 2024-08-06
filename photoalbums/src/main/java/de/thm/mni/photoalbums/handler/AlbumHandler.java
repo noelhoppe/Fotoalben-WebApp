@@ -558,8 +558,13 @@ public class AlbumHandler {
             }
             albums.add(album);
           }
+          ctx.response()
+                  .setStatusCode(200)
+                  .end(albums.encodePrettily());
+          /*
           MainVerticle.response(ctx.response(), 200, new JsonObject().put("albums", albums)
           );
+           */
 
         }else
           System.err.println(res.cause().getMessage());

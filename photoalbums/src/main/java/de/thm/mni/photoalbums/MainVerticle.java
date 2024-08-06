@@ -463,10 +463,10 @@ public class MainVerticle extends AbstractVerticle {
       .handler(albumHandler::validatePhotoNotInAlbum)
       .handler(albumHandler::addPhotoToAlbum);
 
-    router.get("/albums/contains")
+    router.get("/albums/contains/:photoID")
       .handler(authenticationHandler::isLoggedIn)
       .handler(ctx -> {
-        ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
+        ctx.data().put("photoID", ctx.pathParam("photoID"));
         ctx.next();
       })
       .handler(photoHandler::validatePhotoInputReq)
