@@ -448,8 +448,29 @@ public class AlbumHandler {
       });
   }
 
-
+  /**
+   * Fügt Foto zu einem Album hinzu (Tabelle AlbumsPhotos)
+   * Gibt Statuscode 201 zurück, wenn erfolgreich
+   * Gibt Statuscode 500 zurück, wenn ein Datenbank- oder Serverfehler auftritt
+   * @param ctx
+   */
   public void addPhotoToAlbum(RoutingContext ctx) {
+    int albumID = Integer.parseInt(ctx.data().get("albumID").toString());
+    int photoID = Integer.parseInt(ctx.data().get("photoID").toString());
+
+    jdbcPool.preparedQuery("INSERT INTO  AlbumsPhotos VALUES (?, ?)")
+      .execute(Tuple.of(photoID, albumID), res -> {
+        if (res.succeeded()) {
+          MainVerticle.response(ctx.response(), 201, new JsonObject()
+            .put("message", "Foto wurde erfolgreich zum Album hinzugefügt")
+          );
+        } else {
+          System.err.println(res.cause().getMessage());
+          MainVerticle.response(ctx.response(), 500, new JsonObject()
+            .put("message", "Ein interner Serverfehler ist aufgetreten")
+          );
+        }
+      });
 
   }
 
