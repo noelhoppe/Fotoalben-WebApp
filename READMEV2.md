@@ -1065,7 +1065,7 @@ Mögliche Fehler
 }
 ```
 
-5. Statuscode 400, wenn das Feld Tag Leerzeichen enthält
+5. Statuscode 400, wenn das Feld T  ag Leerzeichen enthält
 ```JSON
 {
   "message" : "Der Tag darf keine Leerzeichen enthalten"

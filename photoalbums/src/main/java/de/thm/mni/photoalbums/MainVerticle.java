@@ -431,7 +431,14 @@ public class MainVerticle extends AbstractVerticle {
             .handler(photoHandler::getAllPhotosFromUser);
      */
 
-
+  router.post("/xx")
+    .handler(ctx -> {
+      ctx.data().put("albumID", ctx.body().asJsonObject().getString("albumID"));
+      ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
+      ctx.next();
+    })
+    .handler(albumHandler::validatePhotoNotInAlbum)
+    .handler(ctx -> System.out.println("success"));
 
 
 

@@ -412,5 +412,41 @@ public class AlbumHandler {
                   }
           });
   }
+
+  /**
+   * Prüft ob ein Foto bereits in einem Album ist <br>
+   * Wenn ja, gebe Statuscode 409 mit entsprechender Fehlermeldung <br>
+   * Wenn nein, rufe den nächsten Handler auf <br>
+   * Gibt Statuscode 500 mit entsprechender Meldung zurück, wenn ein Datenback- oder Serverfehler auftritt <br>
+   * @param ctx
+   */
+  public void validatePhotoNotInAlbum(RoutingContext ctx) {
+    System.out.println("called validatePhotoNotInAlbum in albumHandler.java");
+    jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM AlbumsPhotos WHERE Albums_ID = ? AND Photos_ID = ?")
+      .execute(Tuple.of(ctx.data().get("albumID"), ctx.data().get("photoID")), res -> {
+        if (res.succeeded()) {
+          Row row = res.result().iterator().next();
+          int count = row.getInteger("count");
+          if (count > 0) {
+            MainVerticle.response(ctx.response(), 409, new JsonObject()
+              .put("message", "Das gewählte Foto ist bereits in diesem Album")
+            );
+          }else {
+            ctx.next();
+          }
+        } else {
+          System.err.println(res.cause().getMessage());
+          MainVerticle.response(ctx.response(), 500, new JsonObject()
+            .put("message", "Ein interner Serverfehler ist aufgetreten")
+          );
+        }
+      });
+  }
+
+
+  public void addPhotoToAlbum(RoutingContext ctx) {
+
+  }
+
 }
 
