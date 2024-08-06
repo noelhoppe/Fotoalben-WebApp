@@ -308,6 +308,12 @@ public class AlbumHandler {
     return promise.future();
   }
 
+
+        /**
+         * Erstellt einen Tag in der Tabelle Tags
+         * @param tag
+         * @return ID des erstellten Tags
+         */
   Future<Integer> addTagToTableTags(String tag) {
     System.out.println("called addTagToTableTags in albumHandler.java");
 
@@ -333,37 +339,36 @@ public class AlbumHandler {
    * Gibt Statuscode 201 mit entsprechender Erfolgsmeldung zurück, wenn der Tag erfolgreich zum Foto hinzugefügt wurde.<br>
    * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag Leerzeichen enthält.<br>
    * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag leer is.<br>
-   * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht Tags zu Fotos eines anderen Benutzers hinzuzufügen. <br>
-   * Gibt Statuscode 409 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht einen Tag hinzuzufügen, der bereits dem entsprechenden Foto zugewiesen ist.
+   * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht Tags zu Alben eines anderen Benutzers hinzuzufügen. <br>
+   * Gibt Statuscode 409 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht einen Tag hinzuzufügen, der bereits dem entsprechenden Album zugewiesen ist.
    * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
    * @param ctx Routing Context
    */
-
 
   public void addTagToAlbum(RoutingContext ctx) {
 
     Integer albumID = Integer.valueOf(ctx.data().get("albumID").toString());
     String tag = ctx.data().get("tag").toString();
 
-    getTagId(tag).onComplete(res -> {
-      if (res.succeeded()) {
-        jdbcPool.preparedQuery("INSERT INTO  AlbumsTags VALUES (?, ?)")
+    getTagId(tag).onComplete(res -> {                                           //existiert Tag bereits in Tabelle Tags
+      if (res.succeeded()) {                                                    // -> ja Tag existiert in Tags
+        jdbcPool.preparedQuery("INSERT INTO  AlbumsTags VALUES (?, ?)")       //füge Tag zu Album hinzu
           .execute(Tuple.of(albumID, res.result()), dbRes -> {
             if (dbRes.succeeded()) {
               MainVerticle.response(ctx.response(), 201, new JsonObject()
                 .put("message", "Tag erfolgreich zum Album hinzugefügt")
               );
-            } else {
+            } else {                                                            //Tag bereits zu Album hinzugefügt
               System.out.println(dbRes.cause().getMessage());
               MainVerticle.response(ctx.response(), 409, new JsonObject()
                 .put("message", "Der Tag existiert bereits")
               );
             }
           });
-      } else {
-        addTagToTableTags(tag).onComplete(ar -> {
+      } else {                                                                  // -> nein Tag existiert noch nicht in Tags
+        addTagToTableTags(tag).onComplete(ar -> {                               //erstelle Tag
           if (ar.succeeded()) {
-            jdbcPool.preparedQuery("INSERT INTO  AlbumsTags VALUES (?, ?)")
+            jdbcPool.preparedQuery("INSERT INTO  AlbumsTags VALUES (?, ?)")     //füge Tag zu Album hinzu
               .execute(Tuple.of(albumID, ar.result()), dbRes -> {
                 if (dbRes.succeeded()) {
                   MainVerticle.response(ctx.response(), 201, new JsonObject()
