@@ -112,7 +112,7 @@ function updateModalTags(modalTags, tags) {
             const delBtn = document.createElement("button");
             delBtn.classList.add("btn", "btn-close");
             delBtn.setAttribute("aria-label", "Tag entfernen");
-            delBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () { return yield handleTagDelete(delBtn, tag, colDiv); }));
+            delBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () { return yield handleTagDelete(delBtn.closest("p").textContent, colDiv); }));
             tagElement.appendChild(delBtn);
             colDiv.appendChild(tagElement);
             modalTags.appendChild(colDiv);
@@ -136,6 +136,7 @@ function attachAddTagListener() {
         const submitAddTagInput = document.querySelector("#submitAddTagInput");
         submitAddTagInput.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
             const tagName = document.querySelector("#addTagInput").value;
+            console.log(tagName);
             const photoID = Number(document.querySelector("#modal-img").getAttribute("data-id"));
             yield handleTagAdd(photoID, tagName);
         }));
@@ -733,6 +734,8 @@ function renderAlbums(albums) {
     `;
         displayAlbumsContainer.appendChild(albumChild);
     });
+    showAllPhotos();
+    showPhotosFromAlbum();
     attachClickListenerEditAlbum();
     attachDelAlbumListener();
 }
@@ -973,6 +976,38 @@ function handlerAddTagToAlbum(tag, albumID) {
         }
         catch (err) {
             console.log(err);
+        }
+    });
+}
+function showAllPhotos() {
+    document.querySelector("#alleFotos").addEventListener("click", () => fetchPhotos());
+}
+function showPhotosFromAlbum() {
+    const albumsBtns = document.querySelectorAll(".album-title");
+    albumsBtns.forEach(albumBtn => {
+        albumBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+            const albumID = albumBtn.closest("li").getAttribute("data-album-id");
+            yield fetchPhotosFromAlbum(parseInt(albumID));
+        }));
+    });
+}
+function fetchPhotosFromAlbum(albumID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch(`/photos/${albumID}`, {
+                method: "GET",
+                credentials: "include"
+            });
+            if (!res.ok) {
+                const data = yield res.json();
+                console.log(res.status + " " + data.message);
+            }
+            const data = yield res.json();
+            clearImages(document.querySelector("#main-photos-container .row"));
+            data.photos.forEach(photo => renderPhotos(photo));
+        }
+        catch (error) {
+            console.error("Error GET /photos/:albumID", error);
         }
     });
 }

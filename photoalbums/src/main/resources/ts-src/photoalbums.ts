@@ -125,7 +125,7 @@ function updateModalTags(modalTags: HTMLDivElement, tags: string) {
       delBtn.classList.add("btn", "btn-close");
       delBtn.setAttribute("aria-label", "Tag entfernen");
 
-      delBtn.addEventListener("click", async() => await handleTagDelete(delBtn, tag, colDiv));
+      delBtn.addEventListener("click", async() => await handleTagDelete((delBtn.closest("p") as HTMLParagraphElement).textContent as string, colDiv));
 
       tagElement.appendChild(delBtn);
       colDiv.appendChild(tagElement);
@@ -153,6 +153,7 @@ function attachAddTagListener() {
     const submitAddTagInput = document.querySelector("#submitAddTagInput") as HTMLButtonElement;
     submitAddTagInput.addEventListener("click", async () => {
       const tagName = (document.querySelector("#addTagInput") as HTMLInputElement).value;
+      console.log(tagName);
       const photoID = Number((document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id") as string);
       await handleTagAdd(photoID, tagName);
     });
@@ -803,6 +804,8 @@ function renderAlbums(albums : Album[]) {
     `
     displayAlbumsContainer.appendChild(albumChild);
   })
+  showAllPhotos();
+  showPhotosFromAlbum();
   attachClickListenerEditAlbum();
   attachDelAlbumListener();
 }
@@ -1060,6 +1063,46 @@ async function handlerAddTagToAlbum(tag : string, albumID : number) {
     console.log(err);
   }
 }
+
+function showAllPhotos() {
+  (document.querySelector("#alleFotos") as HTMLButtonElement).addEventListener("click", () =>  fetchPhotos());
+}
+
+function showPhotosFromAlbum() {
+  const albumsBtns = document.querySelectorAll(".album-title") as NodeListOf<HTMLButtonElement>;
+  albumsBtns.forEach(albumBtn => {
+    albumBtn.addEventListener("click", async() => {
+      const albumID = (albumBtn.closest("li") as HTMLElement).getAttribute("data-album-id") as string;
+      await fetchPhotosFromAlbum(parseInt(albumID));
+    })
+  })
+}
+
+async function fetchPhotosFromAlbum(albumID : number) {
+  try {
+    const res : Response = await fetch(`/photos/${albumID}`, {
+      method : "GET",
+      credentials : "include"
+    });
+
+    if (!res.ok) {
+      const data : { message : string } = await res.json();
+      console.log(res.status + " " + data.message);
+    }
+
+    const data : { photos : Photo[] } = await res.json();
+
+    clearImages(document.querySelector("#main-photos-container .row") as HTMLDivElement);
+    data.photos.forEach(photo  => renderPhotos(photo));
+
+  } catch (error) {
+    console.error("Error GET /photos/:albumID", error);
+  }
+}
+
+
+
+
 
 
 // --- ALBEN ---
