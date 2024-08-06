@@ -648,6 +648,15 @@ addPhoto();
 
 // --- ALBEN ---
 /**
+ * Besonderheit: tags als optionaler kommaseparierter String
+ */
+interface Album {
+  id : number,
+  title : string,
+  tags ?: string
+}
+
+/**
  * POST /albums
  * Sendet Daten zur Erstellung eines Albums an den Server
  * Lädt die Seite neu wenn Album erfolgreich erstellt wurde
@@ -677,17 +686,8 @@ function addAlbum(){
     }
   });
 }
-
 addAlbum()
 
-/**
- * Besonderheit: tags als optionaler kommaseparierter String
- */
-interface Album {
-  id : number,
-  title : string,
-  tags ?: string
-}
 
 /**
  * Wartet auf das Submit Event des entsprechenden Formulars und extrahiere den Wert des Input-Feldes <br>
@@ -773,7 +773,6 @@ function renderAlbums(albums : Album[]) {
   })
   renderAlbumsEditModal();
   attachDelAlbumListener();
-  // TODO: attachEditAlbumListener();
 }
 
 /**
@@ -808,6 +807,44 @@ async function handleAlbumDelete(albumID : string) {
     })
 
     if (res.status == 204) {
+      await fetchAlbums();
+    } else {
+      const data : { message : string } = await res.json();
+      console.log(res.status + " " + data.message);
+    }
+
+  } catch(err) {
+    console.log(err);
+  }
+}
+
+function patchAlbumsTitle() {
+  const submitEditAlbumNameBtn = document.querySelector("#submit-edit-album-name") as HTMLButtonElement;
+  const editAlbumNameInput = document.querySelector("#edit-album-name") as HTMLInputElement;
+  submitEditAlbumNameBtn.addEventListener("click", async () => {
+    const title = editAlbumNameInput.value;
+    const albumID = (document.querySelector("#editAlbumModal") as HTMLDivElement).getAttribute("data-album-id") as string;
+    await handlerPatchAlbumsTitle(title, parseInt(albumID));
+  })
+}
+patchAlbumsTitle();
+
+async function handlerPatchAlbumsTitle(title : string, albumID : number) {
+  try {
+    const res = await fetch("http://localhost:8080/albums/albumsTitle", {
+      method : "PATCH",
+      credentials : "include",
+      body : JSON.stringify({title : title, albumID : albumID})
+    })
+
+    if (res.ok) {
+      const data : { message : string, albumTitle : string } = await res.json();
+      console.log(`
+      ${res.status}
+      ${data.message}
+      ${data.albumTitle}
+      `);
+      (document.querySelector("#album-title") as HTMLHeadingElement).textContent = data.albumTitle;
       await fetchAlbums();
     } else {
       const data : { message : string } = await res.json();

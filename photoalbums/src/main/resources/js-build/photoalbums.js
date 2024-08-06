@@ -581,7 +581,6 @@ function addPhoto() {
     }));
 }
 addPhoto();
-// --- ALBEN ---
 /**
  * POST /albums
  * Sendet Daten zur Erstellung eines Albums an den Server
@@ -695,7 +694,6 @@ function renderAlbums(albums) {
     });
     renderAlbumsEditModal();
     attachDelAlbumListener();
-    // TODO: attachEditAlbumListener();
 }
 /**
  * Selektiere alle Buttons mit der js-target Klasse .del-btns und füge jedem Button ein Event-Listener hinzu (click).<br>
@@ -728,6 +726,44 @@ function handleAlbumDelete(albumID) {
                 credentials: "include"
             });
             if (res.status == 204) {
+                yield fetchAlbums();
+            }
+            else {
+                const data = yield res.json();
+                console.log(res.status + " " + data.message);
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
+    });
+}
+function patchAlbumsTitle() {
+    const submitEditAlbumNameBtn = document.querySelector("#submit-edit-album-name");
+    const editAlbumNameInput = document.querySelector("#edit-album-name");
+    submitEditAlbumNameBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+        const title = editAlbumNameInput.value;
+        const albumID = document.querySelector("#editAlbumModal").getAttribute("data-album-id");
+        yield handlerPatchAlbumsTitle(title, parseInt(albumID));
+    }));
+}
+patchAlbumsTitle();
+function handlerPatchAlbumsTitle(title, albumID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/albums/albumsTitle", {
+                method: "PATCH",
+                credentials: "include",
+                body: JSON.stringify({ title: title, albumID: albumID })
+            });
+            if (res.ok) {
+                const data = yield res.json();
+                console.log(`
+      ${res.status}
+      ${data.message}
+      ${data.albumTitle}
+      `);
+                document.querySelector("#album-title").textContent = data.albumTitle;
                 yield fetchAlbums();
             }
             else {

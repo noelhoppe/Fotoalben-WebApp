@@ -93,6 +93,88 @@ public class AlbumHandler {
   }
 
   /**
+   * Prüft, ob die albumID eine gültige Zahl ist. <br>
+   * Wenn ja, rufe den nächsten Handler auf.<br>
+   * Wenn nein, beende die http-Anfrage mit dem Statuscode 400 und einer entsprechenden Fehlermeldung.<br>
+   * @param ctx Routing Context
+   */
+  public void validateAlbumInputReq(RoutingContext ctx) {
+    try {
+      int albumIDInt = Integer.parseInt(ctx.data().get("albumID").toString());
+      ctx.data().put("photoID", albumIDInt);
+      ctx.next();
+    } catch (NumberFormatException e) {
+      e.printStackTrace();
+      MainVerticle.response(ctx.response(), 400, new JsonObject()
+              .put("message", "albumID muss eine gültige Zahl sein")
+      );
+    }
+  }
+
+  /**
+   * Prüft, ob das Album in der Datenbank existiert.<br>
+   * Wenn ja, rufe den nächsten Handler auf.<br>
+   * Wenn nein, beende die Anfrage mit einem 404 und entsprechender Fehlermeldung<br>
+   * @param ctx Der Routing Context
+   */
+  public void albumExists(RoutingContext ctx) {
+    Integer albumID = Integer.valueOf(ctx.data().get("albumID").toString());
+    jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM Albums WHERE ID = ?")
+            .execute(Tuple.of(albumID), res -> {
+              if (res.succeeded() && res.result().iterator().next().getInteger("count") == 1) {
+                ctx.next();
+              } else {
+                MainVerticle.response(ctx.response(), 404, new JsonObject().put("message", "Das Album wurde nicht gefunden."));
+              }
+            });
+  }
+
+  /**
+   * Prüft, ob das Album dem Nutzer zugewiesen ist.
+   * Wenn ja, rufe den nächsten Handler auf.
+   * Wenn nein, beende die Anfrage mit einem 403 und entsprechender Fehlermeldung
+   * @param ctx
+   */
+  public void albumIsUser(RoutingContext ctx) {
+    Integer albumID = Integer.valueOf(ctx.data().get("albumID").toString());
+    Integer userId = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
+    jdbcPool.preparedQuery("SELECT COUNT(*) as count FROM Albums WHERE ID = ? AND Users_ID = ?")
+            .execute(Tuple.of(albumID, userId), res -> {
+              if (res.succeeded() && res.result().iterator().next().getInteger("count") == 1) {
+                ctx.next();
+              } else {
+                MainVerticle.response(ctx.response(), 403, new JsonObject()
+                        .put("message", "Das Album gehört nicht dem Benutzer")
+                );
+              }
+            });
+  }
+
+  /**
+   * Bearbeiten des Albumtitels in der Datenbank, Statuscode 200 bei Erfolg<br>
+   * Statuscode 500 mit Fehlermeldung bei Misserfolg.
+   * @param ctx
+   */
+  public void editAlbumTitle(RoutingContext ctx) {
+
+    String albumTitle = ctx.data().get("title").toString();
+
+    jdbcPool.preparedQuery("UPDATE Albums SET title = ? WHERE ID = ?")
+            .execute(Tuple.of(albumTitle, ctx.data().get("albumID")), res -> {
+              if (res.succeeded()) {
+                MainVerticle.response(ctx.response(), 200, new JsonObject()
+                        .put("message", "Der Fototitel wurde erfolgreich geändert")
+                        .put("albumTitle", albumTitle)
+                );
+              } else {
+                MainVerticle.response(ctx.response(), 500, new JsonObject()
+                        .put("message", "Ein interner Serverfehler ist aufgetreten")
+                );
+              }
+            });
+  }
+
+  /**
    * Prüft, ob der Albumtitel nur aus Leerzeichen besteht, also leer ist. <br>
    * Prüft ob der Albumtitel länger als 30 Zeichen ist. <br>
    * Wenn ja, gebe Statuscode 400 mit entsprechender Fehlermeldung zurück. <br>
@@ -201,4 +283,6 @@ public class AlbumHandler {
              }
            });
   }
+
+
 }

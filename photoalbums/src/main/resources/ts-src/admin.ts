@@ -6,8 +6,6 @@ interface User {
     role : string
 }
 
-import togglePasswordVisibility from "/login.js";
-togglePasswordVisibility();
 
 async function initializePage() { // FIXME: TS2393: Duplicate function implementation?
     await fetchUsers();
