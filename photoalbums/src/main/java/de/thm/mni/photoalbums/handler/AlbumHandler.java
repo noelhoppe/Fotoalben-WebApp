@@ -520,5 +520,54 @@ public class AlbumHandler {
 
 
   }
+
+  /**
+   * Gibt Statuscode 200 und eine Liste aller Alben des Nutzers zurück (ID und Titel), <br>
+   * sowie zu jedem Album einen Boolean welcher angibt, ob das Album das übergebene Foto enthält <br>
+   * Gibt Statuscode 500 zurück, wenn ein Datenbank- oder Serverfehler auftritt
+   * @param ctx
+   */
+  public void whichAlbumContainsPhoto(RoutingContext ctx) {
+    int photoID = Integer.parseInt(ctx.data().get("photoID").toString());
+    int currentUserID = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
+
+    jdbcPool.preparedQuery("""
+                            SELECT
+                            a.ID, a.title, COUNT(ap.Photos_ID) AS contains
+                            FROM
+                              Albums a
+                            LEFT JOIN
+                            AlbumsPhotos ap ON a.ID = ap.Albums_ID AND ap.Photos_ID = ?
+                            WHERE
+                            a.Users_ID = ?
+                            GROUP BY
+                            a.ID, a.title
+                            """)
+      .execute(Tuple.of(photoID, currentUserID), res -> {
+        if (res.succeeded()) {
+          RowSet<Row> rows = res.result();
+          JsonArray albums = new JsonArray();
+          for (Row row : rows) {
+            JsonObject album = new JsonObject();
+            album.put("id", row.getLong("ID"));
+            album.put("title", row.getString("title"));
+            if (row.getInteger("contains") > 0) {
+              album.put("contains", true);
+            } else {
+              album.put("contains", false);
+            }
+            albums.add(album);
+          }
+          MainVerticle.response(ctx.response(), 200, new JsonObject().put("albums", albums)
+          );
+
+        }else
+          System.err.println(res.cause().getMessage());
+          MainVerticle.response(ctx.response(), 500, new JsonObject()
+            .put("message", "Ein interner Serverfehler ist aufgetreten")
+          );
+      });
   }
+
+}
 
