@@ -625,12 +625,12 @@ addPhoto();
  */
 function addAlbum() {
     const addAlbumSubmit = document.getElementById("addAlbumSubmit");
-    addAlbumSubmit.addEventListener("click", (evt) => __awaiter(this, void 0, void 0, function* () {
-        const albumName = document.getElementById("addAlbumName").value;
-        const reqData = {
-            title: albumName
-        };
+    addAlbumSubmit.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
         try {
+            const albumName = document.getElementById("addAlbumName").value;
+            const reqData = {
+                title: albumName
+            };
             const res = yield fetch("http://localhost:8080/albums", {
                 method: "POST",
                 credentials: "include",
@@ -698,10 +698,10 @@ function fetchAlbums(searchParam) {
  */
 function renderAlbums(albums) {
     const displayAlbumsContainer = document.querySelector("#display-albums");
-    // reset container
+    // Es existiert immer der Reiter Alle Fotos mit der id = "alleFotos"
     displayAlbumsContainer.innerHTML = `
       <li class="list-group-item d-flex align-items-center">
-        <button class="btn w-100 d-flex justify-content-start">Alle Fotos</button>
+        <button id="alleFotos" class="btn w-100 d-flex justify-content-start">Alle Fotos</button>
       </li>
   `;
     albums.forEach(album => {
@@ -733,14 +733,13 @@ function renderAlbums(albums) {
     `;
         displayAlbumsContainer.appendChild(albumChild);
     });
-    renderAlbumsEditModal();
+    attachClickListenerEditAlbum();
     attachDelAlbumListener();
 }
 /**
  * Selektiere alle Buttons mit der js-target Klasse .del-btns und füge jedem Button ein Event-Listener hinzu (click).<br>
  * Selektiere beim Klick, die ID des Albums, welche als data-attribute im übergeordneten Element gespeichert ist<br>
  * Rufe mit der selektierten Album ID die Funktion auf, die die http-Anfrage an den Server stellt, ein Album zu löschen {@link handleAlbumDelete }
- *
  */
 function attachDelAlbumListener() {
     document.querySelectorAll(".del-btns").forEach(delBtn => {
@@ -829,53 +828,129 @@ function handlerPatchAlbumsTitle(title, albumID) {
     });
 }
 /**
- * Überträgt die Daten des entsprechenden Albums an das Modal, d.h Titel, ID, Tags als kommaseparierter String (wenn vorhanden) an das Modal<br>
- * Setzt die Input-Felder des Modals zurück.<br>
+ * Füge ein Event-Listener zu allen Edit Album Button hinzu, der auf ein Klick-Event reagiert und {@link extractAlbumData} mit dem entsprechenden geklickten Button aufruft.
  */
-function renderAlbumsEditModal() {
-    // attach event listener to edit btns in albums list
+function attachClickListenerEditAlbum() {
     const editBtns = document.querySelectorAll(".edit-btns");
     editBtns.forEach(editBtn => {
-        editBtn.addEventListener("click", () => {
-            // pick attributes from album
-            const closestLiElement = editBtn.closest("li");
-            const data_album_id = closestLiElement.getAttribute("data-album-id");
-            const title = closestLiElement.querySelector(".album-title").textContent;
-            const data_tags = closestLiElement.hasAttribute("data-tags") ? closestLiElement.getAttribute("data-tags") : undefined;
-            // reset an update input fields, album title and tags
-            const editAlbumModalContainer = document.querySelector("#editAlbumModal");
-            editAlbumModalContainer.setAttribute("data-album-id", data_album_id);
-            const editAlbumNameInput = document.querySelector("#edit-album-name");
-            editAlbumNameInput.value = "";
-            const addTagToAlbumInput = document.querySelector("#addTagToAlbumInput");
-            addTagToAlbumInput.value = "";
-            document.querySelector("#album-title").textContent = title;
-            const tagsContainer = document.querySelector("#album-tags .row");
-            tagsContainer.innerHTML = "";
-            data_tags === null || data_tags === void 0 ? void 0 : data_tags.split(", ").forEach(tag => {
-                const tagContainer = document.createElement("div");
-                tagContainer.className = "col";
-                tagContainer.innerHTML = `
+        const btn = editBtn;
+        editBtn.addEventListener("click", () => extractAlbumData(btn));
+    });
+}
+/**
+ * Selektiere die Album-ID, den Titel und die Tags als kommaseparierter String aus dem entsprechenden Album, welches im Modal gerendert werden soll {@link renderAlbumsEditModal}
+ * @param editBtn Der geklickte Button des Albums, welches im Modal bearbeitet werden soll
+ */
+function extractAlbumData(editBtn) {
+    const closestLiElement = editBtn.closest("li");
+    const data_album_id = closestLiElement.getAttribute("data-album-id");
+    const title = closestLiElement.querySelector(".album-title").textContent;
+    const data_tags = closestLiElement.hasAttribute("data-tags") ? closestLiElement.getAttribute("data-tags") : undefined;
+    renderAlbumsEditModal(data_album_id, title, data_tags);
+}
+/**
+ * Setze die Eingabefelder des Modals zurück.
+ */
+function resetEditAlbumsInputFields() {
+    const editAlbumNameInput = document.querySelector("#edit-album-name");
+    editAlbumNameInput.value = "";
+    const addTagToAlbumInput = document.querySelector("#addTagToAlbumInput");
+    addTagToAlbumInput.value = "";
+}
+/**
+ * Setze die Eingabefelder des Modals zurück {@link resetEditAlbumsInputFields}
+ * Bindet die Album-ID und die Tags des Albums als kommaseparierter String an den Container des Modals
+ * Rendert die Tags des Albums {@link renderAlbumsTags}
+ */
+function renderAlbumsEditModal(data_album_id, title, data_tags) {
+    resetEditAlbumsInputFields();
+    const editAlbumModalContainer = document.querySelector("#editAlbumModal");
+    editAlbumModalContainer.setAttribute("data-album-id", data_album_id);
+    document.querySelector("#album-title").textContent = title;
+    renderAlbumsTags(data_tags);
+}
+/**
+ * Rendert die Tags des Albums im Modal und ruft im Anschluss {@link attachDelTagFromAlbumListener} auf
+ * @param data_tags
+ */
+function renderAlbumsTags(data_tags) {
+    const tagsContainer = document.querySelector("#album-tags .row");
+    tagsContainer.innerHTML = "";
+    data_tags === null || data_tags === void 0 ? void 0 : data_tags.split(", ").forEach(tag => {
+        const tagContainer = document.createElement("div");
+        tagContainer.className = "col";
+        tagContainer.innerHTML = `
         <p class="badge bg-light text-dark">
             ${tag}
-            <button class="btn btn-close" aria-label="Tag entfernen">
+            <button class="btn btn-close del-tag-album-btn" aria-label="Tag entfernen"> <!-- KONVENTION: Jeder Button, um den Tag zu entfernen hat die js Targetklasse del-tag-album-btn -->
             </button>
         </p>
       `;
-                tagsContainer.append(tagContainer);
-            });
-        });
+        tagsContainer.append(tagContainer);
+    });
+    attachDelTagFromAlbumListener();
+}
+/**
+ * Funktion, die darauf wartet, dass der benutzer ein Button anklickt, um einen Tag zu löschen. Der Tagname wird extrahiert und die Album-ID aus dem Modal Container.<br>
+ * Damit wird {@link handleTagDeleteFromAlbum} aufgerufen
+ */
+function attachDelTagFromAlbumListener() {
+    const delTagFromAlbumBtns = document.querySelectorAll(".del-tag-album-btn");
+    delTagFromAlbumBtns.forEach(delTagFromAlbumBtn => {
+        delTagFromAlbumBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+            const albumID = delTagFromAlbumBtn.closest("#editAlbumModal").getAttribute("data-album-id");
+            const tag = delTagFromAlbumBtn.closest("p").textContent;
+            yield handleTagDeleteFromAlbum(tag.trim(), parseInt(albumID));
+        }));
     });
 }
+/**
+ * DELETE /albums/tag
+ * @param tag Der Tagname wird im JSON übertragen
+ * @param albumID Die Album-ID wird ebenfalls im JSON übertragen
+ */
+function handleTagDeleteFromAlbum(tag, albumID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/albums/tag", {
+                method: "DELETE",
+                credentials: "include",
+                body: JSON.stringify({ tag: tag, albumID: albumID })
+            });
+            if (res.status == 204) {
+                yield fetchAlbums();
+                const albumLiElement = document.querySelector(`#albumOffcans li[data-album-id='${albumID}']`);
+                const tags = albumLiElement.hasAttribute("data-tags") ? albumLiElement.getAttribute("data-tags") : undefined;
+                renderAlbumsTags(tags);
+            }
+            else {
+                const data = yield res.json();
+                console.log(`${res.status, data.message}`);
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
+    });
+}
+/**
+ * Funktion, die darauf wartet, dass der Nutzer den Button klickt, um einen Tag hinzuzufügen.<br>
+ * Wenn der Button gedrückt wird, wird der Name des Tags sowie die Album-ID des Modalcontainers extrahiert und {@link handlerAddTagToAlbum} aufgerufen
+ */
 function addTagToAlbum() {
-    const submitAddTagtoAlbumBtn = document.getElementById("submitAddTagToAlbumInput");
-    submitAddTagtoAlbumBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+    const submitAddTagToAlbumBtn = document.getElementById("submitAddTagToAlbumInput");
+    submitAddTagToAlbumBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
         const tag = document.getElementById("addTagToAlbumInput").value;
         const albumID = document.querySelector("#editAlbumModal").getAttribute("data-album-id");
         yield handlerAddTagToAlbum(tag, parseInt(albumID));
     }));
 }
 addTagToAlbum();
+/**
+ * POST /albums/tag
+ * @param tag Wird als JSON im Body übertragen
+ * @param albumID Wird als JSON im Body übertragen
+ */
 function handlerAddTagToAlbum(tag, albumID) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -887,8 +962,9 @@ function handlerAddTagToAlbum(tag, albumID) {
             if (res.status == 201) {
                 const data = yield res.json();
                 console.log(res.status + " " + data.message);
-                //TODO tags aktualisieren
                 yield fetchAlbums();
+                const albumLiElement = document.querySelector(`#albumOffcans li[data-album-id='${albumID}']`);
+                renderAlbumsTags(albumLiElement.getAttribute("data-tags") || undefined);
             }
             else {
                 const data = yield res.json();
