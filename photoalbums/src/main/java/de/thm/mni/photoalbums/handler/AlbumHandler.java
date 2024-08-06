@@ -144,7 +144,7 @@ public class AlbumHandler {
                 ctx.next();
               } else {
                 MainVerticle.response(ctx.response(), 403, new JsonObject()
-                        .put("message", "Das Foto gehört nicht dem Benutzer")
+                        .put("message", "Das Album gehört nicht dem Benutzer")
                 );
               }
             });

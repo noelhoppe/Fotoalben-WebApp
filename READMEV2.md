@@ -926,6 +926,8 @@ http-Response
 
 2. Statuscode 500 mit Fehlermeldung wenn ein Server- und/oder Datenbankfehler aufgetreten ist
 
+---
+
 
 > POST /albums   
 > Gibt Statuscode 201 zurück, wenn das Album erfolgreich anglegt wurde
@@ -967,4 +969,67 @@ mögliche Fehler:
 }
 ```
 
+---
+> PATCH /albums/albumsTitle
 
+http-Req
+```JSON
+{
+  "title" : "___",
+  "albumID" : 10
+}
+```
+
+http-Res
+
+```JSON
+{
+  "message" : "Der Fototitle wurde erfolgreich geändert",
+  "albumTitle" : "Neuer Title des Albums steht hier"
+}
+```
+
+Mögliche Fehler
+1. Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn der Benutzer nicht angemeldet ist.
+```JSON
+{
+	"message": "Bitte melde dich zuerst an, um diese Route aufrufen zu dürfen."
+}
+```
+
+2. Statuscode 400, wenn albumID keine gültige Zahl ist
+```JSON
+{
+  "message" : "albumID muss eine gültige Zahl sein"
+}
+```
+
+3. Statuscode 400, wenn der Title leer ist
+```JSON
+{
+  "message" : "Der Titel darf nicht leer sein"
+}
+```
+
+4. Statuscode 400, wenn der Titel zu lang ist
+```JSON
+{
+  "message" : "Der Titel darf maximal 30 Zeichen lang sein"
+}
+```
+
+5. Statuscode 404, wenn das Album nicht gefunden wurde
+```JSON
+{
+  "message" : "Das Album wurde nicht gefunden"
+}
+```
+
+6. Statuscode 403, wenn das Album nicht dem Benutzer gehört
+```JSON
+{
+  "message" : "Das Album gehört nicht dem Benutzer"
+}
+```
+
+7. Ein interner Serve- und/oder Datenbankfehler ist aufgetreten
