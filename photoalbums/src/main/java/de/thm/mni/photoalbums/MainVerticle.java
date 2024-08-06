@@ -375,6 +375,20 @@ public class MainVerticle extends AbstractVerticle {
            .handler(albumHandler::deleteAlbumsTagsConnections)
            .handler(albumHandler::deleteFromAlbums);
 
+    router.patch( "/albums/albumsTitle")
+            .handler(authenticationHandler::isLoggedIn)
+            .handler(ctx -> {
+                    ctx.data().put("title", ctx.body().asJsonObject().getString("title"));
+                    ctx.data().put("albumID", ctx.body().asJsonObject().getString("albumID"));
+                    ctx.next();
+            })
+            .handler(albumHandler::validateAlbumInputReq)
+            .handler(albumHandler::validateAlbumTitleReq)
+            .handler(albumHandler::albumExists)
+            .handler(albumHandler::albumIsUser)
+            .handler(albumHandler::editAlbumTitle);
+
+
     // --- ALBUM HANDLER ---
 
     return Future.succeededFuture(router);

@@ -393,10 +393,11 @@ public class PhotoHandler {
 
 
 	/**
-	 *
+	 * Bearbeiten des Fototitels in der Datenbank, Statuscode 200 bei Erfolg<br>
+	 * Statuscode 500 mit Fehlermeldung bei Misserfolg.
 	 * @param ctx
 	 */
-	public void  editPhotoTitle(RoutingContext ctx) {
+	public void editPhotoTitle(RoutingContext ctx) {
 		System.out.println("called editPhotoTitle in PhotoHandler.java");
 
 		String photoTitle = ctx.data().get("photoTitle").toString();
