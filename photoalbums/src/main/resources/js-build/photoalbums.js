@@ -613,7 +613,6 @@ function addAlbum() {
     }));
 }
 addAlbum();
-
 /**
  * Wartet auf das Submit Event des entsprechenden Formulars und extrahiere den Wert des Input-Feldes <br>
  * Gebe den Wert des Input-Feldes als Suchparameter an die entsprechende Funktion, die die http-Anfrage tätigt {@link fetchAlbums}
