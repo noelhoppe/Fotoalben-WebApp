@@ -46,9 +46,12 @@ public class PhotoHandler {
 
 		// Get query parameters
 		MultiMap parameters = (MultiMap) ctx.data().get("parameters");
-		System.out.println(parameters);
 		String tag = parameters.get("tag");
 		String photoTitle = parameters.get("photoTitle");
+
+		// Check, if /photos/:albumID
+		String albumID = ctx.pathParam("albumID");
+
 
 		// Build the SQL query
 		StringBuilder sql = new StringBuilder("""
@@ -65,10 +68,20 @@ public class PhotoHandler {
                                        ON pt_inner.Photos_ID = p_inner.ID
                                 LEFT JOIN Tags t_inner
                                        ON pt_inner.TAGS_ID = t_inner.ID
-                                WHERE p_inner.Users_ID = ?
                   """);
 
 		List<Object> params = new ArrayList<>();
+		if (albumID != null && !albumID.trim().isEmpty()) {
+			sql.append("""
+				LEFT JOIN Albums a_inner
+                                	ON a_inner.ID = ?
+                               	LEFT JOIN AlbumsPhotos aph
+                               		ON aph.Albums_ID = a_inner.ID
+				""");
+			params.add(albumID);
+		}
+
+		sql.append("WHERE p_inner.Users_ID = ?");
 		params.add(userIdStr);
 
 		if (tag != null && !tag.trim().isEmpty()) {
@@ -81,6 +94,8 @@ public class PhotoHandler {
 			params.add(photoTitle);
 		}
 
+
+
 		sql.append("""
                                  GROUP BY p_inner.ID
                       )
@@ -88,6 +103,7 @@ public class PhotoHandler {
                   """);
 
 
+		System.out.println("sql: " + sql);
 
 		jdbcPool.preparedQuery(sql.toString())
 			.execute(Tuple.from(params), res -> {
@@ -540,7 +556,7 @@ public class PhotoHandler {
 
   /**
    * Prüft ob es sich um ein gültiges Foto handelt
-   * @param FileUpload fileUpload
+   * @param fileUpload fileUpload
    * @return true wenn es sich um eine Bilddatei des  Typs png oder jpeg handelt, ansonsten false
    */
   private boolean isValidImage(FileUpload fileUpload) {
@@ -553,7 +569,7 @@ public class PhotoHandler {
    * Legt das Foto in der Datenbank an <br>
    * Wenn es sich um ein Foto handelt: Bennene die Datei nach der ID und passe den Datebankeintrag entsprechend an <br>
    * Wenn es sich nicht um ein Foto handelt: Lösche Datei
-   * @param RoutingContext ctx
+   * @param ctx Routing Context
    */
 public void uploadPhoto(RoutingContext ctx){
 

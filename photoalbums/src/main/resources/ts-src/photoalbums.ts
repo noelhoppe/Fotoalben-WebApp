@@ -1,3 +1,6 @@
+/**
+ * Besonderheit: Tags als kommaseparierter String
+ */
 interface Photo {
   id : string,
   title: string;
@@ -7,7 +10,8 @@ interface Photo {
 }
 
 /**
- * POST /logout
+ * Selektiert den Logout Button und führt bei dem Klick-Event<br>
+ * POST /logout aus
  */
 function logout() {
   const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
@@ -23,7 +27,7 @@ function logout() {
         window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
       } else {
         const data : { message : string } = await res.json();
-        console.log(data.message);
+        console.log(res.status + " " + data.message);
       }
 
     } catch(error) {
@@ -42,7 +46,9 @@ function attachGalleryItemClickListener() {
 attachGalleryItemClickListener();
 
 /**
- * Behandelt das Klick-Ereignis auf ein Galerie-Element.
+ * Behandelt das Klick-Ereignis auf ein Galerie-Element, d.h
+ * 1. Es extrahiert die Fotodaten aus dem angeklickten Bild {@link extractPhotoData}
+ * 2. Aktualisiert die ModalUI {@link updateModalUI}
  * @param e MouseEvent
  */
 function handleGalleryItemClick(e : MouseEvent) {
@@ -68,7 +74,10 @@ function extractPhotoData(target: HTMLElement) : Photo {
 }
 
 /**
- * Aktualisiert das Modal mit den extrahierten Fotodaten
+ * Aktualisiert das Modal mit den extrahierten Fotodaten<br>
+ * {@link updateModalTags}<br>
+ * {@link resetModalInputs}
+ *
  * @param photoData Ein Photo Objekt, welches die Fotodaten beinhaltet
  */
 function updateModalUI(photoData: Photo) {
@@ -96,7 +105,8 @@ function updateModalUI(photoData: Photo) {
 }
 
 /**
- * Aktualisiert die Modal-Tags-UI.
+ * Aktualisiert die Modal-Tags-UI.<br>
+ * Fügt den Delete Buttons für die Tags ein Event Listener hinzu, und bei ausgelöstem Klick-Event {@link handleTagDelete} aufruft
  * @param modalTags HTMLElement
  * @param tags string
  */
@@ -135,7 +145,8 @@ function resetModalInputs() {
 
 
 /**
- * Fügt einen Event-Listener zum Hinzufügen eines Tags hinzu
+ * Fügt einen Event-Listener zum Hinzufügen eines Tags hinzu<br>
+ * und ruft {@link handleTagAdd} mit der entsprechenden extrahierten photoID und dem tagNamen auf.
  */
 function attachAddTagListener() {
   document.addEventListener("DOMContentLoaded", () => {
@@ -150,7 +161,11 @@ function attachAddTagListener() {
 attachAddTagListener();
 
 /**
- * POST /tag
+ *
+ * Aktualisiert das Tag Attribute des entsprechenden Fotos und aktualisiert die Modaloberfläche {@link updateModalUI} mit den
+ * aktualisierten extrahierten Fotodaten {@link extractPhotoData}  <br>
+ *
+ * POST /tag <br>
  * {
  *     photoID: ___,
  *     tag: ___
@@ -160,18 +175,12 @@ attachAddTagListener();
  * @param tagName Der Tag, der hinzugefügt werden soll
  */
 async function handleTagAdd(photoID: number, tagName: string) {
-  interface ServerReq {
-    photoID : number,
-    tag : string
-  }
-
-
-  // console.log("called2");
-  const reqData : ServerReq = {
-    photoID: photoID,
-    tag: tagName
-  };
   try {
+    const reqData  = {
+      photoID: photoID,
+      tag: tagName
+    };
+
     const res: Response = await fetch("http://localhost:8080/photos/tag", {
       method: "POST",
       credentials: "include",
@@ -253,11 +262,10 @@ function renderError(errorContainer : HTMLElement, resetErrorMessage: boolean, m
  *     "photoID" : ___,
  *     "tag" : ___
  * }
- * @param delBtn HTMLButtonElement
- * @param tag string
+ * @param tag Der tag der gelöscht werden soll
  * @param colDiv HTMLDivElement
  */
-async function handleTagDelete(delBtn: HTMLButtonElement, tag: string, colDiv: HTMLDivElement) {
+async function handleTagDelete(tag: string, colDiv: HTMLDivElement) {
   const img = document.querySelector("#modal-img") as HTMLImageElement;
   const imgId = img.dataset.id as string;
 
@@ -308,13 +316,8 @@ function editPhotoTitle() {
   document.addEventListener("DOMContentLoaded", () => {
     (document.querySelector("#submit-edit-name") as HTMLButtonElement).addEventListener("click", async() => {
       try {
-        interface ServerReq {
-          photoID : number,
-          photoTitle : string
-        }
-
         const photoID = Number((document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id"));
-        const reqData : ServerReq = {
+        const reqData = {
           photoID : photoID,
           photoTitle : (document.querySelector("#edit-name") as HTMLInputElement).value
         }
@@ -333,7 +336,6 @@ function editPhotoTitle() {
           renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, true);
           updateModalUI(extractPhotoData(img));
         } else {
-          console.log("called");
           renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, false, data.message);
         }
       } catch(error) {
@@ -360,7 +362,6 @@ async function fetchUsername() : Promise<void> {
     }
 
     const data : { username : string, role : string } = await res.json();
-    console.log(data);
 
     renderUsername(data.username);
 
@@ -370,7 +371,8 @@ async function fetchUsername() : Promise<void> {
 }
 
 /**
- * GET /role
+ * GET /role <br>
+ * {@link renderGoToAdminPage}
  */
 async function fetchRole()  {
   try {
@@ -398,7 +400,9 @@ function renderGoToAdminPage(role : string) : void {
   }
 }
 
-
+/**
+ * Leitet den Nutzer zur Adminseite weiter, wenn dieser auf den entsprechenden Button klickt und als Admin angemeldet ist
+ */
 function redirectToAdminPage() {
   (document.querySelector("#go-to-admin-page") as HTMLButtonElement).addEventListener("click", async() => {
     try {
@@ -422,6 +426,10 @@ function renderUsername(username : string) {
   usernameField.textContent = username;
 }
 
+/**
+ * Extrahiert den Suchparameter aus dem entsprechenden Input-Feld, wenn das Submit-Event des entsprechenden Forms ausgelöst wurde<br>
+ * Ruft mit dem extrahierten Suchparameter {@link fetchPhotos} auf
+ */
 function addSearchPhotosListener() {
   (document.querySelector("#searchPhotos") as HTMLFormElement).addEventListener("submit", async(evt : SubmitEvent) => {
     evt.preventDefault()
@@ -434,11 +442,10 @@ addSearchPhotosListener();
 
 /**
  * GET /photos <br>
- * Funktion zum Abrufen aller Fotos eines Benutzers vom Server
+ * Funktion zum Abrufen aller Fotos eines Benutzers vom Server, optional mit übergebenem Suchparameter
  */
 async function fetchPhotos(searchVal? : string) : Promise<void> {
   try {
-    console.log(searchVal);
     const res : Response = await fetch("/photos?" +(searchVal ? new URLSearchParams({photoTitle : searchVal, tag : searchVal}).toString() : ""), {
       method : "GET",
       credentials : "include"
@@ -535,15 +542,22 @@ function renderPhotos(photo : Photo) : void {
 
 
 /**
+ * Extrahiert die photoID aus dem entsprechendem HTML Element und ruft
+ *
  * PATCH /photos/photoDate
  * {
  *     "photoID" : ___,
  *     "date" : ___
- * }
+ * } <br>
+ *
+ * mit dem übergebenen Datum auf <br>
+ *
+ * Aktualisiert die ModalUI {@link updateModalUI} mit den aktualisierten extrahierten Fotodaten {@link updateModalUI}<br>
+ * Rendert error messages oder setzt diese zurück {@link renderError}
  */
 async function handleEditPhotoDate(date : string) {
-  const photoID = (document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string;
   try {
+    const photoID = (document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string;
     const reqData = {
       photoID : photoID,
       date : date
@@ -570,6 +584,9 @@ async function handleEditPhotoDate(date : string) {
   }
 }
 
+/**
+ * Wartet, bis der entsprechende Button ein click-event auslöst und ruft dann {@link handleEditPhotoDate} mit dem extrahiertem Fotodatum auf.<br>
+ */
 function editDateListener() {
   document.addEventListener("DOMContentLoaded", () => {
     (document.querySelector("#submit-edit-date") as HTMLButtonElement).addEventListener("click", async() => {
@@ -579,7 +596,9 @@ function editDateListener() {
 }
 editDateListener();
 
-
+/**
+ * Wartet, bis der entsprechende Button zum Löschen eines Fotos ein click-event auslöst und ruft mit der extrahierten photoID {@link handlePhotoDelete} auf
+ */
 function editDelPhotoBtnListener() {
   (document.querySelector("#del-photo-btn") as HTMLButtonElement).addEventListener("click", async () => {
     await handlePhotoDelete((document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string);
@@ -587,20 +606,28 @@ function editDelPhotoBtnListener() {
 }
 editDelPhotoBtnListener();
 
+/**
+ * DELETE /img/:photoID
+ * @param photoID Die ID des Fotos
+ */
 async function handlePhotoDelete(photoID : string) {
-  const res = await fetch(`http://localhost:8080/img/${photoID}`, {
-    method : "DELETE",
-    credentials : "include"
-  })
+  try {
+    const res = await fetch(`http://localhost:8080/img/${photoID}`, {
+      method : "DELETE",
+      credentials : "include"
+    })
 
-  if (res.status == 204) {
-    renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, true);
-    await fetchPhotos()
-    window.location.reload();
-  } else {
-    const data : { message : string } = await res.json();
-    console.log(data.message);
-    renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, false, data.message);
+    if (res.status == 204) {
+      renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, true);
+      await fetchPhotos()
+      window.location.reload();
+    } else {
+      const data : { message : string } = await res.json();
+      console.log(data.message);
+      renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, false, data.message);
+    }
+  } catch(err) {
+    console.log(err);
   }
 }
 
@@ -740,7 +767,11 @@ async function fetchAlbums(searchParam ?: string) {
 function renderAlbums(albums : Album[]) {
   const displayAlbumsContainer = document.querySelector("#display-albums") as  HTMLUListElement;
   // reset container
-  displayAlbumsContainer.innerHTML = "";
+  displayAlbumsContainer.innerHTML = `
+      <li class="list-group-item d-flex align-items-center">
+        <button class="btn w-100 d-flex justify-content-start">Alle Fotos</button>
+      </li>
+  `;
 
   albums.forEach(album => {
     const {id, title, tags } = album; // DESTRUCTURING
@@ -818,6 +849,11 @@ async function handleAlbumDelete(albumID : string) {
   }
 }
 
+/**
+ * Fügt ein click Event Listener dem entsprechenden Button hinzu und extrahiert den neuen Titel des Albums aus dem Input-Feld sowie die albumID des Albums aus dem
+ * Modalcontainer (data attribut).
+ * Ruft mit dem neuen Titel und der albumID {@link handlerPatchAlbumsTitle} auf.
+ */
 function patchAlbumsTitle() {
   const submitEditAlbumNameBtn = document.querySelector("#submit-edit-album-name") as HTMLButtonElement;
   const editAlbumNameInput = document.querySelector("#edit-album-name") as HTMLInputElement;
@@ -829,6 +865,12 @@ function patchAlbumsTitle() {
 }
 patchAlbumsTitle();
 
+/**
+ * PATCH /albums/albumsTitle mit den Parametern als JSON body
+ *
+ * @param title Der neue Titel des Albums
+ * @param albumID Die albumID des Albums
+ */
 async function handlerPatchAlbumsTitle(title : string, albumID : number) {
   try {
     const res = await fetch("http://localhost:8080/albums/albumsTitle", {
@@ -844,7 +886,7 @@ async function handlerPatchAlbumsTitle(title : string, albumID : number) {
       ${data.message}
       ${data.albumTitle}
       `);
-      (document.querySelector("#album-title") as HTMLHeadingElement).textContent = data.albumTitle;
+      (document.querySelector("#album-title") as HTMLHeadingElement).textContent = data.albumTitle; // Aktualisiere das Modal, sodass man nicht das Modal erst schließe und wieder öffnen kann
       await fetchAlbums();
     } else {
       const data : { message : string } = await res.json();

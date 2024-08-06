@@ -322,8 +322,10 @@ public class AlbumHandler {
         }
       });
 
+
     return promise.future();
   }
+
 
 
   /**
