@@ -284,5 +284,8 @@ public class AlbumHandler {
            });
   }
 
+  public void deleteTagFromAlbum(RoutingContext ctx) {
+          String albumID = ctx.data().get("albumID").toString();
 
+  }
 }

@@ -388,6 +388,40 @@ public class MainVerticle extends AbstractVerticle {
             .handler(albumHandler::albumIsUser)
             .handler(albumHandler::editAlbumTitle);
 
+    /*
+    router.get("/photos/:albumID")
+            .handler(authenticationHandler::isLoggedIn)
+            .handler(ctx -> {
+                    ctx.data().put("albumID", ctx.pathParam("albumID"));
+                    ctx.next();
+            })
+            .handler(albumHandler::validateAlbumInputReq)
+            .handler(albumHandler::albumExists)
+            .handler(albumHandler::albumIsUser)
+            .handler(ctx -> {
+                    ctx.data().put("parameters", ctx.request().params()); // Speichere mögliche Suchparameter im ctx
+                    ctx.next();
+            })
+            .handler(photoHandler::getAllPhotosFromUser);
+     */
+          /*
+     router.delete("/albums/tag")
+             .handler(authenticationHandler::isLoggedIn)
+             .handler(ctx -> {
+                     ctx.data().put("tag", ctx.body().asJsonObject().getString("tag"));
+                     ctx.data().put("albumID", ctx.body().asJsonObject().getString("albumID"));
+                     ctx.next();
+             })
+             .handler(albumHandler::validateAlbumInputReq)
+             .handler(photoHandler::validateTagInputReq)
+             .handler(albumHandler::albumExists)
+             .handler(albumHandler::albumIsUser)
+             .handler(albumHandler::deleteTagFromAlbum);
+
+
+           */
+
+
 
 
 
