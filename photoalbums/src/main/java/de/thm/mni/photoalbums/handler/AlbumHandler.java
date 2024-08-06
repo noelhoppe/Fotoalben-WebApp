@@ -1,7 +1,9 @@
 package de.thm.mni.photoalbums.handler;
 
 import de.thm.mni.photoalbums.MainVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.MultiMap;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -284,5 +286,103 @@ public class AlbumHandler {
            });
   }
 
+  /**
+   *
+   * @param tag Der tag, der überprüft werden soll
+   * @return
+   */
+  Future<Integer> getTagId(String tag) {
+    System.out.println("called getTagID in AlbumHandler.java");
+
+    Promise<Integer> promise = Promise.promise();
+
+    jdbcPool.preparedQuery("SELECT ID FROM Tags WHERE Tags.name = ?")
+      .execute(Tuple.of(tag), res -> {
+        if (res.succeeded() && res.result().size() == 1) {
+          promise.complete(res.result().iterator().next().getInteger("ID"));
+        } else {
+          promise.fail(res.cause());
+        }
+      });
+
+    return promise.future();
+  }
+
+  Future<Integer> addTagToTableTags(String tag) {
+    System.out.println("called addTagToTableTags in albumHandler.java");
+
+    Promise<Integer> promise = Promise.promise();
+
+    jdbcPool.preparedQuery("INSERT INTO Tags (name) VALUES (?)")
+      .execute(Tuple.of(tag), res -> {
+        if (res.succeeded()) {
+          promise.complete(res.result().property(JDBCPool.GENERATED_KEYS).getInteger(0));
+        }  else {
+          promise.fail(res.cause());
+        }
+      });
+
+    return promise.future();
+  }
+
+
+  /**
+   * Handler für POST /albums/tag <br>
+   * Gibt Statuscode 201 mit entsprechender Erfolgsmeldung zurück, wenn der Tag erfolgreich zum Foto hinzugefügt wurde.<br>
+   * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag Leerzeichen enthält.<br>
+   * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag leer is.<br>
+   * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht Tags zu Fotos eines anderen Benutzers hinzuzufügen. <br>
+   * Gibt Statuscode 409 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht einen Tag hinzuzufügen, der bereits dem entsprechenden Foto zugewiesen ist.
+   * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
+   * @param ctx Routing Context
+   */
+
+
+  public void addTagToAlbum(RoutingContext ctx) {
+
+    Integer albumID = Integer.valueOf(ctx.data().get("albumID").toString());
+    String tag = ctx.data().get("tag").toString();
+
+    getTagId(tag).onComplete(res -> {
+      if (res.succeeded()) {
+        jdbcPool.preparedQuery("INSERT INTO  AlbumsTags VALUES (?, ?)")
+          .execute(Tuple.of(albumID, res.result()), dbRes -> {
+            if (dbRes.succeeded()) {
+              MainVerticle.response(ctx.response(), 201, new JsonObject()
+                .put("message", "Tag erfolgreich zum Album hinzugefügt")
+              );
+            } else {
+              System.out.println(dbRes.cause().getMessage());
+              MainVerticle.response(ctx.response(), 409, new JsonObject()
+                .put("message", "Der Tag existiert bereits")
+              );
+            }
+          });
+      } else {
+        addTagToTableTags(tag).onComplete(ar -> {
+          if (ar.succeeded()) {
+            jdbcPool.preparedQuery("INSERT INTO  AlbumsTags VALUES (?, ?)")
+              .execute(Tuple.of(albumID, ar.result()), dbRes -> {
+                if (dbRes.succeeded()) {
+                  MainVerticle.response(ctx.response(), 201, new JsonObject()
+                    .put("message", "Tag erfolgreich zum Album hinzugefügt")
+                  );
+                } else {
+                  System.out.println(dbRes.cause().getMessage());
+                  MainVerticle.response(ctx.response(), 409, new JsonObject()
+                    .put("message", "Der Tag existiert bereits")
+                  );
+                }
+              });
+          } else {
+            MainVerticle.response(ctx.response(), 500, new JsonObject()
+              .put("message", "Ein interner Serverfehler ist aufgetreten")
+            );
+          }
+        });
+      }
+    });
+  }
 
 }
+

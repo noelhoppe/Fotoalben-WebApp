@@ -900,4 +900,38 @@ function renderAlbumsEditModal() {
   })
 }
 
+function addTagToAlbum() {
+  const submitAddTagtoAlbumBtn = document.getElementById("submitAddTagToAlbumInput") as HTMLButtonElement;
+  submitAddTagtoAlbumBtn.addEventListener("click", async () => {
+    const tag = (document.getElementById("addTagToAlbumInput") as HTMLInputElement).value;
+    const albumID = (document.querySelector("#editAlbumModal") as HTMLDivElement).getAttribute("data-album-id") as string;
+    await handlerAddTagToAlbum(tag, parseInt(albumID));
+  })
+}
+
+addTagToAlbum();
+
+async function handlerAddTagToAlbum(tag : string, albumID : number) {
+  try {
+    const res = await fetch("http://localhost:8080/albums/tag", {
+      method : "POST",
+      credentials : "include",
+      body : JSON.stringify({tag : tag, albumID : albumID})
+    })
+
+    if (res.status == 201) {
+      const data : { message : string} = await res.json();
+      console.log(res.status + " " + data.message);
+     //TODO tags aktualisieren
+      await fetchAlbums();
+    } else {
+      const data : { message : string } = await res.json();
+      console.log(res.status + " " + data.message);
+    }
+
+  } catch(err) {
+    console.log(err);
+  }
+}
+
 // --- ALBEN ---

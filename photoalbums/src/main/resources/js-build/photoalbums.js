@@ -815,4 +815,37 @@ function renderAlbumsEditModal() {
         });
     });
 }
+function addTagToAlbum() {
+    const submitAddTagtoAlbumBtn = document.getElementById("submitAddTagToAlbumInput");
+    submitAddTagtoAlbumBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+        const tag = document.getElementById("addTagToAlbumInput").value;
+        const albumID = document.querySelector("#editAlbumModal").getAttribute("data-album-id");
+        yield handlerAddTagToAlbum(tag, parseInt(albumID));
+    }));
+}
+addTagToAlbum();
+function handlerAddTagToAlbum(tag, albumID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const res = yield fetch("http://localhost:8080/albums/tag", {
+                method: "POST",
+                credentials: "include",
+                body: JSON.stringify({ tag: tag, albumID: albumID })
+            });
+            if (res.status == 201) {
+                const data = yield res.json();
+                console.log(res.status + " " + data.message);
+                //TODO tags aktualisieren
+                yield fetchAlbums();
+            }
+            else {
+                const data = yield res.json();
+                console.log(res.status + " " + data.message);
+            }
+        }
+        catch (err) {
+            console.log(err);
+        }
+    });
+}
 // --- ALBEN ---

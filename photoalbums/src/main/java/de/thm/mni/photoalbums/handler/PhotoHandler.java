@@ -271,7 +271,7 @@ public class PhotoHandler {
 
 
 	/**
-	 * Handler für POST /tag <br>
+	 * Handler für POST /photos/tag <br>
 	 * Gibt Statuscode 201 mit entsprechender Erfolgsmeldung zurück, wenn der Tag erfolgreich zum Foto hinzugefügt wurde.<br>
 	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag Leerzeichen enthält.<br>
 	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn der Tag leer is.<br>
@@ -334,7 +334,7 @@ public class PhotoHandler {
 	 * @return
 	 */
 	Future<Integer> getTagId(String tag) {
-		System.out.println("called tagExistsInTableTags in PhotoHandler.java");
+		System.out.println("called getTagID in PhotoHandler.java");
 
 		Promise<Integer> promise = Promise.promise();
 
