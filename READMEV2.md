@@ -1165,3 +1165,50 @@ Mögliche Fehler
   "message" : "Ein interner Serverfehler ist aufgetreten"
 }
 ```
+
+> GET /photos/:albumID
+
+http-Res
+```JSON
+{
+  "photos": [
+    {
+      "id": 14,
+      "title": "Hundebaby",
+      "taken": "2003-10-06",
+      "imgUrl": "14.jpg",
+      "tags": "Tiere"
+    }
+  ]
+}
+```
+
+1. Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn der Benutzer nicht angemeldet ist.
+```JSON
+{
+	"message": "Bitte melde dich zuerst an, um diese Route aufrufen zu dürfen."
+}
+```
+
+2. Statuscode 400, wenn albumID keine gültige Zahl ist
+```JSON
+{
+  "message" : "albumID muss eine gültige Zahl sein"
+}
+```
+
+3. Statuscode 404, wenn das Album nicht gefunden wurde
+```JSON
+{
+  "message" : "Das Album wurde nicht gefunden"
+}
+```
+
+4. Statuscode 403, wenn das Album nicht dem Benutzer gehört
+```JSON
+{
+  "message" : "Das Album gehört nicht dem Benutzer"
+}
+```
+
+5. Statuscode 500 mit Fehlermeldung, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.

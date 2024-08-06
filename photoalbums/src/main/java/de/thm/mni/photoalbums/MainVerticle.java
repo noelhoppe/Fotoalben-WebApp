@@ -414,7 +414,8 @@ public class MainVerticle extends AbstractVerticle {
       .handler(albumHandler::albumIsUser)
       .handler(photoHandler::validateTagInputReq)
       .handler(albumHandler::addTagToAlbum);
-    /*
+
+
     router.get("/photos/:albumID")
             .handler(authenticationHandler::isLoggedIn)
             .handler(ctx -> {
@@ -429,7 +430,6 @@ public class MainVerticle extends AbstractVerticle {
                     ctx.next();
             })
             .handler(photoHandler::getAllPhotosFromUser);
-     */
 
     router.post("/albums/photo")
       .handler(authenticationHandler::isLoggedIn)

@@ -52,58 +52,50 @@ public class PhotoHandler {
 		// Check, if /photos/:albumID
 		String albumID = ctx.pathParam("albumID");
 
-
 		// Build the SQL query
 		StringBuilder sql = new StringBuilder("""
-                      SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
-                      FROM Photos p
-                      LEFT JOIN PhotosTags pt
-                                ON pt.Photos_ID = p.ID
-                      LEFT JOIN Tags t
-                                 ON pt.TAGS_ID = t.ID
-                     WHERE p.ID IN (
-                     SELECT p_inner.ID
-                                FROM Photos p_inner
-                                LEFT JOIN PhotosTags pt_inner
-                                       ON pt_inner.Photos_ID = p_inner.ID
-                                LEFT JOIN Tags t_inner
-                                       ON pt_inner.TAGS_ID = t_inner.ID
-                  """);
+                 SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
+                 FROM Photos p
+                 LEFT JOIN PhotosTags pt
+                            ON pt.Photos_ID = p.ID
+                 LEFT JOIN Tags t
+                             ON pt.TAGS_ID = t.ID
+                 WHERE p.ID IN (
+                 SELECT p_inner.ID
+                            FROM Photos p_inner
+                            LEFT JOIN PhotosTags pt_inner
+                                   ON pt_inner.Photos_ID = p_inner.ID
+                            LEFT JOIN Tags t_inner
+                                   ON pt_inner.TAGS_ID = t_inner.ID
+                            LEFT JOIN AlbumsPhotos aph
+                                   ON aph.Photos_ID = p_inner.ID
+                            WHERE p_inner.Users_ID = ?
+              """);
 
 		List<Object> params = new ArrayList<>();
+		params.add(userIdStr);
+
 		if (albumID != null && !albumID.trim().isEmpty()) {
-			sql.append("""
-				LEFT JOIN Albums a_inner
-                                	ON a_inner.ID = ?
-                               	LEFT JOIN AlbumsPhotos aph
-                               		ON aph.Albums_ID = a_inner.ID
-				""");
+			sql.append("AND aph.Albums_ID = ? ");
 			params.add(albumID);
 		}
 
-		sql.append("WHERE p_inner.Users_ID = ?");
-		params.add(userIdStr);
-
 		if (tag != null && !tag.trim().isEmpty()) {
-			sql.append("AND t_inner.name LIKE CONCAT('%', ?, '%')");
+			sql.append("AND t_inner.name LIKE CONCAT('%', ?, '%') ");
 			params.add(tag);
 		}
 
 		if (photoTitle != null && !photoTitle.trim().isEmpty()) {
-			sql.append("OR p_inner.title LIKE CONCAT('%', ?, '%')");
+			sql.append("AND p_inner.title LIKE CONCAT('%', ?, '%') ");
 			params.add(photoTitle);
 		}
 
-
-
 		sql.append("""
-                                 GROUP BY p_inner.ID
-                      )
-                      GROUP BY p.ID, p.title, p.taken, p.url
-                  """);
+                             GROUP BY p_inner.ID
+                  )
+                  GROUP BY p.ID, p.title, p.taken, p.url
+              """);
 
-
-		System.out.println("sql: " + sql);
 
 		jdbcPool.preparedQuery(sql.toString())
 			.execute(Tuple.from(params), res -> {
@@ -217,14 +209,13 @@ public class PhotoHandler {
 				MainVerticle.response(ctx.response(), 400, new JsonObject()
 					.put("message", "Der Tag darf keine Leerzeichen enthalten")
 				);
-			}
-
-			if (tag.trim().isEmpty()) {
+			} else if (tag.trim().isEmpty()) {
 				MainVerticle.response(ctx.response(), 400, new JsonObject()
 					.put("message", "Der Tag darf nicht leer sein")
 				);
+			} else {
+				ctx.next();
 			}
-			ctx.next();
 
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
@@ -244,16 +235,20 @@ public class PhotoHandler {
 		System.out.println("called deleteTag in PhotoHandler.java");
 		Integer photoID = Integer.valueOf(ctx.data().get("photoID").toString());
 		String tag = ctx.data().get("tag").toString();
+		System.out.println(tag);
 
 		getTagId(tag).onComplete(ar -> {
 			if (ar.succeeded()) {
+				System.out.println("called");
 				jdbcPool.preparedQuery("DELETE FROM PhotosTags WHERE Photos_ID = ? AND Tags_ID = ? ")
 					.execute(Tuple.of(photoID, ar.result()), res -> {
 						if (res.succeeded()) {
+							System.out.println("res.succeeded()");
 							ctx.response()
 								.setStatusCode(204)
 								.end();
 						} else {
+							System.out.println("!res.succeeded()");
 							MainVerticle.response(ctx.response(), 500, new JsonObject()
 								.put("message", "Fehler beim Löschen des Tags")
 							);
