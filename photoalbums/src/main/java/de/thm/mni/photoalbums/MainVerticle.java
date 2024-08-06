@@ -409,9 +409,9 @@ public class MainVerticle extends AbstractVerticle {
         ctx.data().put("tag", ctx.body().asJsonObject().getString("tag"));
         ctx.next();
       })
+      .handler(albumHandler::validateAlbumInputReq)
       .handler(albumHandler::albumExists)
       .handler(albumHandler::albumIsUser)
-      .handler(albumHandler::validateAlbumInputReq)
       .handler(photoHandler::validateTagInputReq)
       .handler(albumHandler::addTagToAlbum);
     /*

@@ -1033,3 +1033,69 @@ Mögliche Fehler
 ```
 
 7. Ein interner Serve- und/oder Datenbankfehler ist aufgetreten
+
+> POST /albums/tags  
+> Gibt Statuscode 201 zurück, wenn der Tag erfolgreich mit dem Album verknüpft wurde.
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statuscode 400, wenn albumID keine gültige Zahl ist
+```JSON
+{
+  "message" : "albumID muss eine gültige Zahl sein"
+}
+```
+
+3. Statuscode 404, wenn das Album nicht existiert.
+```JSON
+{
+  "message" : "Das Album wurde nicht gefunden."
+}
+```
+
+4. Statuscode 403, wenn das Album nicht dem Benutzer gehört
+```JSON
+{
+  "message" : "Das Album gehört nicht dem Benutzer"
+}
+```
+
+5. Statuscode 400, wenn das Feld Tag Leerzeichen enthält
+```JSON
+{
+  "message" : "Der Tag darf keine Leerzeichen enthalten"
+}
+```
+
+6. Statuscode 400, wenn das Feld Tag leer ist
+```JSON
+{
+  "message" : "Der Tag darf nicht leer sein"
+}
+```
+
+7. Statuscode 400, wenn das Feld Tag null ist
+```JSON
+{
+  "message" : "tag darf nicht null sein"
+}
+```
+
+8. Statuscode 409, wenn der Tag bereits mit dem Foto verknüpft ist
+```JSON
+{
+  "message" : "Der Tag existiert bereits"
+}
+```
+
+9. Statuscode 500, wenn ein Datenbank- oder Serverfehler auftritt
+```JSON
+{
+  "message" : "Ein interner Serverfehler ist aufgetreten"
+}
+```
