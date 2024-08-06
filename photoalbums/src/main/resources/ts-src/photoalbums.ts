@@ -677,7 +677,6 @@ function addAlbum(){
     }
   });
 }
-
 addAlbum()
 
 /**

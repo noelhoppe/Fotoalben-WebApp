@@ -57,18 +57,15 @@ public class LoginHandler {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Nutzername darf keine Leerzeichen enthalten")
 			);
-		}
-		else if (ctx.data().get("username").toString().trim().isEmpty()) {
+		} else if (ctx.data().get("username").toString().trim().isEmpty()) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Nutzername darf nicht leer sein")
 			);
-		}
-    else if (ctx.data().get("username").toString().length() > 30) {
-        MainVerticle.response(ctx.response(), 400, new JsonObject()
-          .put("message", "Der Nutzername darf höchstens 30 Zeichen lang sein")
-        );
-    }
-		else {
+		} else if (ctx.data().get("username").toString().length() > 30) {
+        		MainVerticle.response(ctx.response(), 400, new JsonObject()
+          			.put("message", "Der Nutzername darf höchstens 30 Zeichen lang sein")
+        		);
+		} else {
 			ctx.next();
 		}
 	}

@@ -375,19 +375,19 @@ public class PhotoHandler {
 	 * @param ctx Routing Context
 	 */
 	public void validatePhotoTitleReq(RoutingContext ctx) {
-    String photoTitle = ctx.data().get("photoTitle").toString();
+		String photoTitle = ctx.data().get("photoTitle").toString();
 
-    if (photoTitle.trim().isEmpty()) {
-			MainVerticle.response(ctx.response(), 400, new JsonObject()
+    		if (photoTitle.trim().isEmpty()) {
+	    		MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Titel darf nicht leer sein")
+	    		);
+    		} else if (photoTitle.length() > 30) {
+	    		MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Der Titel darf maximal 30 Zeichen lang sein")
 			);
-		} else if (photoTitle.length() > 30) {
-      MainVerticle.response(ctx.response(), 400, new JsonObject()
-        .put("message", "Der Titel darf maximal 30 Zeichen lang sein")
-      );
-    } else {
-			ctx.next();
-		}
+    		} else {
+	    		ctx.next();
+    		}
 	}
 
 
