@@ -93,6 +93,18 @@ function updateModalUI(photoData) {
     updateModalTags(modalTags, tags || "");
     // Setze die Eingabefelder zurück
     resetModalInputs();
+    try {
+        const data = yield photoIsInAlbum(parseInt(id));
+        if (Array.isArray(data)) {
+            createAlbumList(data);
+        }
+        else {
+            console.log(data.message);
+        }
+    }
+    catch (err) {
+        console.log(err);
+    }
 }
 /**
  * Aktualisiert die Modal-Tags-UI.<br>
@@ -1020,6 +1032,84 @@ function fetchPhotosFromAlbum(albumID) {
         }
         catch (error) {
             console.error("Error GET /photos/:albumID", error);
+        }
+    });
+}
+function createAlbumList(albums) {
+    const albumMenu = document.getElementById('albumMenu');
+    albumMenu.innerHTML = ''; // Clear existing items
+    albums.forEach(album => {
+        const listItem = document.createElement('li');
+        const formCheck = document.createElement('div');
+        formCheck.className = 'form-check form-switch';
+        const input = document.createElement('input');
+        input.className = 'form-check-input';
+        input.type = 'checkbox';
+        input.id = `switch-${album.id}`;
+        input.checked = album.containsPhoto;
+        input.addEventListener('change', (event) => handleSwitchChange(event, album.id));
+        const label = document.createElement('label');
+        label.className = 'form-check-label';
+        label.htmlFor = input.id;
+        label.textContent = `In Album ${album.name}`;
+        formCheck.appendChild(input);
+        formCheck.appendChild(label);
+        listItem.appendChild(formCheck);
+        albumMenu.appendChild(listItem);
+    });
+}
+function photoIsInAlbum(photoID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const res = yield fetch("http://localhost:8080/albums/contains", {
+            method: "GET",
+            credentials: "include",
+            body: JSON.stringify(photoID)
+        });
+        if (res.ok) {
+            const data = yield res.json();
+            return data;
+        }
+        else {
+            const data = yield res.json();
+            console.log(res.status + " " + data.message);
+            return data;
+        }
+    });
+}
+function handleSwitchChange(evt, albumID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const input = evt.target;
+        const photoID = document.querySelector("#modal-img").getAttribute("data-id");
+        const reqData = {
+            photoID: photoID,
+            albumID: albumID
+        };
+        if (input.checked) {
+            try {
+                const res = yield fetch("http://localhost:8080/albums/photo", {
+                    method: "POST",
+                    credentials: "include",
+                    body: JSON.stringify(reqData)
+                });
+                if (res.status != 201) {
+                    const data = yield res.json();
+                    console.log(res.status + " " + data.messsage);
+                }
+            }
+            catch (err) {
+                console.log(err);
+            }
+        }
+        else {
+            const res = yield fetch("http://localhost:8080/albums/photo", {
+                method: "DELETE",
+                credentials: "include",
+                body: JSON.stringify(reqData)
+            });
+            if (res.status != 204) {
+                const data = yield res.json();
+                console.log(res.status + " " + data.message);
+            }
         }
     });
 }

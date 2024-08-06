@@ -102,6 +102,17 @@ function updateModalUI(photoData: Photo) {
 
   // Setze die Eingabefelder zurück
   resetModalInputs();
+
+  try {
+    const data = await photoIsInAlbum(parseInt(id))
+    if (Array.isArray(data)) {
+      createAlbumList(data);
+    } else {
+      console.log(data.message);
+    }
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 /**
@@ -1110,6 +1121,97 @@ async function fetchPhotosFromAlbum(albumID : number) {
   } catch (error) {
     console.error("Error GET /photos/:albumID", error);
   }
+}
+
+
+
+function createAlbumList(albums : [{id : number, name : string, containsPhoto : boolean}]): void {
+  const albumMenu = document.getElementById('albumMenu') as HTMLUListElement;
+  albumMenu.innerHTML = ''; // Clear existing items
+
+  albums.forEach(album => {
+    const listItem = document.createElement('li');
+    const formCheck = document.createElement('div');
+    formCheck.className = 'form-check form-switch';
+
+    const input = document.createElement('input');
+    input.className = 'form-check-input';
+    input.type = 'checkbox';
+    input.id = `switch-${album.id}`;
+    input.checked = album.containsPhoto;
+    input.addEventListener('change', (event ) => handleSwitchChange(event, album.id));
+
+    const label = document.createElement('label');
+    label.className = 'form-check-label';
+    label.htmlFor = input.id;
+    label.textContent = `In Album ${album.name}`;
+
+    formCheck.appendChild(input);
+    formCheck.appendChild(label);
+    listItem.appendChild(formCheck);
+
+    albumMenu.appendChild(listItem);
+  });
+}
+
+async function photoIsInAlbum(photoID : number) {
+  const res = await fetch("http://localhost:8080/albums/contains", {
+    method : "GET",
+    credentials : "include",
+    body : JSON.stringify(photoID)
+  })
+
+  if (res.ok) {
+    const data : [{id : number, name : string, containsPhoto : boolean}] = await res.json();
+    return data;
+  } else {
+    const data : { message : string } = await res.json();
+    console.log(res.status + " " + data.message);
+    return data;
+  }
+}
+
+
+async function handleSwitchChange(evt : Event, albumID : number) {
+  const input = evt.target as HTMLInputElement;
+  const photoID = (document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id") as string;
+
+  const reqData = {
+    photoID : photoID,
+    albumID : albumID
+  }
+
+  if (input.checked) {
+
+    try {
+      const res = await fetch("http://localhost:8080/albums/photo", {
+        method : "POST",
+        credentials : "include",
+        body : JSON.stringify(reqData)
+      })
+
+      if (res.status != 201) {
+        const data : { messsage : string } = await res.json()
+        console.log(res.status + " " + data.messsage);
+      }
+
+    } catch(err) {
+      console.log(err);
+    }
+
+  } else {
+    const res = await fetch("http://localhost:8080/albums/photo", {
+      method : "DELETE",
+      credentials : "include",
+      body : JSON.stringify(reqData)
+    })
+
+    if (res.status != 204) {
+      const data : { message : string } = await res.json();
+      console.log(res.status + " " + data.message);
+    }
+  }
+
 }
 
 
