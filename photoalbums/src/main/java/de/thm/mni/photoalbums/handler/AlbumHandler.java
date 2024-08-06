@@ -103,7 +103,7 @@ public class AlbumHandler {
   public void validateAlbumInputReq(RoutingContext ctx) {
     try {
       int albumIDInt = Integer.parseInt(ctx.data().get("albumID").toString());
-      ctx.data().put("photoID", albumIDInt);
+      ctx.data().put("albumID", albumIDInt);
       ctx.next();
     } catch (NumberFormatException e) {
       e.printStackTrace();
@@ -386,5 +386,31 @@ public class AlbumHandler {
     });
   }
 
+   /**
+   * Gibt Statuscode 204 zurück, wenn der Tag erfolgreich vom Foto gelöscht wurde. <br>
+   * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist<br>
+   * @param ctx Routing Context
+   */
+  public void deleteTagFromAlbum(RoutingContext ctx) {
+          Integer albumID = Integer.valueOf(ctx.data().get("albumID").toString());
+          String tag = ctx.data().get("tag").toString();
+
+          getTagId(tag).onComplete(ar -> {
+                  if (ar.succeeded()) {
+                          jdbcPool.preparedQuery("DELETE FROM AlbumsTags WHERE Alben_ID = ? AND Tags_ID = ? ")
+                                  .execute(Tuple.of(albumID, ar.result()), res -> {
+                                          if (res.succeeded()) {
+                                                  ctx.response()
+                                                          .setStatusCode(204)
+                                                          .end();
+                                          } else {
+                                                  MainVerticle.response(ctx.response(), 500, new JsonObject()
+                                                          .put("message", "Fehler beim Löschen des Tags")
+                                                  );
+                                          }
+                                  });
+                  }
+          });
+  }
 }
 

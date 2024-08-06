@@ -369,6 +369,20 @@ public class MainVerticle extends AbstractVerticle {
       .handler(albumHandler::validateAlbumTitleReq)
       .handler(albumHandler::createAlbum);
 
+    router.delete("/albums/tag")
+            .handler(authenticationHandler::isLoggedIn)
+            .handler(ctx -> {
+                    System.out.println("second handler called");
+                    ctx.data().put("tag", ctx.body().asJsonObject().getString("tag"));
+                    ctx.data().put("albumID", ctx.body().asJsonObject().getString("albumID"));
+                    ctx.next();
+            })
+            .handler(albumHandler::validateAlbumInputReq)
+            .handler(photoHandler::validateTagInputReq)
+            .handler(albumHandler::albumExists)
+            .handler(albumHandler::albumIsUser)
+            .handler(albumHandler::deleteTagFromAlbum);
+
     router.delete("/albums/:albumID")
            .handler(authenticationHandler::isLoggedIn)
            .handler(albumHandler::deleteAlbumsPhotosConnections)
@@ -416,22 +430,8 @@ public class MainVerticle extends AbstractVerticle {
             })
             .handler(photoHandler::getAllPhotosFromUser);
      */
-          /*
-     router.delete("/albums/tag")
-             .handler(authenticationHandler::isLoggedIn)
-             .handler(ctx -> {
-                     ctx.data().put("tag", ctx.body().asJsonObject().getString("tag"));
-                     ctx.data().put("albumID", ctx.body().asJsonObject().getString("albumID"));
-                     ctx.next();
-             })
-             .handler(albumHandler::validateAlbumInputReq)
-             .handler(photoHandler::validateTagInputReq)
-             .handler(albumHandler::albumExists)
-             .handler(albumHandler::albumIsUser)
-             .handler(albumHandler::deleteTagFromAlbum);
 
 
-           */
 
 
 

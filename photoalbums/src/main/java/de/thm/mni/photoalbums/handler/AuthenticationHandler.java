@@ -15,6 +15,7 @@ public class AuthenticationHandler {
 		if (ctx.session().isEmpty()) {
 			ctx.response().setStatusCode(401).end(new JsonObject().put("message", "Bitte melde dich zuerst an, um diese Route aufzurufen").encodePrettily());
 		} else {
+			System.out.println("ctx.next() called");
 			ctx.next();
 		}
 	}
