@@ -209,9 +209,7 @@ public class PhotoHandler {
 				MainVerticle.response(ctx.response(), 400, new JsonObject()
 					.put("message", "Der Tag darf keine Leerzeichen enthalten")
 				);
-			}
-
-			if (tag.trim().isEmpty()) {
+			} else if (tag.trim().isEmpty()) {
 				MainVerticle.response(ctx.response(), 400, new JsonObject()
 					.put("message", "Der Tag darf nicht leer sein")
 				);

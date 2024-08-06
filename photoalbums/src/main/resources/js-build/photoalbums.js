@@ -979,9 +979,16 @@ function handlerAddTagToAlbum(tag, albumID) {
         }
     });
 }
+/**
+ * Füge einen Event-Listener hinzu, der auf den Click auf "Alle Fotos" in der Sidebar wartet und alle Fotos anzeigt
+ * {@link fetchPhotos}
+ */
 function showAllPhotos() {
     document.querySelector("#alleFotos").addEventListener("click", () => fetchPhotos());
 }
+/**
+ * Füge jedem Albumname (Button) ein Klick-Event-Listener hinzu, der die zugehörige Album-ID selektiert und diese als Argument an {@link fetchPhotosFromAlbum} übergibt.
+ */
 function showPhotosFromAlbum() {
     const albumsBtns = document.querySelectorAll(".album-title");
     albumsBtns.forEach(albumBtn => {
@@ -991,6 +998,11 @@ function showPhotosFromAlbum() {
         }));
     });
 }
+/**
+ * GET /photos/:albumID
+ *
+ * @param albumID Die ID des Albums aus welchem die Fotos angezeigt werden sollen
+ */
 function fetchPhotosFromAlbum(albumID) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
