@@ -438,6 +438,8 @@ public class MainVerticle extends AbstractVerticle {
         ctx.data().put("albumID", ctx.body().asJsonObject().getString("albumID"));
         ctx.next();
       })
+      .handler(photoHandler::validatePhotoInputReq)
+      .handler(albumHandler::validateAlbumInputReq)
       .handler(photoHandler::photoExists)
       .handler(albumHandler::albumExists)
       .handler(photoHandler::photoIsUser)
