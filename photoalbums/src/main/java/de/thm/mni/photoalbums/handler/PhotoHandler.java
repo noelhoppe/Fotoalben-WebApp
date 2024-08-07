@@ -213,6 +213,10 @@ public class PhotoHandler {
 				MainVerticle.response(ctx.response(), 400, new JsonObject()
 					.put("message", "Der Tag darf nicht leer sein")
 				);
+			} else if(tag.length() > 30){
+				MainVerticle.response(ctx.response(), 400, new JsonObject()
+					.put("message", "Der Tag darf nicht länger als 30 Zeichen sein sein")
+				);
 			} else {
 				ctx.next();
 			}
@@ -243,10 +247,13 @@ public class PhotoHandler {
 				jdbcPool.preparedQuery("DELETE FROM PhotosTags WHERE Photos_ID = ? AND Tags_ID = ? ")
 					.execute(Tuple.of(photoID, ar.result()), res -> {
 						if (res.succeeded()) {
+							/*
 							System.out.println("res.succeeded()");
 							ctx.response()
 								.setStatusCode(204)
 								.end();
+							 */
+							ctx.next();
 						} else {
 							System.out.println("!res.succeeded()");
 							MainVerticle.response(ctx.response(), 500, new JsonObject()

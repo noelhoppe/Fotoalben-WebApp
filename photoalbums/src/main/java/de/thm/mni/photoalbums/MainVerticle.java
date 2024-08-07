@@ -229,7 +229,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::servePhotos); // "1" => "1.jpg"
 
-    router.delete("/photos/tag")
+    router.delete("/photos/tag") // TODO:
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
              ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
@@ -240,7 +240,8 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::validateTagInputReq)
            .handler(photoHandler::photoExists)
            .handler(photoHandler::photoIsUser)
-           .handler(photoHandler::deleteTag);
+           .handler(photoHandler::deleteTag)
+            .handler(albumHandler::garbageCollectorTagsTable);
 
     router.post("/photos/tag")
            .handler(authenticationHandler::isLoggedIn)
@@ -373,7 +374,7 @@ public class MainVerticle extends AbstractVerticle {
       .handler(albumHandler::validateAlbumTitleReq)
       .handler(albumHandler::createAlbum);
 
-    router.delete("/albums/tag")
+    router.delete("/albums/tag") // TODO:
             .handler(authenticationHandler::isLoggedIn)
             .handler(ctx -> {
                     System.out.println("second handler called");
@@ -385,7 +386,8 @@ public class MainVerticle extends AbstractVerticle {
             .handler(photoHandler::validateTagInputReq)
             .handler(albumHandler::albumExists)
             .handler(albumHandler::albumIsUser)
-            .handler(albumHandler::deleteTagFromAlbum);
+            .handler(albumHandler::deleteTagFromAlbum)
+            .handler(albumHandler::garbageCollectorTagsTable);
 
     router.delete("/albums/photo")
       .handler(authenticationHandler::isLoggedIn)
