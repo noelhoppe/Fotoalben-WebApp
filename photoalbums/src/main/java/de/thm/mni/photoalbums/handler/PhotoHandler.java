@@ -46,31 +46,33 @@ public class PhotoHandler {
 
 		// Get query parameters
 		MultiMap parameters = (MultiMap) ctx.data().get("parameters");
+		System.out.println(parameters);
 		String tag = parameters.get("tag");
 		String photoTitle = parameters.get("photoTitle");
 
 		// Check, if /photos/:albumID
 		String albumID = ctx.pathParam("albumID");
 
+
 		// Build the SQL query
 		StringBuilder sql = new StringBuilder("""
-                 SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
-                 FROM Photos p
-                 LEFT JOIN PhotosTags pt
-                            ON pt.Photos_ID = p.ID
-                 LEFT JOIN Tags t
-                             ON pt.TAGS_ID = t.ID
-                 WHERE p.ID IN (
-                 SELECT p_inner.ID
-                            FROM Photos p_inner
-                            LEFT JOIN PhotosTags pt_inner
-                                   ON pt_inner.Photos_ID = p_inner.ID
-                            LEFT JOIN Tags t_inner
-                                   ON pt_inner.TAGS_ID = t_inner.ID
-                            LEFT JOIN AlbumsPhotos aph
-                                   ON aph.Photos_ID = p_inner.ID
-                            WHERE p_inner.Users_ID = ?
-              """);
+                      SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
+                      FROM Photos p
+                      LEFT JOIN PhotosTags pt
+                                ON pt.Photos_ID = p.ID
+                      LEFT JOIN Tags t
+                                 ON pt.TAGS_ID = t.ID
+                     WHERE p.ID IN (
+                     SELECT p_inner.ID
+                                FROM Photos p_inner
+                                LEFT JOIN PhotosTags pt_inner
+                                       	ON pt_inner.Photos_ID = p_inner.ID
+                                LEFT JOIN Tags t_inner
+                                       	ON pt_inner.TAGS_ID = t_inner.ID
+                                LEFT JOIN AlbumsPhotos aph
+                               		ON aph.Photos_ID = p_inner.ID
+                                WHERE p_inner.Users_ID = ?
+                  """);
 
 		List<Object> params = new ArrayList<>();
 		params.add(userIdStr);
@@ -80,21 +82,23 @@ public class PhotoHandler {
 			params.add(albumID);
 		}
 
+
 		if (tag != null && !tag.trim().isEmpty()) {
-			sql.append("AND t_inner.name LIKE CONCAT('%', ?, '%') ");
+			sql.append("AND t_inner.name LIKE CONCAT('%', ?, '%')");
 			params.add(tag);
 		}
 
 		if (photoTitle != null && !photoTitle.trim().isEmpty()) {
-			sql.append("AND p_inner.title LIKE CONCAT('%', ?, '%') ");
+			sql.append("OR p_inner.title LIKE CONCAT('%', ?, '%')");
 			params.add(photoTitle);
 		}
 
 		sql.append("""
-                             GROUP BY p_inner.ID
-                  )
-                  GROUP BY p.ID, p.title, p.taken, p.url
-              """);
+                                 GROUP BY p_inner.ID
+                      )
+                      GROUP BY p.ID, p.title, p.taken, p.url
+                  """);
+
 
 
 		jdbcPool.preparedQuery(sql.toString())
@@ -119,6 +123,7 @@ public class PhotoHandler {
 				}
 			});
 	}
+
 
 	/**
 	 * Sendet das Foto
