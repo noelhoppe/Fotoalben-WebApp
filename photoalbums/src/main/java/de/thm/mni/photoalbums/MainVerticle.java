@@ -312,12 +312,14 @@ public class MainVerticle extends AbstractVerticle {
            .handler(authenticationHandler::isAdmin)
            .handler(adminHandler::getUsers);
 
-    router.delete("/users/:userID")
+    router.delete("/users/:userID") // TODO: Tags der entsprechenden gelöschten Fotos und Alben löschen; Fotos vom Dateisystem löschen
            .handler(authenticationHandler::isLoggedIn)
            .handler(authenticationHandler::isAdmin)
            .handler(adminHandler::userIDIsNumber)
            .handler(adminHandler::tryToDelAdmin)
+            .handler(adminHandler::deleteAllTagsFromUsersPhotos)
            .handler(adminHandler::deleteAllPhotosFromUser)
+            .handler(adminHandler::deleteAllTagsFromUsersAlbums)
            .handler(adminHandler::deleteAllAlbumsFromUser)
            .handler(adminHandler::delUser);
 

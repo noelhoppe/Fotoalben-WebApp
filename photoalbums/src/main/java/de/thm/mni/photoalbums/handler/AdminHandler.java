@@ -1,7 +1,9 @@
 package de.thm.mni.photoalbums.handler;
 
 import de.thm.mni.photoalbums.MainVerticle;
-import io.vertx.core.MultiMap;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -13,8 +15,6 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.mindrot.jbcrypt.BCrypt;
 
 public class AdminHandler {
 	private final JDBCPool jdbcPool;
@@ -269,4 +269,142 @@ public class AdminHandler {
 				}
 			});
 	}
+
+	/**
+	 * @param userID Die userID des Benutzers
+	 * @return Eine Liste mit den zugehörigen IDs der Fotos, die dem Benutze gehören
+	 */
+	Future<List<Integer>> getAllPhotosIDsFromUser(int userID) {
+		Promise<List<Integer>> promise = Promise.promise();
+		List<Integer> ids = new ArrayList<>();
+
+		jdbcPool.preparedQuery("SELECT ID FROM Photos WHERE Users_ID = ?")
+			.execute(Tuple.of(userID), ar -> {
+				if (ar.succeeded()) {
+					RowSet<Row> rows = ar.result();
+					for (Row row : rows) {
+						ids.add(row.getInteger("ID"));
+					}
+					promise.complete(ids);
+				} else {
+					promise.fail(ar.cause());
+				}
+			});
+
+		return promise.future();
+	}
+
+	/**
+	 *
+	 * @param userID Die userID des Benutzers
+	 * @return Eine Liste mit den zugehörigen IDs der Alben, die dem Benutzer gehören
+	 */
+	Future<List<Integer>> getAllAlbumsIDsFromUser(int userID) {
+		Promise<List<Integer>> promise = Promise.promise();
+		List<Integer> ids = new ArrayList<>();
+
+		jdbcPool.preparedQuery("SELECT ID FROM Albums WHERE Users_ID = ?")
+			.execute(Tuple.of(userID), ar -> {
+				if (ar.succeeded()) {
+					RowSet<Row> rows = ar.result();
+					for (Row row : rows) {
+						ids.add(row.getInteger("ID"));
+					}
+					promise.complete(ids);
+				} else {
+					promise.fail(ar.cause());
+				}
+			});
+		return promise.future();
+	}
+
+
+	/**
+	 * Löscht alle Tags aus der Verbindungstabelle, die dem Foto zugeordnet sind und gibt bei Erfolg die Anfrage an den nächsten Handler weiter.<br>
+	 * Beendet bei Misserfolg die Anfrage mit Statuscode 500 und Fehlermeldung.
+	 */
+	public void deleteAllTagsFromUsersPhotos(RoutingContext ctx) {
+		int userID = Integer.parseInt(ctx.pathParam("userID"));
+
+		getAllPhotosIDsFromUser(userID).onComplete(ar -> {
+			if (ar.succeeded()) {
+				List<Integer> photoIDs = ar.result();
+				List<Future<Void>> deleteFutures = new ArrayList<>();
+
+				for (Integer photoID : photoIDs) {
+					Promise<Void> deletePromise = Promise.promise();
+					jdbcPool.preparedQuery("DELETE FROM PhotosTags WHERE Photos_ID = ?")
+						.execute(Tuple.of(photoID), res -> {
+							if (res.succeeded()) {
+								deletePromise.complete();
+							} else {
+								deletePromise.fail(res.cause());
+							}
+						});
+					deleteFutures.add(deletePromise.future());
+				}
+
+				Future.all(deleteFutures).onComplete(result -> {
+					if (result.succeeded()) {
+						ctx.next();
+					} else {
+						MainVerticle.response(ctx.response(), 500, new JsonObject()
+							.put("message", "Ein interner Serverfehler ist aufgetreten")
+						);
+					}
+				});
+
+			} else {
+				MainVerticle.response(ctx.response(), 500, new JsonObject()
+					.put("message", "Ein interner Serverfehler ist aufgetreten")
+				);
+			}
+		});
+	}
+
+	/**
+	 * Löscht alle Tags aus der Verbindungstabelle, die dem Album zugeordnet sind und gibt bei Erfolg die Anfrage an den nächsten Handler weiter.<br>
+	 * Beendet bei Misserfolg die Anfrage mit Statuscode 500 und Fehlermeldung.
+	 */
+	public void deleteAllTagsFromUsersAlbums(RoutingContext ctx) {
+		int userID = Integer.parseInt(ctx.pathParam("userID"));
+
+		getAllAlbumsIDsFromUser(userID).onComplete(ar -> {
+			if (ar.succeeded()) {
+				List<Integer> albumsIDs = ar.result();
+				List<Future<Void>> deleteFutures = new ArrayList<>();
+
+				for (Integer albumID: albumsIDs) {
+					Promise<Void> deletePromise = Promise.promise();
+					jdbcPool.preparedQuery("DELETE FROM AlbumsTags WHERE Alben_ID = ?")
+						.execute(Tuple.of(albumID), res -> {
+							if (res.succeeded()) {
+								deletePromise.complete();
+							} else {
+								deletePromise.fail(res.cause());
+							}
+						});
+					deleteFutures.add(deletePromise.future());
+				}
+
+				Future.all(deleteFutures).onComplete(result -> {
+					if (result.succeeded()) {
+						ctx.next();
+					} else {
+						MainVerticle.response(ctx.response(), 500, new JsonObject()
+							.put("message", "Ein interner Serverfehler ist aufgetreten")
+						);
+					}
+				});
+
+			} else {
+				MainVerticle.response(ctx.response(), 500, new JsonObject()
+					.put("message", "Ein interner Serverfehler ist aufgetreten")
+				);
+			}
+		});
+	}
+
+
+
 }
