@@ -377,7 +377,6 @@ public class MainVerticle extends AbstractVerticle {
     router.delete("/albums/tag") // TODO:
             .handler(authenticationHandler::isLoggedIn)
             .handler(ctx -> {
-                    System.out.println("second handler called");
                     ctx.data().put("tag", ctx.body().asJsonObject().getString("tag"));
                     ctx.data().put("albumID", ctx.body().asJsonObject().getString("albumID"));
                     ctx.next();
@@ -407,6 +406,12 @@ public class MainVerticle extends AbstractVerticle {
 
     router.delete("/albums/:albumID")
            .handler(authenticationHandler::isLoggedIn)
+            .handler(ctx -> {
+              ctx.data().put("albumID", ctx.pathParam("albumID"));
+              ctx.next();
+                }
+              )
+            .handler(albumHandler::albumExists)
            .handler(albumHandler::deleteAlbumsPhotosConnections)
            .handler(albumHandler::deleteAlbumsTagsConnections)
            .handler(albumHandler::deleteFromAlbums);

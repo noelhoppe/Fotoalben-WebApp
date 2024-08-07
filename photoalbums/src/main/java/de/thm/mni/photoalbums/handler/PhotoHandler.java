@@ -590,9 +590,6 @@ public void uploadPhoto(RoutingContext ctx){
     );
   }
 
-    //TODO: TAGS implementieren!!
-
-
     for (FileUpload file : ctx.fileUploads()) { //verarbeite FileUpload
       String fileNameOriginal = file.fileName();
       String fileNameUpload = file.uploadedFileName();

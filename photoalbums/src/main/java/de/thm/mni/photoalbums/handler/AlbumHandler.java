@@ -692,7 +692,7 @@ public class AlbumHandler {
 			} else {
 				System.out.println("Future schlägt fehl");
 				MainVerticle.response(ctx.response(), 500, new JsonObject()
-					.put("message", "Ein interner Serverfehler")
+					.put("message", "Ein interner Serverfehler ist aufgetreten")
 				);
 			}
 		});

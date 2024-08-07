@@ -1,6 +1,9 @@
 # Beschreibung der RESTful-API
 
-> POST /login  
+> Wenn bei einer Route kein Statuscode bei erfolg angegeben ist, <br>
+> wird bei Erfolg Statuscode 200 mit einer entsprechenden Statusmeldung zurückgegeben
+
+### POST /login  
 > Gibt Statuscode 303 mit entsprechenden Location-Header zurück, wenn der Login erfolgreich war, d.h. das Paar Benutzername und Passwort existiert.  
 > Die Passwörter sind mit Bcrypt (round 10) gehasht in der Datenbank gespeichert.
 
@@ -78,7 +81,7 @@ http-Response
 
 
 
-> GET /username  
+### GET /username  
 > Eine Route, um den Nutzernamen des Benutzs abzurufen und im Frontend anzuzeigen.
 
 ```JSON
@@ -99,8 +102,8 @@ http-Response
 ---
 
 
-> GET /role  
-> Eien Route, um die Rolle des Benutzers abzufragen. Im Frontend wird je nach Rolle der Button zum Admin-Tool angezeigt.
+### GET /role  
+> Eine Route, um die Rolle des Benutzers abzufragen. Im Frontend wird je nach Rolle der Button zum Admin-Tool angezeigt.
 
 1. Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn der Benutzer nicht angemeldet ist.
 ```JSON
@@ -114,7 +117,7 @@ http-Response
 
 
 
-> POST /logout  
+### POST /logout  
 > Statuscode 303 mit Location-Header auf die login.html Seite
 
 1. Die Session ist bereits zerstört, also ungültig.
@@ -129,9 +132,12 @@ http-Response
 
 
 
-> GET /photos
+### GET /photos
+> Gibt Statuscode 200 und JSON mit allen Fotoinformationen inklusive Tags als kommaseparierter String zurück.
 
-1. Gibt Statuscode 200 und JSON mit allen Fotoinformationen inklusive Tags als kommaseparierter String zurück.
+http-Res:
+
+
 ```JSON
 {
 	"photos": [
@@ -153,29 +159,29 @@ http-Response
 }
 ```
 
-2. Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn der Benutzer nicht angemeldet ist.
+1. Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn der Benutzer nicht angemeldet ist.
 ```JSON
 {
 	"message": "Bitte melde dich zuerst an, um diese Route aufrufen zu dürfen."
 }
 ```
 
-3. Gibt Statuscode 500 mit Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
+2. Gibt Statuscode 500 mit Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
 
 
 ---
 
 
-> photos?photoTitle=searchQuery&tag=serachQuery  
+### photos/photoTitle=searchQuery&tag=serachQuery  
 > Route, um Fotos zu durchsuchen. Es können diesleben Fehler wie oben auftreten.  
 
 
 ---
 
 
-> GET /img/:photoID
+### GET /img/:photoID
 > Sendet das Bild mit der entsprechenden ID.  
-> Namenskonvention. Jedes Bild ist mit ID.jpg gespeichert.
+> Namenskonvention. Jedes Bild ist mit ID.jpg oder ID.png gespeichert.
 
 1. Wenn kein Benutzer angemeldet ist, wird die http-Anfrage hier mit einem 401 Unauthorized und einer entsprechenden Fehlermeldung abgewiesen.
 ```JSON
@@ -191,7 +197,7 @@ http-Response
 }
 ```
 
-3. Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
+3. Gibt Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
 ```JSON
 {
 	"message": "Das Foto gehört nicht dem Benutzer"
@@ -210,7 +216,7 @@ http-Response
 
 
 
-> DELETE photos/tag  
+### DELETE photos/tag  
 > Statuscode 204, wenn der Tag erfolgreich gelöscht wurde.
 
 http-Request
@@ -227,10 +233,10 @@ http-Request
 	"message": "Bitte melde dich zuerst an, um diese Route aufrufen zu dürfen."
 }
 ```
-2. Gebe Statuscode 400 mit enstsprechender Fehlermeldung zurück, wenn der Nutzer das Feld photoID nicht korrekt ausfüllt
+2. Gebe Statuscode 400 mit enstsprechender Fehlermeldung zurück, wenn photoID einen ungültigen Wert enthält
 ```JSON
 {
-	"message": "photoID muss das Format Zahl.jpg haben"
+	"message": "photoID muss eine gültige Zahl sein"
 }
 ```
 
@@ -266,14 +272,21 @@ http-Request
 }
 ```
 
-5. Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
+5. Gibt Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
 ```JSON
 {
 	"message": "Das Foto gehört nicht dem Benutzer"
 }
 ```
 
-6. Statuscode 500 mit entsprechender Fehlermeldung, wenn ein Server- und/oder Datenbankfehler auftritt
+6. Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, der Tag nicht existiert
+```JSON
+{
+	"message": "Der Tag existiert nicht"
+}
+```
+
+7. Statuscode 500 mit entsprechender Fehlermeldung, wenn ein Server- und/oder Datenbankfehler auftritt
 
 
 
@@ -281,7 +294,7 @@ http-Request
 
 
 
-> POST /photos/tag  
+### POST /photos/tag  
 > Gebe Statuscode 201 mit entsprechender Erfolgsmelsung zurück, wenn Tag erfolgreich angelegt wurde.  
 
 http-Anfrage
@@ -338,7 +351,7 @@ http-Anfrage
 }
 ```
 
-5. Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
+5. Gibt Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
 ```JSON
 {
 	"message": "Das Foto gehört nicht dem Benutzer"
@@ -352,122 +365,7 @@ http-Anfrage
 }
 ```
 
-
----
-
-
-
-> PATCH /photos/photoTitle
-
-http-Anfrage
-
-```JSON
-{
-  "photoID" : 1,
-  "photoTitle" : "___"
-}
-```
-
-1. Statuscode 200  mit entsprechdner Erfolgsmeldung und dem neuen Titel, wenn der Titel des Fotos geändert wurde
-```JSON
-{
-  "message" : "Der Fototitel wurder erfolgreich geändert",
-  "photoTitle" : "___"
-}
-```
-
-2. Wenn kein Benutzer angemeldet ist, wird die http-Anfrage hier mit einem 401 Unauthorized und einer entsprechenden Fehlermeldung abgewiesen.
-```JSON
-{
-	"message": "Bitte melde dich zuerst an, um diese Route aufrufen zu dürfen."
-}
-```
-
-3. Statuscode 400 mit entsprechender Fehlermeldung, wenn die imageID (Pfadparameter) keine gültige Zahl ist.
-```JSON
-{
-	"message": "photoID muss eine gültige Zahl sein"
-}
-```
-
-4. Statuscode 400, wenn der Titel leer ist bzw. nur aus Leerzeichen besteht.
-```JSON
-{
-  "message" : "Der Titel darf nicht leer sein"
-}
-```
-
-5. Gibt Statuscode 404 mit entsrechender Fehlermeldung zurück, wenn das Bild nicht gefunden wurde.
-```JSON
-{
-	"message": "Das Foto wurde nicht gefunden."
-}
-```
-
-6. Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
-```JSON
-{
-	"message": "Das Foto gehört nicht dem Benutzer"
-}
-```
-
-
----
-
-> PATCH /photos/photoDate
-
-http-Anfrage:
-```JSON
-{
-  "photoID" : 1,
-  "date" : "___"
-}
-```
-
-1. Gibt Statuscode 200 mit enstprechender Erfolgsmeldung zurück, wenn der Titel des Bildes erfolgreich geändert wurde. 
-```JSON
-{
-  "message" : "Das Datum des Fotos wurde erfolgreich geändert",
-  "newDate" : "___"
-}
-```
-
-2. Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn der Benutzer nicht angemeldet ist.
-```JSON
-{
-	"message": "Bitte melde dich zuerst an, um diese Route aufrufen zu dürfen."
-}
-```
-
-3. Statuscode 400 mit entsprechender Fehlermeldung, wenn die imageID (Pfadparameter) keine gültige Zahl ist.
-```JSON
-{
-	"message": "photoID muss eine gültige Zahl sein"
-}
-```
-
-4. Gibt Statuscode 404 mit entsrechender Fehlermeldung zurück, wenn das Bild nicht gefunden wurde.
-```JSON
-{
-	"message": "Das Foto wurde nicht gefunden."
-}
-```
-
-5. Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
-```JSON
-{
-	"message": "Das Foto gehört nicht dem Benutzer"
-}
-```
-
-6. Gebe Status 400 mit entsprechender Fehlermeldung zurück, wenn das Datum nicht korrekt formatiert ist oder in der Zukunft liegt.  
-```JSON
-{
-  "message" : "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen"
-}
-```
-
-7. Gebe Statusocde 500 mit entpsrechender Fehlermeldung zurück, wenn ein Server und/oder Datenbankfehler aufgetreten ist.
+7. Statuscode 500, wenn ein Datenbank- oder Serverfehler auftritt
 ```JSON
 {
   "message" : "Ein interner Serverfehler ist aufgetreten"
@@ -478,7 +376,152 @@ http-Anfrage:
 ---
 
 
-> DELETE /img/:photoID  
+
+### PATCH /photos/photoTitle
+> Statuscode 200  mit entsprechdner Erfolgsmeldung und dem neuen Titel, wenn der Titel des Fotos geändert wurde
+
+http-Anfrage
+
+```JSON
+{
+  "photoID" : 1,
+  "photoTitle" : "___"
+}
+```
+
+http-Res
+
+```JSON
+{
+  "message" : "Der Fototitel wurder erfolgreich geändert",
+  "photoTitle" : "___"
+}
+```
+
+mögliche Fehlermeldungen:
+
+1. Wenn kein Benutzer angemeldet ist, wird die http-Anfrage hier mit einem 401 Unauthorized und einer entsprechenden Fehlermeldung abgewiesen.
+```JSON
+{
+	"message": "Bitte melde dich zuerst an, um diese Route aufrufen zu dürfen."
+}
+```
+
+2. Statuscode 400 mit entsprechender Fehlermeldung, wenn die imageID (Pfadparameter) keine gültige Zahl ist.
+```JSON
+{
+	"message": "photoID muss eine gültige Zahl sein"
+}
+```
+
+3. Statuscode 400, wenn der Titel leer ist bzw. nur aus Leerzeichen besteht.
+```JSON
+{
+  "message" : "Der Titel darf nicht leer sein"
+}
+```
+
+4. Statuscode 400, wenn der Titel länger als 30 Zeichen ist
+```JSON
+{
+  "message" : "Der Titel darf maximal 30 Zeichen lang sein"
+}
+```
+
+5. Gibt Statuscode 404 mit entsrechender Fehlermeldung zurück, wenn das Bild nicht gefunden wurde.
+```JSON
+{
+	"message": "Das Foto wurde nicht gefunden."
+}
+```
+
+6. Gibt Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
+```JSON
+{
+	"message": "Das Foto gehört nicht dem Benutzer"
+}
+```
+
+7. Statuscode 500, wenn ein Datenbank- oder Serverfehler auftritt
+```JSON
+{
+  "message" : "Ein interner Serverfehler ist aufgetreten"
+}
+```
+
+
+---
+
+### PATCH /photos/photoDate
+> Gibt Statuscode 200 mit enstprechender Erfolgsmeldung zurück, wenn der Titel des Bildes erfolgreich geändert wurde.
+
+
+http-Anfrage:
+```JSON
+{
+  "photoID" : 1,
+  "date" : "___"
+}
+```
+
+http-Res:
+
+```JSON
+{
+  "message" : "Das Datum des Fotos wurde erfolgreich geändert",
+  "newDate" : "___"
+}
+```
+
+mögliche Fehlermeldungen:
+
+1. Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn der Benutzer nicht angemeldet ist.
+```JSON
+{
+	"message": "Bitte melde dich zuerst an, um diese Route aufrufen zu dürfen."
+}
+```
+
+2. Statuscode 400 mit entsprechender Fehlermeldung, wenn die imageID (Pfadparameter) keine gültige Zahl ist.
+```JSON
+{
+	"message": "photoID muss eine gültige Zahl sein"
+}
+```
+
+3. Gibt Statuscode 404 mit entsrechender Fehlermeldung zurück, wenn das Bild nicht gefunden wurde.
+```JSON
+{
+	"message": "Das Foto wurde nicht gefunden."
+}
+```
+
+4. Gibt Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
+```JSON
+{
+	"message": "Das Foto gehört nicht dem Benutzer"
+}
+```
+
+5. Gebe Status 400 mit entsprechender Fehlermeldung zurück, wenn das Datum nicht korrekt formatiert ist oder in der Zukunft liegt.  
+```JSON
+{
+  "message" : "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen"
+}
+```
+
+6. Gebe Statusocde 500 mit entpsrechender Fehlermeldung zurück, wenn ein Server und/oder Datenbankfehler aufgetreten ist.
+```JSON
+{
+  "message" : "Ein interner Serverfehler ist aufgetreten"
+}
+```
+
+
+---
+
+
+### DELETE /img/:photoID  
 > Gibt Statuscode 204 zurück, wenn das Foto erfolgreich gelöscht wurde.
 
 1. Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn der Benutzer nicht angemeldet ist.
@@ -502,7 +545,7 @@ http-Anfrage:
 }
 ```
 
-4. Gibt Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
+4. Gibt Statuscode 403 mit entsprechender Fehlermeldung zurück, wenn das Foto nicht dem Benutzer gehört.
 ```JSON
 {
 	"message": "Das Foto gehört nicht dem Benutzer"
@@ -518,7 +561,7 @@ http-Anfrage:
 
 ---
 
-> POST /photos   
+### POST /photos   
 > Gibt Statuscode 201 zurück, wenn das Foto erfolgreich hochgeladen wurde.
 
 1. Statuscode 400, wenn dass Datum ungültig ist (in der Zukunft oder falsch formatiert).
@@ -586,7 +629,7 @@ http-Anfrage:
 
 ---
 
-> GET /users
+### GET /users
 
 http-Response: 
 ```JSON
@@ -607,6 +650,8 @@ http-Response:
   ]
 }
 ```
+
+mögliche Fehlermeldungen:
 
 1. Statuscode 401, wenn kein Nutzer angemeldet ist.
 ```JSON
@@ -631,8 +676,10 @@ http-Response:
 
 ---
 
-> DELETE /users/:userID
-> Gibt bei erfolgt Statuscode 204 zurück.
+### DELETE /users/:userID
+> Gibt bei Erfolg Statuscode 204 zurück.
+
+mögliche Fehlermeldungen:
 
 1. Statuscode 401, wenn kein Nutzer angemeldet ist.
 ```JSON
@@ -671,7 +718,7 @@ http-Response:
 
 ---
 
-> PATCH /users/username/:userID
+### PATCH /users/username/:userID
 
 http-Request
 ```JSON
@@ -679,6 +726,8 @@ http-Request
   "username" : "Benutzername hier"
 }
 ```
+
+mögliche Fehlermeldungen:
 
 1. Statuscode 401, wenn kein Nutzer angemeldet ist.
 ```JSON
@@ -715,7 +764,7 @@ http-Request
 }
 ```
 
-6. Statuscode 400, wenn der Nutzername merh als 30 Zeichen hat
+6. Statuscode 400, wenn der Nutzername mehr als 30 Zeichen hat
 ```JSON
 {
   "message" : "Der Nutzername darf höchstens 30 Zeichen lang sein"
@@ -740,7 +789,7 @@ http-Request
 ---
 
 
-> PATCH /users/password/:userID
+### PATCH /users/password/:userID
 
 http-Request
 ````JSON
@@ -748,6 +797,8 @@ http-Request
   "password" : "password"
 }
 ````
+
+mögliche Fehlermeldungen:
 
 1. Statuscode 401, wenn kein Nutzer angemeldet ist.
 ```JSON
@@ -777,7 +828,7 @@ http-Request
 }
 ```
 
-5. Statuscode 400, wenn das Passwort mehr als 30 Zeichen enthält
+5. Statuscode 400, wenn das Passwort weniger als 4 oder mehr als 30 Zeichen enthält
 ```JSON
 {
   "message" : "Das Passwort muss zwischen 4 und 30 Zeichen lang sein"
@@ -798,7 +849,7 @@ http-Request
 }
 ```
 
-> POST /users   
+### POST /users   
 > Gibt Statuscode 201 zurück, wenn der Nutzer erfolgreich anglegt wurde
 
 http-Request
@@ -893,10 +944,11 @@ mögliche Fehler:
 
 ---
 
-> GET /albums
+### GET /albums
 > Diese Route wird auch für die Suche mit Suchparametern gematcht
 
-http-Response
+http-Response:
+
 ```JSON
 {
   "albums": [
@@ -913,6 +965,8 @@ http-Response
   ]
 }
 ```
+
+mögliche Fehlermeldungen:
 
 1. Statuscode 401, wenn kein Nutzer angemeldet ist.
 ```JSON
@@ -936,12 +990,19 @@ http-Response
 }
 ```
 
-2. Statuscode 500 mit Fehlermeldung wenn ein Server- und/oder Datenbankfehler aufgetreten ist
+2. Statuscode 404, wenn das Album nicht gefunden wurde.
+```JSON
+{
+  "message" : "Das Album wurde nicht gefunden."
+}
+```
+
+3. Statuscode 500 mit Fehlermeldung wenn ein Server- und/oder Datenbankfehler aufgetreten ist
 
 ---
 
 
-> POST /albums   
+### POST /albums   
 > Gibt Statuscode 201 zurück, wenn das Album erfolgreich anglegt wurde
 
 http-Request
@@ -982,7 +1043,7 @@ mögliche Fehler:
 ```
 
 ---
-> PATCH /albums/albumsTitle
+### PATCH /albums/albumsTitle
 
 http-Req
 ```JSON
@@ -992,7 +1053,7 @@ http-Req
 }
 ```
 
-http-Res
+http-Res:
 
 ```JSON
 {
@@ -1001,7 +1062,8 @@ http-Res
 }
 ```
 
-Mögliche Fehler
+Mögliche Fehler:
+
 1. Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn der Benutzer nicht angemeldet ist.
 ```JSON
 {
@@ -1044,9 +1106,14 @@ Mögliche Fehler
 }
 ```
 
-7. Ein interner Serve- und/oder Datenbankfehler ist aufgetreten
+7. Statuscode 500, wenn ein Datenbank- oder Serverfehler auftritt
+```JSON
+{
+  "message" : "Ein interner Serverfehler ist aufgetreten"
+}
+```
 
-> POST /albums/tags  
+### POST /albums/tag 
 > Gibt Statuscode 201 zurück, wenn der Tag erfolgreich mit dem Album verknüpft wurde.
 
 http-Req
@@ -1057,7 +1124,7 @@ http-Req
 }
 ```
 
-mögliche Fehlermeldungen
+mögliche Fehlermeldungen:
 
 1. Statuscode 401, wenn kein Nutzer angemeldet ist.
 ```JSON
@@ -1129,7 +1196,7 @@ mögliche Fehlermeldungen
 }
 ```
 
-> POST /albums/photo  
+### POST /albums/photo  
 > Gibt Statuscode 201 zurück, wenn das Foto erfolgreich zum Album hinzugefügt wurde
 
 http-Req
@@ -1140,7 +1207,7 @@ http-Req
 }
 ```
 
-mögliche Fehlermeldungen
+mögliche Fehlermeldungen:
 
 1. Statuscode 401, wenn kein Nutzer angemeldet ist.
 ```JSON
@@ -1205,9 +1272,9 @@ mögliche Fehlermeldungen
 }
 ```
 
-> GET /photos/:albumID
+### GET /photos/:albumID
 
-http-Res
+http-Res:
 ```JSON
 {
   "photos": [
@@ -1221,6 +1288,8 @@ http-Res
   ]
 }
 ```
+
+mögliche Fehlermeldungen:
 
 1. Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn der Benutzer nicht angemeldet ist.
 ```JSON
@@ -1252,7 +1321,7 @@ http-Res
 
 5. Statuscode 500 mit Fehlermeldung, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
 
-> DELETE /albums/photo  
+### DELETE /albums/photo  
 > Gibt Statuscode 204 zurück, wenn das Foto erfolgreich aus dem Album entfernt wurde
 
 http-Req
@@ -1328,7 +1397,7 @@ mögliche Fehlermeldungen:
 }
 ```
 
-> GET /albums/contains/:photoID
+### GET /albums/contains/:photoID
 > Gibt Statuscode 201 zurück
 
 
@@ -1399,6 +1468,91 @@ mögiche Fehlermeldungen:
   "message" : "Ein interner Serverfehler ist aufgetreten"
 }
 ```
+### DELETE /albums/tag
+> Gibt Statuscode 204 zurück, wenn Tag erfolgreich gelöscht wurde
+
+http-Req
+```JSON
+{
+  "tag" : "___",
+  "albumID" : __
+}
+```
+mögliche Fehlermeldungen:
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statuscode 400, wenn albumID keine gültige Zahl ist
+```JSON
+{
+  "message" : "albumID muss eine gültige Zahl sein"
+}
+```
+
+3. Statuscode 400, wenn das Feld Tag Leerzeichen enthält
+```JSON
+{
+  "message" : "Der Tag darf keine Leerzeichen enthalten"
+}
+```
+
+4. Statuscode 400, wenn das Feld Tag leer ist
+```JSON
+{
+  "message" : "Der Tag darf nicht leer sein"
+}
+```
+
+5. Statuscode 400, wenn der Tag länger als 30 Zeichen ist
+```JSON
+{
+  "message" : "Der Tag darf nicht länger als 30 Zeichen sein sein"
+}
+```
+
+6. Statuscode 400, wenn das Feld Tag null ist
+```JSON
+{
+  "message" : "tag darf nicht null sein"
+}
+```
+
+7. Statuscode 404, wenn das Album nicht existiert.
+```JSON
+{
+  "message" : "Das Album wurde nicht gefunden."
+}
+```
+
+7. Statuscode 403, wenn das Album nicht dem Benutzer gehört
+```JSON
+{
+  "message" : "Das Album gehört nicht dem Benutzer"
+}
+```
+
+8. Statuscode 500, wenn das löschen des Tags fehlschlägt
+```JSON
+{
+  "message" : "Fehler beim Löschen des Tags"
+}
+```
+
+8. Statuscode 500, wenn ein Datenbank- oder Serverfehler auftritt
+```JSON
+{
+  "message" : "Ein interner Serverfehler ist aufgetreten"
+}
+```
+
+
+
+
 
 
 
