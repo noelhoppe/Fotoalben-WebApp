@@ -76,35 +76,34 @@ function extractPhotoData(target) {
  * @param photoData Ein Photo Objekt, welches die Fotodaten beinhaltet
  */
 function updateModalUI(photoData) {
-    const { id, title, taken, imgUrl, tags } = photoData; // DESTRUCTURING
-    // Aktualisiere die Modal Elemente
-    const imageTitle = document.querySelector("#image-title");
-    const modalImg = document.querySelector("#modal-img");
-    const modalTaken = document.querySelector("#taken");
-    const modalTags = document.querySelector("#tags .row");
-    imageTitle.textContent = title;
-    modalImg.setAttribute("data-id", id);
-    modalImg.setAttribute("title", title);
-    modalImg.setAttribute("src", imgUrl);
-    modalImg.setAttribute("data-taken", taken);
-    modalTaken.textContent = `Aufnahmedatum: ${taken}`;
-    modalImg.setAttribute("data-tags", tags || "");
-    // Aktualisiere die Tags
-    updateModalTags(modalTags, tags || "");
-    // Setze die Eingabefelder zurück
-    resetModalInputs();
-    try {
-        const data = yield photoIsInAlbum(parseInt(id));
-        if (Array.isArray(data)) {
-            createAlbumList(data);
+    return __awaiter(this, void 0, void 0, function* () {
+        const { id, title, taken, imgUrl, tags } = photoData; // DESTRUCTURING
+        // Aktualisiere die Modal Elemente
+        const imageTitle = document.querySelector("#image-title");
+        const modalImg = document.querySelector("#modal-img");
+        const modalTaken = document.querySelector("#taken");
+        const modalTags = document.querySelector("#tags .row");
+        imageTitle.textContent = title;
+        modalImg.setAttribute("data-id", id);
+        modalImg.setAttribute("title", title);
+        modalImg.setAttribute("src", imgUrl);
+        modalImg.setAttribute("data-taken", taken);
+        modalTaken.textContent = `Aufnahmedatum: ${taken}`;
+        modalImg.setAttribute("data-tags", tags || "");
+        // Aktualisiere die Tags
+        updateModalTags(modalTags, tags || "");
+        // Setze die Eingabefelder zurück
+        resetModalInputs();
+        try {
+            const data = yield photoIsInAlbum(parseInt(id));
+            if (Array.isArray(data)) {
+                createAlbumList(data);
+            }
         }
-        else {
-            console.log(data.message);
+        catch (err) {
+            console.error("Fehler bei updateModalUI:", err);
         }
-    }
-    catch (err) {
-        console.log(err);
-    }
+    });
 }
 /**
  * Aktualisiert die Modal-Tags-UI.<br>
@@ -1046,12 +1045,12 @@ function createAlbumList(albums) {
         input.className = 'form-check-input';
         input.type = 'checkbox';
         input.id = `switch-${album.id}`;
-        input.checked = album.containsPhoto;
+        input.checked = album.contains;
         input.addEventListener('change', (event) => handleSwitchChange(event, album.id));
         const label = document.createElement('label');
         label.className = 'form-check-label';
         label.htmlFor = input.id;
-        label.textContent = `In Album ${album.name}`;
+        label.textContent = `In ${album.title}`;
         formCheck.appendChild(input);
         formCheck.appendChild(label);
         listItem.appendChild(formCheck);
@@ -1060,10 +1059,9 @@ function createAlbumList(albums) {
 }
 function photoIsInAlbum(photoID) {
     return __awaiter(this, void 0, void 0, function* () {
-        const res = yield fetch("http://localhost:8080/albums/contains", {
+        const res = yield fetch("http://localhost:8080/albums/contains/" + photoID, {
             method: "GET",
             credentials: "include",
-            body: JSON.stringify(photoID)
         });
         if (res.ok) {
             const data = yield res.json();

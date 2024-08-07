@@ -138,9 +138,11 @@ function giveUserIDToModal() {
     editBtns.forEach(editBtn => {
         editBtn.addEventListener("click", () => {
             const tr = editBtn.closest("tr");
+            const username = tr.firstChild.textContent;
             const userID = tr.getAttribute("data-users-id");
             const editUsersModalContainer = document.querySelector("#editModal");
             editUsersModalContainer.setAttribute("data-user-id", userID);
+            document.querySelector("#editModalLabel").textContent = `${username} bearbeiten`;
             editUsername();
             editPassword();
         });
@@ -156,13 +158,13 @@ function editUsername() {
     });
 }
 function editPassword() {
-    document.querySelector("#password-form").addEventListener("submit", (evt) => {
+    document.querySelector("#password-form").addEventListener("submit", (evt) => __awaiter(this, void 0, void 0, function* () {
         evt.preventDefault();
         const newPassword = document.querySelector("#password").value;
         const editUserModalContainer = document.querySelector("#editModal");
         const userID = editUserModalContainer.getAttribute("data-user-id");
-        fetchEditPassword(parseInt(userID), newPassword);
-    });
+        yield fetchEditPassword(parseInt(userID), newPassword);
+    }));
 }
 function fetchEditPassword(userID, password) {
     return __awaiter(this, void 0, void 0, function* () {

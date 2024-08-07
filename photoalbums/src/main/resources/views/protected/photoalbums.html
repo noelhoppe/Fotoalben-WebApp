@@ -79,14 +79,14 @@
         </svg>
       </button>
       <ul class="dropdown-menu mt-3">
-        <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addPhotoModal">Foto in ausgewähltes Album hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
+        <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addPhotoModal">Foto hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
         <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#addAlbumModal">Album hinzufügen</a></li> <!-- BEACHTEN: Öffnet ein Modalfenester -->
       </ul>
     </div>
 
     <!-- Search for photos in the specified album -->
     <form id="searchPhotos" class="d-flex col-12 order-1 col-lg-10 order-lg-3" role="search">
-      <input id="searchPhotosQuery" type="search" class="form-control me-2" placeholder="Search photos in album" aria-label="Search in this album"> <!-- TODO: Server muss Einagbe verarbeiten -->
+      <input id="searchPhotosQuery" type="search" class="form-control me-2" placeholder="Search all photos" aria-label="Search in this album"> <!-- TODO: Server muss Einagbe verarbeiten -->
       <button class="btn btn-outline-success" type="submit">Search</button>
     </form>
   </div>
@@ -181,7 +181,7 @@
 
     <!-- Alben durchsucchen -->
     <form id="searchAlbums" class="d-flex mb-5" role="search">
-      <input id="searchAlbumsQuery" type="search" class="form-control me-2" placeholder="Search photos in album" aria-label="Search in this album"> <!-- *js/*ts targets this input -->
+      <input id="searchAlbumsQuery" type="search" class="form-control me-2" placeholder="Search albums" aria-label="Search in this album"> <!-- *js/*ts targets this input -->
       <button class="btn btn-outline-success" type="submit">Search</button> <!-- *js/*ts listens here -->
     </form>
     <ul id="display-albums" class="list-group d-flex flex-column gap-3">
