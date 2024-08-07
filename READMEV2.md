@@ -234,7 +234,7 @@ http-Request
 }
 ```
 
-3. Gebe Statuscode 400 mit ensprechender Fehlermeldung zurück, wenn der das Feld tag leer ist, Leerzeichen enthält oder null ist
+3. Gebe Statuscode 400 mit ensprechender Fehlermeldung zurück, wenn der das Feld tag leer ist, Leerzeichen enthält, länger als 30 Zeichen ist, oder null ist
 ```JSON
 {
   "message" : "Der Tag darf keine Leerzeichen enthalten"
@@ -244,6 +244,12 @@ http-Request
 ```JSON
 {
   "message" : "Der Tag darf nicht leer sein"
+}
+```
+
+```JSON
+{
+  "message" : "Der Tag darf nicht länger als 30 Zeichen sein sein"
 }
 ```
 
@@ -304,6 +310,12 @@ http-Anfrage
 ```JSON
 {
   "message" : "Der Tag darf keine Leerzeichen enthalten"
+}
+```
+
+```JSON
+{
+  "message" : "Der Tag darf nicht länger als 30 Zeichen sein sein"
 }
 ```
 
@@ -1079,21 +1091,28 @@ Mögliche Fehler
 }
 ```
 
-7. Statuscode 400, wenn das Feld Tag null ist
+7. Statuscode 400, wenn der Tag länger als 30 Zeichen ist
+```JSON
+{
+  "message" : "Der Tag darf nicht länger als 30 Zeichen sein sein"
+}
+```
+
+8. Statuscode 400, wenn das Feld Tag null ist
 ```JSON
 {
   "message" : "tag darf nicht null sein"
 }
 ```
 
-8. Statuscode 409, wenn der Tag bereits mit dem Foto verknüpft ist
+9. Statuscode 409, wenn der Tag bereits mit dem Foto verknüpft ist
 ```JSON
 {
   "message" : "Der Tag existiert bereits"
 }
 ```
 
-9. Statuscode 500, wenn ein Datenbank- oder Serverfehler auftritt
+10. Statuscode 500, wenn ein Datenbank- oder Serverfehler auftritt
 ```JSON
 {
   "message" : "Ein interner Serverfehler ist aufgetreten"
