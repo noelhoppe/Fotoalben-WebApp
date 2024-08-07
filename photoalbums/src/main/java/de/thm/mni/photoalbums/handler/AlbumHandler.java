@@ -459,7 +459,7 @@ public class AlbumHandler {
             ctx.next();
           }else {
             MainVerticle.response(ctx.response(), 409, new JsonObject()
-              .put("message", "Das gewählte Foto ist bereits in diesem Album")
+              .put("message", "Das gewählte Foto ist nicht in diesem Album")
             );
           }
 
@@ -506,7 +506,6 @@ public class AlbumHandler {
     jdbcPool.preparedQuery("DELETE FROM AlbumsPhotos WHERE Photos_ID = ? AND Albums_ID = ?")
       .execute(Tuple.of(photoID, albumID), res -> {
         if (res.succeeded()) {
-          System.out.println("called it");
           ctx.response()
             .setStatusCode(204)
             .end();
