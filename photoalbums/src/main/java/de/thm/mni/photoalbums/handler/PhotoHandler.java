@@ -266,6 +266,10 @@ public class PhotoHandler {
 							);
 						}
 					});
+			} else {
+				MainVerticle.response(ctx.response(), 404, new JsonObject()
+					.put("message", "Der Tag existiert nicht")
+				);
 			}
 		});
 	}
@@ -275,7 +279,7 @@ public class PhotoHandler {
 	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
 	 * @param ctx Routing Context
 	 */
-	public void deleteAllTagsTagsFromPhoto(RoutingContext ctx) {
+	public void deleteAllTagsFromPhoto(RoutingContext ctx) {
 		System.out.println("called deleteTag in PhotoHandler.java");
 		Integer photoID = Integer.valueOf(ctx.data().get("photoID").toString());
 
