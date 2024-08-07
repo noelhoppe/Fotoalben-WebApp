@@ -18,7 +18,7 @@ CREATE TABLE Photos(
     FOREIGN KEY (Users_ID) REFERENCES Users(ID),
     title VARCHAR(30) NOT NULL,
     taken DATE NOT NULL,
-    url VARCHAR(30) UNIQUE NOT NULL
+    url VARCHAR(50) UNIQUE NOT NULL -- VertX generiert vor Umbenennung Zeichen beliebiger Länge
 );
 
 Create TABLE Albums(

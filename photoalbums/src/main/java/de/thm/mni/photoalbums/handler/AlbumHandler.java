@@ -561,17 +561,29 @@ public class AlbumHandler {
           ctx.response()
                   .setStatusCode(200)
                   .end(albums.encodePrettily());
-          /*
-          MainVerticle.response(ctx.response(), 200, new JsonObject().put("albums", albums)
-          );
-           */
-
-        }else
+        } else
           System.err.println(res.cause().getMessage());
           MainVerticle.response(ctx.response(), 500, new JsonObject()
             .put("message", "Ein interner Serverfehler ist aufgetreten")
           );
       });
+  }
+
+  /**
+   * Löscht das entsprechende Foto von allen Alben
+   * @param ctx
+   */
+  public void removePhotoFromAllAlbums(RoutingContext ctx) {
+          jdbcPool.preparedQuery("DELETE FROM AlbumsPhotos WHERE Photos_ID = ?")
+                  .execute(Tuple.of(ctx.data().get("photoID")), res -> {
+                     if (res.succeeded()) {
+                             ctx.next();
+                     } else {
+                             MainVerticle.response(ctx.response(), 500, new JsonObject()
+                                     .put("message", "Ein interner Serverfehler ist aufgetreten")
+                             );
+                     }
+                  });
   }
 
 }

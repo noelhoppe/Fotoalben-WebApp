@@ -206,6 +206,8 @@ public class MainVerticle extends AbstractVerticle {
 
     // -- PHOTO HANDLER ---
     PhotoHandler photoHandler = new PhotoHandler(jdbcPool, vertx);
+    AlbumHandler albumHandler = new AlbumHandler(jdbcPool);
+
     router.get("/photos") // auch: /photos?photoTitle=Bild1?tag=tagName
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
@@ -288,6 +290,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoExists)
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::deleteAllTagsTagsFromPhoto)
+            .handler(albumHandler::removePhotoFromAllAlbums)
            .handler(photoHandler::deletePhoto);
 
     router.post("/photos")
@@ -355,7 +358,8 @@ public class MainVerticle extends AbstractVerticle {
 
     // --- ALBUM HANDLER ---
 
-    AlbumHandler albumHandler = new AlbumHandler(jdbcPool);
+    //wird bei PhotoHandler initialisiert wegen delete Foto Route
+
     router.get("/albums") // auch /albums?searchParam=test
            .handler(authenticationHandler::isLoggedIn)
            .handler(albumHandler::getAllAlbumsFromUser);
