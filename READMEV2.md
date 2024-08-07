@@ -234,7 +234,7 @@ http-Request
 }
 ```
 
-3. Gebe Statuscode 400 mit ensprechender Fehlermeldung zurück, wenn der das Feld tag leer ist, Leerzeichen enthält oder null ist
+3. Gebe Statuscode 400 mit ensprechender Fehlermeldung zurück, wenn der das Feld tag leer ist, Leerzeichen enthält, länger als 30 Zeichen ist, oder null ist
 ```JSON
 {
   "message" : "Der Tag darf keine Leerzeichen enthalten"
@@ -244,6 +244,12 @@ http-Request
 ```JSON
 {
   "message" : "Der Tag darf nicht leer sein"
+}
+```
+
+```JSON
+{
+  "message" : "Der Tag darf nicht länger als 30 Zeichen sein sein"
 }
 ```
 
@@ -304,6 +310,12 @@ http-Anfrage
 ```JSON
 {
   "message" : "Der Tag darf keine Leerzeichen enthalten"
+}
+```
+
+```JSON
+{
+  "message" : "Der Tag darf nicht länger als 30 Zeichen sein sein"
 }
 ```
 
@@ -1037,6 +1049,16 @@ Mögliche Fehler
 > POST /albums/tags  
 > Gibt Statuscode 201 zurück, wenn der Tag erfolgreich mit dem Album verknüpft wurde.
 
+http-Req
+```JSON
+{
+  "tag" : "___",
+  "albumID" : __
+}
+```
+
+mögliche Fehlermeldungen
+
 1. Statuscode 401, wenn kein Nutzer angemeldet ist.
 ```JSON
 {
@@ -1079,21 +1101,28 @@ Mögliche Fehler
 }
 ```
 
-7. Statuscode 400, wenn das Feld Tag null ist
+7. Statuscode 400, wenn der Tag länger als 30 Zeichen ist
+```JSON
+{
+  "message" : "Der Tag darf nicht länger als 30 Zeichen sein sein"
+}
+```
+
+8. Statuscode 400, wenn das Feld Tag null ist
 ```JSON
 {
   "message" : "tag darf nicht null sein"
 }
 ```
 
-8. Statuscode 409, wenn der Tag bereits mit dem Foto verknüpft ist
+9. Statuscode 409, wenn der Tag bereits mit dem Foto verknüpft ist
 ```JSON
 {
   "message" : "Der Tag existiert bereits"
 }
 ```
 
-9. Statuscode 500, wenn ein Datenbank- oder Serverfehler auftritt
+10. Statuscode 500, wenn ein Datenbank- oder Serverfehler auftritt
 ```JSON
 {
   "message" : "Ein interner Serverfehler ist aufgetreten"
@@ -1102,6 +1131,16 @@ Mögliche Fehler
 
 > POST /albums/photo  
 > Gibt Statuscode 201 zurück, wenn das Foto erfolgreich zum Album hinzugefügt wurde
+
+http-Req
+```JSON
+{
+  "photoID" : __,
+  "albumID" : __
+}
+```
+
+mögliche Fehlermeldungen
 
 1. Statuscode 401, wenn kein Nutzer angemeldet ist.
 ```JSON
@@ -1212,3 +1251,154 @@ http-Res
 ```
 
 5. Statuscode 500 mit Fehlermeldung, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
+
+> DELETE /albums/photo  
+> Gibt Statuscode 204 zurück, wenn das Foto erfolgreich aus dem Album entfernt wurde
+
+http-Req
+```JSON
+{
+  "photoID" : __,
+  "albumID" : __
+}
+```
+
+mögliche Fehlermeldungen:
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statuscode 400, wenn photoID keine gültige Zahl ist
+```JSON
+{
+  "message" : "photoID muss eine gültige Zahl sein"
+}
+```
+
+3. Statuscode 400, wenn albumID keine gültige Zahl ist
+```JSON
+{
+  "message" : "albumID muss eine gültige Zahl sein"
+}
+```
+
+4. Statuscode 404, wenn das Foto nicht existiert.
+```JSON
+{
+  "message" : "Das Foto wurde nicht gefunden."
+}
+```
+
+5. Statuscode 404, wenn das Album nicht existiert.
+```JSON
+{
+  "message" : "Das Album wurde nicht gefunden."
+}
+```
+
+6. Statuscode 403, wenn das Foto nicht dem Benutzer gehört
+```JSON
+{
+  "message" : "Das Foto gehört nicht dem Benutzer"
+}
+```
+
+7. Statuscode 403, wenn das Album nicht dem Benutzer gehört
+```JSON
+{
+  "message" : "Das Album gehört nicht dem Benutzer"
+}
+```
+
+8. Statuscode 409, wenn das das Foto nicht mit dem Album verknüpft ist
+```JSON
+{
+  "message" : "Das gewählte Foto ist nicht in diesem Album"
+}
+```
+
+9. Statuscode 500, wenn ein Server- oder Datenbankfehler auftritt
+```JSON
+{
+  "message" : "Ein interner Serverfehler ist aufgetreten"
+}
+```
+
+> GET /albums/contains/:photoID
+> Gibt Statuscode 201 zurück
+
+
+http-Res:
+
+```JSON
+[
+  {
+    "id": 1,
+    "title": "test",
+    "contains": true
+  },
+  {
+    "id": 2,
+    "title": "testalbum",
+    "contains": false
+  },
+  {
+    "id": 3,
+    "title": "urlaub",
+    "contains": false
+  },
+  {
+    "id": 4,
+    "title": "berge",
+    "contains": false
+  },
+  {
+    "id": 5,
+    "title": "katzen",
+    "contains": false
+ 
+]
+```
+
+mögiche Fehlermeldungen:
+
+1. Statuscode 401, wenn kein Nutzer angemeldet ist.
+```JSON
+{
+  "message" : "Bitte melde dich zuerst an, um diese Route aufzurufen"
+}
+```
+
+2. Statuscode 400, wenn photoID keine gültige Zahl ist
+```JSON
+{
+  "message" : "photoID muss eine gültige Zahl sein"
+}
+```
+3. Statuscode 404, wenn das Foto nicht existiert.
+```JSON
+{
+  "message" : "Das Foto wurde nicht gefunden."
+}
+```
+
+4. Statuscode 403, wenn das Foto nicht dem Benutzer gehört
+```JSON
+{
+  "message" : "Das Foto gehört nicht dem Benutzer"
+}
+```
+
+5. Statuscode 500, wenn ein Server- oder Datenbankfehler auftritt
+```JSON
+{
+  "message" : "Ein interner Serverfehler ist aufgetreten"
+}
+```
+
+
+
