@@ -1,7 +1,7 @@
 # Beschreibung der RESTful-API
 
-> Wenn bei einer Route kein Statuscode bei erfolg angegeben ist, <br>
-> wird bei Erfolg Statuscode 200 mit einer entsprechenden Statusmeldung zurückgegeben
+> Wenn bei einer Route kein Statuscode bei Erfolg angegeben ist, <br>
+> wird bei Erfolg Statuscode 200 mit einer entsprechenden Statusmeldung zurückgegeben.
 
 ### POST /login  
 > Gibt Statuscode 303 mit entsprechenden Location-Header zurück, wenn der Login erfolgreich war, d.h. das Paar Benutzername und Passwort existiert.  
@@ -172,7 +172,7 @@ http-Res:
 ---
 
 
-### photos/photoTitle=searchQuery&tag=serachQuery  
+### GET photos/photoTitle=searchQuery&tag=serachQuery  
 > Route, um Fotos zu durchsuchen. Es können diesleben Fehler wie oben auftreten.  
 
 
