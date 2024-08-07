@@ -1334,7 +1334,35 @@ mögliche Fehlermeldungen:
 
 http-Res:
 
-ERGÄNZEN NEUE VERSION
+```JSON
+[
+  {
+    "id": 1,
+    "title": "test",
+    "contains": true
+  },
+  {
+    "id": 2,
+    "title": "testalbum",
+    "contains": false
+  },
+  {
+    "id": 3,
+    "title": "urlaub",
+    "contains": false
+  },
+  {
+    "id": 4,
+    "title": "berge",
+    "contains": false
+  },
+  {
+    "id": 5,
+    "title": "katzen",
+    "contains": false
+ 
+]
+```
 
 mögiche Fehlermeldungen:
 
