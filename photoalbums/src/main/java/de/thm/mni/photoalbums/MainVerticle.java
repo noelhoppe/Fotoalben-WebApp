@@ -173,13 +173,13 @@ public class MainVerticle extends AbstractVerticle {
            .handler(loginHandler::validatePasswordInput)
            .handler(loginHandler::checkUsernamePasswordPair);
 
-    router.get( "/username").handler(authenticationHandler::isLoggedIn).handler(ctx -> { // TODO: GET /users/username?
+    router.get( "/username").handler(authenticationHandler::isLoggedIn).handler(ctx -> {
       MainVerticle.response(ctx.response(), 200, new JsonObject()
              .put("username", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_USER))
       );
     });
 
-    router.get("/role").handler(authenticationHandler::isLoggedIn).handler(ctx -> { // TODO: GET /users/role?
+    router.get("/role").handler(authenticationHandler::isLoggedIn).handler(ctx -> {
       MainVerticle.response(ctx.response(), 200, new JsonObject()
              .put("role", ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ROLE))
       );
@@ -229,7 +229,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::photoIsUser)
            .handler(photoHandler::servePhotos); // "1" => "1.jpg"
 
-    router.delete("/photos/tag") // TODO:
+    router.delete("/photos/tag")
            .handler(authenticationHandler::isLoggedIn)
            .handler(ctx -> {
              ctx.data().put("photoID", ctx.body().asJsonObject().getString("photoID"));
@@ -290,7 +290,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(photoHandler::validatePhotoInputReq)
            .handler(photoHandler::photoExists)
            .handler(photoHandler::photoIsUser)
-           .handler(photoHandler::deleteAllTagsTagsFromPhoto)
+           .handler(photoHandler::deleteAllTagsFromPhoto)
             .handler(albumHandler::removePhotoFromAllAlbums)
            .handler(photoHandler::deletePhoto);
 
@@ -312,12 +312,14 @@ public class MainVerticle extends AbstractVerticle {
            .handler(authenticationHandler::isAdmin)
            .handler(adminHandler::getUsers);
 
-    router.delete("/users/:userID")
+    router.delete("/users/:userID") // TODO: Tags der entsprechenden gelöschten Fotos und Alben löschen; Fotos vom Dateisystem löschen
            .handler(authenticationHandler::isLoggedIn)
            .handler(authenticationHandler::isAdmin)
            .handler(adminHandler::userIDIsNumber)
            .handler(adminHandler::tryToDelAdmin)
+            .handler(adminHandler::deleteAllTagsFromUsersPhotos)
            .handler(adminHandler::deleteAllPhotosFromUser)
+            .handler(adminHandler::deleteAllTagsFromUsersAlbums)
            .handler(adminHandler::deleteAllAlbumsFromUser)
            .handler(adminHandler::delUser);
 
@@ -374,7 +376,7 @@ public class MainVerticle extends AbstractVerticle {
       .handler(albumHandler::validateAlbumTitleReq)
       .handler(albumHandler::createAlbum);
 
-    router.delete("/albums/tag") // TODO:
+    router.delete("/albums/tag")
             .handler(authenticationHandler::isLoggedIn)
             .handler(ctx -> {
                     ctx.data().put("tag", ctx.body().asJsonObject().getString("tag"));

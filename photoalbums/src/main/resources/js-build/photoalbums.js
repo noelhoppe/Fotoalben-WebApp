@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,6 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+// @ts-ignore
+import { renderError } from "/helper.js";
 /**
  * Selektiert den Logout Button und führt bei dem Klick-Event<br>
  * POST /logout aus
@@ -147,7 +148,6 @@ function attachAddTagListener() {
         const submitAddTagInput = document.querySelector("#submitAddTagInput");
         submitAddTagInput.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
             const tagName = document.querySelector("#addTagInput").value;
-            console.log(tagName);
             const photoID = Number(document.querySelector("#modal-img").getAttribute("data-id"));
             yield handleTagAdd(photoID, tagName);
         }));
@@ -183,10 +183,9 @@ function handleTagAdd(photoID, tagName) {
                 },
                 body: JSON.stringify(reqData)
             });
+            const errorContainer = document.querySelector("#error-edit-photo-container");
             if (res.status == 201) {
-                const data = yield res.json();
-                console.log(data.message);
-                document.querySelector("#error-edit-photo-container").classList.add("d-none");
+                renderError(errorContainer, true);
                 const img = document.querySelector(`img[data-id='${photoID}']`);
                 let tags = img.dataset.tags;
                 if (tags.length == 0) {
@@ -200,48 +199,13 @@ function handleTagAdd(photoID, tagName) {
             }
             else {
                 const data = yield res.json();
-                renderError(document.querySelector("#error-edit-photo-container"), false, data.message);
+                renderError(errorContainer, false, data.message);
             }
         }
         catch (error) {
             console.error("Error POST /tag", error);
         }
     });
-}
-/**
- * Rendert die Fehlermeldungen, die auftreten können, wenn man ein Foto bearbeitet.
- * @param resetErrorMessage true, wenn die Fehlermeldung zurückgesetzt werden soll und der container versteckt werden soll; false sonst
- * @param message Die Fehlermeldung, die gerendert werden soll
- */
-function renderError(errorContainer, resetErrorMessage, message) {
-    // const errorContainer = document.querySelector("#error-edit-photo-container") as HTMLDivElement;
-    const errorParagraph = errorContainer.querySelector("p");
-    if (resetErrorMessage) {
-        // Wenn resetErrorMessage true ist, leeren wir die Fehlermeldung und verstecken den Container
-        if (errorParagraph) {
-            errorParagraph.textContent = '';
-        }
-        if (errorContainer) {
-            errorContainer.classList.add("d-none");
-        }
-    }
-    else {
-        // Wenn message definiert ist und nicht leer ist, zeigen wir die Fehlermeldung an
-        if (message && message.trim() != '') {
-            if (errorParagraph) {
-                errorParagraph.textContent = message;
-            }
-            if (errorContainer) {
-                errorContainer.classList.remove("d-none");
-            }
-        }
-        else {
-            // Wenn keine Nachricht vorhanden ist oder leer ist, verstecken wir den Container
-            if (errorContainer) {
-                errorContainer.classList.add("d-none");
-            }
-        }
-    }
 }
 /**
  * Behandelt das Löschen eines Tags.
@@ -270,7 +234,9 @@ function handleTagDelete(tag, colDiv) {
                 },
                 body: JSON.stringify(reqData)
             });
+            const errorContainer = document.querySelector("#error-edit-photo-container");
             if (res.status == 204) {
+                renderError(errorContainer, true);
                 // Remove Element from DOM
                 colDiv.remove();
                 // Aktualisiere die Tags des Bildes
@@ -284,7 +250,8 @@ function handleTagDelete(tag, colDiv) {
                 }
             }
             else {
-                console.log(yield res.json());
+                const data = yield res.json();
+                renderError(errorContainer, false, data.message);
             }
         }
         catch (error) {
@@ -314,14 +281,15 @@ function editPhotoTitle() {
                     body: JSON.stringify(reqData)
                 });
                 const data = yield res.json();
+                const errorContainer = document.querySelector("#error-edit-photo-container");
                 if (res.status == 200) {
                     const img = document.querySelector(`img[data-id='${photoID}']`);
                     img.setAttribute("title", data.photoTitle);
-                    renderError(document.querySelector("#error-edit-photo-container"), true);
+                    renderError(errorContainer, true);
                     updateModalUI(extractPhotoData(img));
                 }
                 else {
-                    renderError(document.querySelector("#error-edit-photo-container"), false, data.message);
+                    renderError(errorContainer, false, data.message);
                 }
             }
             catch (error) {
@@ -426,7 +394,10 @@ addSearchPhotosListener();
 function fetchPhotos(searchVal) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const res = yield fetch("/photos?" + (searchVal ? new URLSearchParams({ photoTitle: searchVal, tag: searchVal }).toString() : ""), {
+            const res = yield fetch("/photos?" + (searchVal ? new URLSearchParams({
+                photoTitle: searchVal,
+                tag: searchVal
+            }).toString() : ""), {
                 method: "GET",
                 credentials: "include"
             });
@@ -651,12 +622,18 @@ function addAlbum() {
                 },
                 body: JSON.stringify(reqData),
             });
+            const errorContainer = document.querySelector("#error-add-album-container");
             if (res.status == 201) {
+                renderError(errorContainer, true);
                 window.location.reload();
+            }
+            else {
+                const data = yield res.json();
+                renderError(errorContainer, false, data.message);
             }
         }
         catch (error) {
-            console.log("ERROR at POST /Albums");
+            console.log("ERROR at POST /Albums", error);
         }
     }));
 }
@@ -821,18 +798,22 @@ function handlerPatchAlbumsTitle(title, albumID) {
                 credentials: "include",
                 body: JSON.stringify({ title: title, albumID: albumID })
             });
+            const errorContainer = document.querySelector("#error-edit-album-container");
             if (res.ok) {
+                renderError(errorContainer, true);
                 const data = yield res.json();
                 console.log(`
-      ${res.status}
-      ${data.message}
-      ${data.albumTitle}
-      `);
+                ${res.status}
+                ${data.message}
+                ${data.albumTitle}
+            `);
                 document.querySelector("#album-title").textContent = data.albumTitle; // Aktualisiere das Modal, sodass man nicht das Modal erst schließe und wieder öffnen kann
                 yield fetchAlbums();
             }
             else {
                 const data = yield res.json();
+                console.log("called");
+                renderError(errorContainer, false, data.message);
                 console.log(res.status + " " + data.message);
             }
         }
@@ -973,7 +954,9 @@ function handlerAddTagToAlbum(tag, albumID) {
                 credentials: "include",
                 body: JSON.stringify({ tag: tag, albumID: albumID })
             });
+            const errorContainer = document.querySelector("#error-edit-album-container");
             if (res.status == 201) {
+                renderError(errorContainer, true);
                 const data = yield res.json();
                 console.log(res.status + " " + data.message);
                 yield fetchAlbums();
@@ -982,6 +965,7 @@ function handlerAddTagToAlbum(tag, albumID) {
             }
             else {
                 const data = yield res.json();
+                renderError(errorContainer, false, data.message);
                 console.log(res.status + " " + data.message);
             }
         }

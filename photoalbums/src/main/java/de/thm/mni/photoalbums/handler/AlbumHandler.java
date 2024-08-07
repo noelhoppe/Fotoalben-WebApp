@@ -426,6 +426,10 @@ public class AlbumHandler {
 							);
 						}
 					});
+			} else {
+				MainVerticle.response(ctx.response(), 404, new JsonObject()
+					.put("message", "Der Tag existiert nicht")
+				);
 			}
 		});
 	}

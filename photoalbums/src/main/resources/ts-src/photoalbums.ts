@@ -1,12 +1,15 @@
+// @ts-ignore
+import {renderError} from "/helper.js";
+
 /**
  * Besonderheit: Tags als kommaseparierter String
  */
 interface Photo {
-  id : string,
-  title: string;
-  taken: string;
-  imgUrl: string;
-  tags?:string; // tags als kommaseparierter String
+    id: string,
+    title: string;
+    taken: string;
+    imgUrl: string;
+    tags?: string; // tags als kommaseparierter String
 }
 
 /**
@@ -14,35 +17,37 @@ interface Photo {
  * POST /logout aus
  */
 function logout() {
-  const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
-  logoutBtn.addEventListener("click", async () => {
-    try {
-      const res : Response = await fetch("http://localhost:8080/logout", {
-        method : "POST",
-        redirect : "follow",
-        credentials : "include"
-      });
+    const logoutBtn = document.querySelector("#logout-btn") as HTMLButtonElement;
+    logoutBtn.addEventListener("click", async () => {
+        try {
+            const res: Response = await fetch("http://localhost:8080/logout", {
+                method: "POST",
+                redirect: "follow",
+                credentials: "include"
+            });
 
-      if (res.redirected) {
-        window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
-      } else {
-        const data : { message : string } = await res.json();
-        console.log(res.status + " " + data.message);
-      }
+            if (res.redirected) {
+                window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
+            } else {
+                const data: { message: string } = await res.json();
+                console.log(res.status + " " + data.message);
+            }
 
-    } catch(error) {
-      console.error("Error POST /logout", error);
-    }
-  });
+        } catch (error) {
+            console.error("Error POST /logout", error);
+        }
+    });
 }
+
 logout();
 
 /**
  * Fügt einen Klick-Event-Listener zu Galerie-Elementen hinzu.
  */
 function attachGalleryItemClickListener() {
-  document.addEventListener('click', handleGalleryItemClick);
+    document.addEventListener('click', handleGalleryItemClick);
 }
+
 attachGalleryItemClickListener();
 
 /**
@@ -51,12 +56,12 @@ attachGalleryItemClickListener();
  * 2. Aktualisiert die ModalUI {@link updateModalUI}
  * @param e MouseEvent
  */
-function handleGalleryItemClick(e : MouseEvent) {
-  const target = e.target as HTMLElement;
-  if (target.classList.contains('gallery-item')) { // KONVENTION: Alle Bilder besitzen die Klasse '.gallery-item'
-    const photoData = extractPhotoData(target);
-    updateModalUI(photoData);
-  }
+function handleGalleryItemClick(e: MouseEvent) {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('gallery-item')) { // KONVENTION: Alle Bilder besitzen die Klasse '.gallery-item'
+        const photoData = extractPhotoData(target);
+        updateModalUI(photoData);
+    }
 }
 
 /**
@@ -64,13 +69,13 @@ function handleGalleryItemClick(e : MouseEvent) {
  * @param target HTMLElement
  * @returns Ein Objekt, das die Fotodaten enthält.
  */
-function extractPhotoData(target: HTMLElement) : Photo {
-  const title = target.getAttribute('title') as string;
-  const id = target.getAttribute('data-id') as string;
-  const imgUrl = target.getAttribute('src') as string;
-  const taken = target.getAttribute('data-date') as string;
-  const tags = target.getAttribute('data-tags') as string;
-  return { id, title, taken, imgUrl, tags };
+function extractPhotoData(target: HTMLElement): Photo {
+    const title = target.getAttribute('title') as string;
+    const id = target.getAttribute('data-id') as string;
+    const imgUrl = target.getAttribute('src') as string;
+    const taken = target.getAttribute('data-date') as string;
+    const tags = target.getAttribute('data-tags') as string;
+    return {id, title, taken, imgUrl, tags};
 }
 
 /**
@@ -81,38 +86,38 @@ function extractPhotoData(target: HTMLElement) : Photo {
  * @param photoData Ein Photo Objekt, welches die Fotodaten beinhaltet
  */
 async function updateModalUI(photoData: Photo) {
-  const { id, title, taken, imgUrl, tags } = photoData; // DESTRUCTURING
+    const {id, title, taken, imgUrl, tags} = photoData; // DESTRUCTURING
 
-  // Aktualisiere die Modal Elemente
-  const imageTitle = document.querySelector("#image-title") as HTMLElement;
-  const modalImg = document.querySelector("#modal-img") as HTMLImageElement;
-  const modalTaken = document.querySelector("#taken") as HTMLParagraphElement;
-  const modalTags = document.querySelector("#tags .row") as HTMLDivElement;
+    // Aktualisiere die Modal Elemente
+    const imageTitle = document.querySelector("#image-title") as HTMLElement;
+    const modalImg = document.querySelector("#modal-img") as HTMLImageElement;
+    const modalTaken = document.querySelector("#taken") as HTMLParagraphElement;
+    const modalTags = document.querySelector("#tags .row") as HTMLDivElement;
 
-  imageTitle.textContent = title;
-  modalImg.setAttribute("data-id", id);
-  modalImg.setAttribute("title", title);
-  modalImg.setAttribute("src", imgUrl);
-  modalImg.setAttribute("data-taken", taken);
-  modalTaken.textContent = `Aufnahmedatum: ${taken}`;
-  modalImg.setAttribute("data-tags", tags || "");
+    imageTitle.textContent = title;
+    modalImg.setAttribute("data-id", id);
+    modalImg.setAttribute("title", title);
+    modalImg.setAttribute("src", imgUrl);
+    modalImg.setAttribute("data-taken", taken);
+    modalTaken.textContent = `Aufnahmedatum: ${taken}`;
+    modalImg.setAttribute("data-tags", tags || "");
 
-  // Aktualisiere die Tags
-  updateModalTags(modalTags, tags || "");
+    // Aktualisiere die Tags
+    updateModalTags(modalTags, tags || "");
 
-  // Setze die Eingabefelder zurück
-  resetModalInputs();
+    // Setze die Eingabefelder zurück
+    resetModalInputs();
 
-  try {
-    const data = await photoIsInAlbum(parseInt(id));
+    try {
+        const data = await photoIsInAlbum(parseInt(id));
 
-    if (Array.isArray(data)) {
-      createAlbumList(data);
+        if (Array.isArray(data)) {
+            createAlbumList(data);
+        }
+
+    } catch (err) {
+        console.error("Fehler bei updateModalUI:", err);
     }
-
-  } catch (err) {
-    console.error("Fehler bei updateModalUI:", err);
-  }
 }
 
 /**
@@ -122,36 +127,36 @@ async function updateModalUI(photoData: Photo) {
  * @param tags string
  */
 function updateModalTags(modalTags: HTMLDivElement, tags: string) {
-  modalTags.innerHTML = "";
-  if (tags.length > 0) {
-    tags.split(", ").forEach(tag => {
-      const colDiv = document.createElement("div") as HTMLDivElement;
-      colDiv.classList.add("col");
+    modalTags.innerHTML = "";
+    if (tags.length > 0) {
+        tags.split(", ").forEach(tag => {
+            const colDiv = document.createElement("div") as HTMLDivElement;
+            colDiv.classList.add("col");
 
-      const tagElement = document.createElement("p") as HTMLParagraphElement;
-      tagElement.classList.add("badge", "bg-light", "text-dark");
-      tagElement.textContent = tag;
+            const tagElement = document.createElement("p") as HTMLParagraphElement;
+            tagElement.classList.add("badge", "bg-light", "text-dark");
+            tagElement.textContent = tag;
 
-      const delBtn = document.createElement("button") as HTMLButtonElement;
-      delBtn.classList.add("btn", "btn-close");
-      delBtn.setAttribute("aria-label", "Tag entfernen");
+            const delBtn = document.createElement("button") as HTMLButtonElement;
+            delBtn.classList.add("btn", "btn-close");
+            delBtn.setAttribute("aria-label", "Tag entfernen");
 
-      delBtn.addEventListener("click", async() => await handleTagDelete((delBtn.closest("p") as HTMLParagraphElement).textContent as string, colDiv));
+            delBtn.addEventListener("click", async () => await handleTagDelete((delBtn.closest("p") as HTMLParagraphElement).textContent as string, colDiv));
 
-      tagElement.appendChild(delBtn);
-      colDiv.appendChild(tagElement);
-      modalTags.appendChild(colDiv);
-    });
-  }
+            tagElement.appendChild(delBtn);
+            colDiv.appendChild(tagElement);
+            modalTags.appendChild(colDiv);
+        });
+    }
 }
 
 /**
  * Setzt die Eingabefelder im Modal zurück.
  */
 function resetModalInputs() {
-  (document.querySelector("#edit-name") as HTMLInputElement).value = "";
-  (document.querySelector("#edit-date") as HTMLInputElement).value = "";
-  (document.querySelector("#addTagInput") as HTMLInputElement).value = "";
+    (document.querySelector("#edit-name") as HTMLInputElement).value = "";
+    (document.querySelector("#edit-date") as HTMLInputElement).value = "";
+    (document.querySelector("#addTagInput") as HTMLInputElement).value = "";
 }
 
 
@@ -160,16 +165,16 @@ function resetModalInputs() {
  * und ruft {@link handleTagAdd} mit der entsprechenden extrahierten photoID und dem tagNamen auf.
  */
 function attachAddTagListener() {
-  document.addEventListener("DOMContentLoaded", () => {
-    const submitAddTagInput = document.querySelector("#submitAddTagInput") as HTMLButtonElement;
-    submitAddTagInput.addEventListener("click", async () => {
-      const tagName = (document.querySelector("#addTagInput") as HTMLInputElement).value;
-      console.log(tagName);
-      const photoID = Number((document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id") as string);
-      await handleTagAdd(photoID, tagName);
+    document.addEventListener("DOMContentLoaded", () => {
+        const submitAddTagInput = document.querySelector("#submitAddTagInput") as HTMLButtonElement;
+        submitAddTagInput.addEventListener("click", async () => {
+            const tagName = (document.querySelector("#addTagInput") as HTMLInputElement).value;
+            const photoID = Number((document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id") as string);
+            await handleTagAdd(photoID, tagName);
+        });
     });
-  });
 }
+
 attachAddTagListener();
 
 /**
@@ -187,85 +192,43 @@ attachAddTagListener();
  * @param tagName Der Tag, der hinzugefügt werden soll
  */
 async function handleTagAdd(photoID: number, tagName: string) {
-  try {
-    const reqData  = {
-      photoID: photoID,
-      tag: tagName
-    };
+    try {
+        const reqData = {
+            photoID: photoID,
+            tag: tagName
+        };
 
-    const res: Response = await fetch("http://localhost:8080/photos/tag", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(reqData)
-    });
+        const res: Response = await fetch("http://localhost:8080/photos/tag", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(reqData)
+        });
 
-    if (res.status == 201) {
+        const errorContainer = document.querySelector("#error-edit-photo-container") as HTMLDivElement;
+        if (res.status == 201) {
+            renderError(errorContainer, true);
 
-      const data : { message : string } = await res.json();
-      console.log(data.message);
-
-      (document.querySelector("#error-edit-photo-container")  as HTMLDivElement).classList.add("d-none");
-      const img = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
-      let tags = img.dataset.tags as string;
-      if (tags.length == 0) {
-        tags = tagName;
-      } else {
-        tags = tags + `, ${tagName}`;
-      }
-      img.dataset.tags = tags;
-      updateModalUI(extractPhotoData(img));
-    } else {
-      const data : { message : string }  = await res.json();
-      renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, false, data.message);
+            const img = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
+            let tags = img.dataset.tags as string;
+            if (tags.length == 0) {
+                tags = tagName;
+            } else {
+                tags = tags + `, ${tagName}`;
+            }
+            img.dataset.tags = tags;
+            updateModalUI(extractPhotoData(img));
+        } else {
+            const data: { message: string } = await res.json();
+            renderError(errorContainer, false, data.message);
+        }
+    } catch (error) {
+        console.error("Error POST /tag", error);
     }
-  } catch(error) {
-    console.error("Error POST /tag", error);
-  }
 
 }
-
-
-
-/**
- * Rendert die Fehlermeldungen, die auftreten können, wenn man ein Foto bearbeitet.
- * @param resetErrorMessage true, wenn die Fehlermeldung zurückgesetzt werden soll und der container versteckt werden soll; false sonst
- * @param message Die Fehlermeldung, die gerendert werden soll
- */
-function renderError(errorContainer : HTMLElement, resetErrorMessage: boolean, message?: string) {
-  // const errorContainer = document.querySelector("#error-edit-photo-container") as HTMLDivElement;
-
-  const errorParagraph = errorContainer.querySelector("p") as HTMLParagraphElement;
-
-  if (resetErrorMessage) {
-    // Wenn resetErrorMessage true ist, leeren wir die Fehlermeldung und verstecken den Container
-    if (errorParagraph) {
-      errorParagraph.textContent = '';
-    }
-    if (errorContainer) {
-      errorContainer.classList.add("d-none");
-    }
-  } else {
-    // Wenn message definiert ist und nicht leer ist, zeigen wir die Fehlermeldung an
-    if (message && message.trim() != '') {
-      if (errorParagraph) {
-        errorParagraph.textContent = message;
-      }
-      if (errorContainer) {
-        errorContainer.classList.remove("d-none");
-      }
-    } else {
-      // Wenn keine Nachricht vorhanden ist oder leer ist, verstecken wir den Container
-      if (errorContainer) {
-        errorContainer.classList.add("d-none");
-      }
-    }
-  }
-}
-
-
 
 /**
  * Behandelt das Löschen eines Tags.
@@ -278,43 +241,47 @@ function renderError(errorContainer : HTMLElement, resetErrorMessage: boolean, m
  * @param colDiv HTMLDivElement
  */
 async function handleTagDelete(tag: string, colDiv: HTMLDivElement) {
-  const img = document.querySelector("#modal-img") as HTMLImageElement;
-  const imgId = img.dataset.id as string;
+    const img = document.querySelector("#modal-img") as HTMLImageElement;
+    const imgId = img.dataset.id as string;
 
-  const reqData = {
-    photoID: imgId,
-    tag: tag
-  };
+    const reqData = {
+        photoID: imgId,
+        tag: tag
+    };
 
-  try {
-    const res = await fetch("http://localhost:8080/photos/tag", {
-      method: "DELETE",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(reqData)
-    });
+    try {
+        const res = await fetch("http://localhost:8080/photos/tag", {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(reqData)
+        });
 
-    if (res.status == 204) {
-      // Remove Element from DOM
-      colDiv.remove();
+        const errorContainer = document.querySelector("#error-edit-photo-container") as HTMLDivElement;
+        if (res.status == 204) {
+            renderError(errorContainer, true);
 
-      // Aktualisiere die Tags des Bildes
-      const imgElement = document.querySelector(`img[data-id='${imgId}']`) as HTMLImageElement;
-      if (imgElement) {
-        const currentTags = imgElement.getAttribute("data-tags") as string;
-        if (currentTags) {
-          const updatedTags = currentTags.split(", ").filter(t => t != tag).join(", ");
-          imgElement.setAttribute("data-tags", updatedTags);
+            // Remove Element from DOM
+            colDiv.remove();
+
+            // Aktualisiere die Tags des Bildes
+            const imgElement = document.querySelector(`img[data-id='${imgId}']`) as HTMLImageElement;
+            if (imgElement) {
+                const currentTags = imgElement.getAttribute("data-tags") as string;
+                if (currentTags) {
+                    const updatedTags = currentTags.split(", ").filter(t => t != tag).join(", ");
+                    imgElement.setAttribute("data-tags", updatedTags);
+                }
+            }
+        } else {
+            const data: { message: string } = await res.json();
+            renderError(errorContainer, false, data.message);
         }
-      }
-    } else {
-      console.log(await res.json())
+    } catch (error) {
+        console.error("Error DELETE /tag", error);
     }
-  } catch(error) {
-    console.error("Error DELETE /tag", error);
-  }
 }
 
 /**
@@ -325,117 +292,120 @@ async function handleTagDelete(tag: string, colDiv: HTMLDivElement) {
  * }
  */
 function editPhotoTitle() {
-  document.addEventListener("DOMContentLoaded", () => {
-    (document.querySelector("#submit-edit-name") as HTMLButtonElement).addEventListener("click", async() => {
-      try {
-        const photoID = Number((document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id"));
-        const reqData = {
-          photoID : photoID,
-          photoTitle : (document.querySelector("#edit-name") as HTMLInputElement).value
-        }
+    document.addEventListener("DOMContentLoaded", () => {
+        (document.querySelector("#submit-edit-name") as HTMLButtonElement).addEventListener("click", async () => {
+            try {
+                const photoID = Number((document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id"));
+                const reqData = {
+                    photoID: photoID,
+                    photoTitle: (document.querySelector("#edit-name") as HTMLInputElement).value
+                }
 
-        const res = await fetch("http://localhost:8080/photos/photoTitle", {
-          method : "PATCH",
-          credentials : "include",
-          body : JSON.stringify(reqData)
+                const res = await fetch("http://localhost:8080/photos/photoTitle", {
+                    method: "PATCH",
+                    credentials: "include",
+                    body: JSON.stringify(reqData)
+                })
+
+                const data = await res.json();
+
+                const errorContainer = document.querySelector("#error-edit-photo-container") as HTMLDivElement;
+                if (res.status == 200) {
+                    const img = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
+                    img.setAttribute("title", data.photoTitle);
+                    renderError(errorContainer, true);
+                    updateModalUI(extractPhotoData(img));
+                } else {
+                    renderError(errorContainer, false, data.message);
+                }
+            } catch (error) {
+                console.log("Error updating photo's title" + error);
+            }
         })
-
-        const data = await res.json();
-
-        if (res.status == 200) {
-          const img = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
-          img.setAttribute("title", data.photoTitle);
-          renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, true);
-          updateModalUI(extractPhotoData(img));
-        } else {
-          renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, false, data.message);
-        }
-      } catch(error) {
-        console.log("Error updating photo's title" + error);
-      }
     })
-  })
 }
+
 editPhotoTitle();
 
 
 /**
  * GET /username
  */
-async function fetchUsername() : Promise<void> {
-  try {
-    const res : Response = await fetch("/username", {
-      method : "GET",
-      credentials : "include"
-    });
+async function fetchUsername(): Promise<void> {
+    try {
+        const res: Response = await fetch("/username", {
+            method: "GET",
+            credentials: "include"
+        });
 
-    if (!res.ok) {
-      console.error("Error fetching username");
+        if (!res.ok) {
+            console.error("Error fetching username");
+        }
+
+        const data: { username: string, role: string } = await res.json();
+
+        renderUsername(data.username);
+
+    } catch (error) {
+        console.error("Error GET /username", error);
     }
-
-    const data : { username : string, role : string } = await res.json();
-
-    renderUsername(data.username);
-
-  } catch (error) {
-    console.error("Error GET /username", error);
-  }
 }
 
 /**
  * GET /role <br>
  * {@link renderGoToAdminPage}
  */
-async function fetchRole()  {
-  try {
-    const res : Response = await fetch("http://localhost:8080/role", {
-      method : "GET",
-      credentials : "include"
-    })
-    const data : { role : string } = await res.json()
-    renderGoToAdminPage(data.role);
-  } catch (error) {
-    console.error("Error GET /role" + error);
-  }
+async function fetchRole() {
+    try {
+        const res: Response = await fetch("http://localhost:8080/role", {
+            method: "GET",
+            credentials: "include"
+        })
+        const data: { role: string } = await res.json()
+        renderGoToAdminPage(data.role);
+    } catch (error) {
+        console.error("Error GET /role" + error);
+    }
 }
 
 /**
  * Zeigt den Button "Zur Adminseite" nicht an, wenn der Nutzer kein Admin ist.
  * @param role Rolle des Benutzers
  */
-function renderGoToAdminPage(role : string) : void {
-  const goToAdminPageItem = document.querySelector("#go-to-admin-page") as HTMLButtonElement;
-  if (role == "ADMIN") {
-    goToAdminPageItem.classList.remove("d-none");
-  } else {
-    goToAdminPageItem.classList.add("d-none");
-  }
+function renderGoToAdminPage(role: string): void {
+    const goToAdminPageItem = document.querySelector("#go-to-admin-page") as HTMLButtonElement;
+    if (role == "ADMIN") {
+        goToAdminPageItem.classList.remove("d-none");
+    } else {
+        goToAdminPageItem.classList.add("d-none");
+    }
 }
 
 /**
  * Leitet den Nutzer zur Adminseite weiter, wenn dieser auf den entsprechenden Button klickt und als Admin angemeldet ist
  */
 function redirectToAdminPage() {
-  (document.querySelector("#go-to-admin-page") as HTMLButtonElement).addEventListener("click", async() => {
-    try {
-      const res = await fetch("http://localhost:8080/protected/admin.html");
+    (document.querySelector("#go-to-admin-page") as HTMLButtonElement).addEventListener("click", async () => {
+        try {
+            const res = await fetch("http://localhost:8080/protected/admin.html");
 
-      window.location.href = res.url;
+            window.location.href = res.url;
 
-    } catch(error) {
-      console.error("Error redirecting to Admin-Page")
-    }
-  })
+        } catch (error) {
+            console.error("Error redirecting to Admin-Page")
+        }
+    })
 }
+
 redirectToAdminPage();
 
 /**
  * Funktion zum Rendern des Benutzernamens im DOM
  * @param username Der Benutzername
  */
-function renderUsername(username : string) {
-  const usernameField = document.querySelector("#username") as HTMLParagraphElement;
-  usernameField.textContent = username;
+function renderUsername(username: string) {
+    const usernameField = document.querySelector("#username") as HTMLParagraphElement;
+    usernameField.textContent = username;
 }
 
 /**
@@ -443,12 +413,13 @@ function renderUsername(username : string) {
  * Ruft mit dem extrahierten Suchparameter {@link fetchPhotos} auf
  */
 function addSearchPhotosListener() {
-  (document.querySelector("#searchPhotos") as HTMLFormElement).addEventListener("submit", async(evt : SubmitEvent) => {
-    evt.preventDefault()
-    const query = (document.querySelector("#searchPhotosQuery") as HTMLInputElement).value;
-    await fetchPhotos(query);
-  })
+    (document.querySelector("#searchPhotos") as HTMLFormElement).addEventListener("submit", async (evt: SubmitEvent) => {
+        evt.preventDefault()
+        const query = (document.querySelector("#searchPhotosQuery") as HTMLInputElement).value;
+        await fetchPhotos(query);
+    })
 }
+
 addSearchPhotosListener();
 
 
@@ -456,52 +427,56 @@ addSearchPhotosListener();
  * GET /photos <br>
  * Funktion zum Abrufen aller Fotos eines Benutzers vom Server, optional mit übergebenem Suchparameter
  */
-async function fetchPhotos(searchVal? : string) : Promise<void> {
-  try {
-    const res : Response = await fetch("/photos?" +(searchVal ? new URLSearchParams({photoTitle : searchVal, tag : searchVal}).toString() : ""), {
-      method : "GET",
-      credentials : "include"
-    });
+async function fetchPhotos(searchVal?: string): Promise<void> {
+    try {
+        const res: Response = await fetch("/photos?" + (searchVal ? new URLSearchParams({
+            photoTitle: searchVal,
+            tag: searchVal
+        }).toString() : ""), {
+            method: "GET",
+            credentials: "include"
+        });
 
-    if (!res.ok) {
-      console.error("Error fetching photos");
+        if (!res.ok) {
+            console.error("Error fetching photos");
+        }
+
+        const data: { photos: Photo[] } = await res.json();
+
+        clearImages(document.querySelector("#main-photos-container .row") as HTMLDivElement);
+        data.photos.forEach(photo => renderPhotos(photo));
+
+    } catch (error) {
+        console.error("Error GET /photos", error);
     }
-
-    const data : { photos : Photo[] } = await res.json();
-
-    clearImages(document.querySelector("#main-photos-container .row") as HTMLDivElement);
-    data.photos.forEach(photo  => renderPhotos(photo));
-
-  } catch (error) {
-    console.error("Error GET /photos", error);
-  }
 }
 
 /**
  * Funktion zum Initialisieren der Seite.
  */
-function initializePage() : void {
-  document.addEventListener("DOMContentLoaded", async () : Promise<void> => {
-    await fetchUsername();
-    await fetchPhotos();
-    await fetchAlbums();
-    await fetchRole();
-  });
+function initializePage(): void {
+    document.addEventListener("DOMContentLoaded", async (): Promise<void> => {
+        await fetchUsername();
+        await fetchPhotos();
+        await fetchAlbums();
+        await fetchRole();
+    });
 }
+
 initializePage();
 
 /**
  * Entfernt die Bilder aus dem DOM
  * @param element Das entsprechende Element
  */
-function clearImages(element : HTMLElement) {
+function clearImages(element: HTMLElement) {
 
-  if (!element) {
-    console.error("Container not found");
-    return;
-  }
+    if (!element) {
+        console.error("Container not found");
+        return;
+    }
 
-  element.innerHTML = "";
+    element.innerHTML = "";
 }
 
 /**
@@ -510,47 +485,46 @@ function clearImages(element : HTMLElement) {
  * Des Weiteren werden die für Bootstrap erforderlichen Attribute dem <img> Tag hinzugefügt
  * @param photo Ein Bild
  */
-function renderPhotos(photo : Photo) : void {
-  const {id, imgUrl, title, taken, tags }  = photo;
+function renderPhotos(photo: Photo): void {
+    const {id, imgUrl, title, taken, tags} = photo;
 
-  // Hauptcontainer auswählen
-  const mainContainer = document.querySelector("#main-photos-container .row") as HTMLDivElement;
+    // Hauptcontainer auswählen
+    const mainContainer = document.querySelector("#main-photos-container .row") as HTMLDivElement;
 
-  // Prüfen, ob das Element existiert
-  if (!mainContainer) {
-    console.error("Container not found");
-    return;
-  }
+    // Prüfen, ob das Element existiert
+    if (!mainContainer) {
+        console.error("Container not found");
+        return;
+    }
 
-  // Erstellen des Bild Containers
-  const colDiv = document.createElement("div") as HTMLDivElement;
-  colDiv.classList.add("col-sm-6", "col-md-4", "col-lg-3");
+    // Erstellen des Bild Containers
+    const colDiv = document.createElement("div") as HTMLDivElement;
+    colDiv.classList.add("col-sm-6", "col-md-4", "col-lg-3");
 
-  // Erstellen des Bildes
-  const img = document.createElement("img") as HTMLImageElement;
-  img.classList.add("img-fluid", "gallery-item");
-  img.dataset.id = id;
-  img.src = `http://localhost:8080/img/${imgUrl}`;
-  img.title = title;
-  img.dataset.date = taken;
+    // Erstellen des Bildes
+    const img = document.createElement("img") as HTMLImageElement;
+    img.classList.add("img-fluid", "gallery-item");
+    img.dataset.id = id;
+    img.src = `http://localhost:8080/img/${imgUrl}`;
+    img.title = title;
+    img.dataset.date = taken;
 
-  if (photo.tags) {
-    img.dataset.tags = tags;
-  } else {
-    img.dataset.tags = "";
-  }
+    if (photo.tags) {
+        img.dataset.tags = tags;
+    } else {
+        img.dataset.tags = "";
+    }
 
-  // Für das Bootstrap modal erforderliche Attribute setzen
-  img.setAttribute("data-bs-toggle", "modal");
-  img.setAttribute("data-bs-target", "#gallery-modal");
+    // Für das Bootstrap modal erforderliche Attribute setzen
+    img.setAttribute("data-bs-toggle", "modal");
+    img.setAttribute("data-bs-target", "#gallery-modal");
 
-  // Bild in den Bild Container einfügen
-  colDiv.appendChild(img);
+    // Bild in den Bild Container einfügen
+    colDiv.appendChild(img);
 
-  // Bild-Container in den Hauptcontainer einfügen
-  mainContainer.appendChild(colDiv);
+    // Bild-Container in den Hauptcontainer einfügen
+    mainContainer.appendChild(colDiv);
 }
-
 
 
 /**
@@ -567,80 +541,82 @@ function renderPhotos(photo : Photo) : void {
  * Aktualisiert die ModalUI {@link updateModalUI} mit den aktualisierten extrahierten Fotodaten {@link updateModalUI}<br>
  * Rendert error messages oder setzt diese zurück {@link renderError}
  */
-async function handleEditPhotoDate(date : string) {
-  try {
-    const photoID = (document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string;
-    const reqData = {
-      photoID : photoID,
-      date : date
+async function handleEditPhotoDate(date: string) {
+    try {
+        const photoID = (document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string;
+        const reqData = {
+            photoID: photoID,
+            date: date
+        }
+
+        const res = await fetch("http://localhost:8080/photos/photoDate", {
+            method: "PATCH",
+            credentials: "include",
+            body: JSON.stringify(reqData)
+        })
+
+        const data: { message: string, newDate?: string } = await res.json();
+
+        if (res.status == 200) {
+            const imgElement = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
+            imgElement.dataset.date = data.newDate;
+            updateModalUI(extractPhotoData(imgElement));
+            renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, true);
+        } else {
+            renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, false, data.message);
+        }
+    } catch (error) {
+        console.error("Error PATCH /photoDate")
     }
-
-    const res = await fetch("http://localhost:8080/photos/photoDate", {
-      method : "PATCH",
-      credentials : "include",
-      body : JSON.stringify(reqData)
-    })
-
-    const data   : { message : string, newDate ?: string } = await res.json();
-
-    if (res.status == 200) {
-      const imgElement = document.querySelector(`img[data-id='${photoID}']`) as HTMLImageElement;
-      imgElement.dataset.date = data.newDate;
-      updateModalUI(extractPhotoData(imgElement));
-      renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, true);
-    } else {
-      renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement,false, data.message);
-    }
-  } catch (error) {
-    console.error("Error PATCH /photoDate")
-  }
 }
 
 /**
  * Wartet, bis der entsprechende Button ein click-event auslöst und ruft dann {@link handleEditPhotoDate} mit dem extrahiertem Fotodatum auf.<br>
  */
 function editDateListener() {
-  document.addEventListener("DOMContentLoaded", () => {
-    (document.querySelector("#submit-edit-date") as HTMLButtonElement).addEventListener("click", async() => {
-      await handleEditPhotoDate((document.querySelector("#edit-date") as HTMLInputElement).value);
+    document.addEventListener("DOMContentLoaded", () => {
+        (document.querySelector("#submit-edit-date") as HTMLButtonElement).addEventListener("click", async () => {
+            await handleEditPhotoDate((document.querySelector("#edit-date") as HTMLInputElement).value);
+        })
     })
-  })
 }
+
 editDateListener();
 
 /**
  * Wartet, bis der entsprechende Button zum Löschen eines Fotos ein click-event auslöst und ruft mit der extrahierten photoID {@link handlePhotoDelete} auf
  */
 function editDelPhotoBtnListener() {
-  (document.querySelector("#del-photo-btn") as HTMLButtonElement).addEventListener("click", async () => {
-    await handlePhotoDelete((document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string);
-  })
+    (document.querySelector("#del-photo-btn") as HTMLButtonElement).addEventListener("click", async () => {
+        await handlePhotoDelete((document.querySelector("#modal-img") as HTMLImageElement).dataset.id as string);
+    })
 }
+
 editDelPhotoBtnListener();
 
 /**
  * DELETE /img/:photoID
  * @param photoID Die ID des Fotos
  */
-async function handlePhotoDelete(photoID : string) {
-  try {
-    const res = await fetch(`http://localhost:8080/img/${photoID}`, {
-      method : "DELETE",
-      credentials : "include"
-    })
+async function handlePhotoDelete(photoID: string) {
+    try {
+        const res = await fetch(`http://localhost:8080/img/${photoID}`, {
+            method: "DELETE",
+            credentials: "include"
+        })
 
-    if (res.status == 204) {
-      renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, true);
-      await fetchPhotos()
-      window.location.reload();
-    } else {
-      const data : { message : string } = await res.json();
-      console.log(data.message);
-      renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, false, data.message);
+        if (res.status == 204) {
+            renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, true);
+            await fetchPhotos()
+            window.location.reload();
+        } else {
+            const data: { message: string } = await res.json();
+            console.log(data.message);
+            renderError(document.querySelector("#error-edit-photo-container") as HTMLDivElement, false, data.message);
+        }
+    } catch (err) {
+        console.log(err);
     }
-  } catch(err) {
-    console.log(err);
-  }
 }
 
 //Don't allow Dates that are in the future for Image Date of creation
@@ -648,38 +624,37 @@ const addPhotoDate = document.getElementById("addPhotoDate") as HTMLInputElement
 let today = new Date().toISOString().split("T")[0];
 addPhotoDate.setAttribute("max", today);
 
-function addPhoto(){
-  const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
-  addPhotoSubmit.addEventListener("click", async (evt: MouseEvent)=> {
-    const photoName = (document.getElementById("addPhotoName")as HTMLInputElement).value;
-    const photoDate = (document.getElementById("addPhotoDate") as HTMLInputElement).value;
-    const photoData =((document.getElementById("photoUploadBtn") as HTMLInputElement).files as FileList);
-    const formData = new FormData();
+function addPhoto() {
+    const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
+    addPhotoSubmit.addEventListener("click", async (evt: MouseEvent) => {
+        const photoName = (document.getElementById("addPhotoName") as HTMLInputElement).value;
+        const photoDate = (document.getElementById("addPhotoDate") as HTMLInputElement).value;
+        const photoData = ((document.getElementById("photoUploadBtn") as HTMLInputElement).files as FileList);
+        const formData = new FormData();
 
-    formData.append("title", photoName);
-    formData.append("taken", photoDate);
-    formData.append("photo", photoData[0]);
+        formData.append("title", photoName);
+        formData.append("taken", photoDate);
+        formData.append("photo", photoData[0]);
 
-    try {
-      const res: Response = await fetch("http://localhost:8080/photos", {
-        method: "POST",
-        credentials: "include",
-        headers: {},
-        body: formData
-      });
-      const data : { message : string } = await res.json();
+        try {
+            const res: Response = await fetch("http://localhost:8080/photos", {
+                method: "POST",
+                credentials: "include",
+                headers: {},
+                body: formData
+            });
+            const data: { message: string } = await res.json();
 
-      if (res.status == 201) {
-        window.location.reload();
-        renderError(document.querySelector("#error-add-photo-container") as HTMLDivElement, true );
-      } else {
-        renderError(document.querySelector("#error-add-photo-container") as HTMLDivElement, false, data.message);
-      }
-    }
-    catch (error){
-      console.log("ERROR at POST /photos");
-    }
-  });
+            if (res.status == 201) {
+                window.location.reload();
+                renderError(document.querySelector("#error-add-photo-container") as HTMLDivElement, true);
+            } else {
+                renderError(document.querySelector("#error-add-photo-container") as HTMLDivElement, false, data.message);
+            }
+        } catch (error) {
+            console.log("ERROR at POST /photos");
+        }
+    });
 }
 
 addPhoto();
@@ -690,9 +665,9 @@ addPhoto();
  * Besonderheit: tags als optionaler kommaseparierter String
  */
 interface Album {
-  id : number,
-  title : string,
-  tags ?: string
+    id: number,
+    title: string,
+    tags?: string
 }
 
 /**
@@ -700,31 +675,38 @@ interface Album {
  * Sendet Daten zur Erstellung eines Albums an den Server
  * Lädt die Seite neu wenn Album erfolgreich erstellt wurde
  */
-function addAlbum(){
-  const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;
-  addAlbumSubmit.addEventListener("click", async ()=> {
-    try {
-      const albumName = (document.getElementById("addAlbumName")as HTMLInputElement).value;
+function addAlbum() {
+    const addAlbumSubmit = document.getElementById("addAlbumSubmit") as HTMLButtonElement;
+    addAlbumSubmit.addEventListener("click", async () => {
+        try {
+            const albumName = (document.getElementById("addAlbumName") as HTMLInputElement).value;
 
-      const reqData = {
-        title : albumName
-      };
-      const res: Response = await fetch("http://localhost:8080/albums", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(reqData),
-      });
-      if (res.status == 201) {
-        window.location.reload();
-      }
-    } catch(error){
-      console.log("ERROR at POST /Albums")
-    }
-  });
+            const reqData = {
+                title: albumName
+            };
+            const res: Response = await fetch("http://localhost:8080/albums", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(reqData),
+            });
+
+            const errorContainer = document.querySelector("#error-add-album-container") as HTMLDivElement;
+            if (res.status == 201) {
+                renderError(errorContainer, true);
+                window.location.reload();
+            } else {
+                const data: { message: string } = await res.json();
+                renderError(errorContainer, false, data.message);
+            }
+        } catch (error) {
+            console.log("ERROR at POST /Albums", error);
+        }
+    });
 }
+
 addAlbum()
 
 
@@ -733,12 +715,13 @@ addAlbum()
  * Gebe den Wert des Input-Feldes als Suchparameter an die entsprechende Funktion, die die http-Anfrage tätigt {@link fetchAlbums}
  */
 function searchAlbums() {
-  (document.querySelector("#searchAlbums") as HTMLFormElement).addEventListener("submit", async(evt : SubmitEvent) => {
-    evt.preventDefault();
-    const query = (document.querySelector("#searchAlbumsQuery") as HTMLInputElement).value;
-    await fetchAlbums(query);
-  })
+    (document.querySelector("#searchAlbums") as HTMLFormElement).addEventListener("submit", async (evt: SubmitEvent) => {
+        evt.preventDefault();
+        const query = (document.querySelector("#searchAlbumsQuery") as HTMLInputElement).value;
+        await fetchAlbums(query);
+    })
 }
+
 searchAlbums();
 
 
@@ -747,23 +730,23 @@ searchAlbums();
  * Optional mit Suchparameter <br>
  */
 async function fetchAlbums(searchParam ?: string) {
-  try {
-    const res : Response = await fetch("http://localhost:8080/albums?" + (searchParam ? new URLSearchParams({searchParam : searchParam}).toString() : ""), {
-     method : "GET",
-     credentials : "include"
-    });
+    try {
+        const res: Response = await fetch("http://localhost:8080/albums?" + (searchParam ? new URLSearchParams({searchParam: searchParam}).toString() : ""), {
+            method: "GET",
+            credentials: "include"
+        });
 
-    if (res.ok) {
-      const data : { albums : Album[] } = await res.json();
-      renderAlbums(data.albums);
-    } else {
-      const data : { message : string } = await res.json();
-      console.log(res.status + " " + data.message);
+        if (res.ok) {
+            const data: { albums: Album[] } = await res.json();
+            renderAlbums(data.albums);
+        } else {
+            const data: { message: string } = await res.json();
+            console.log(res.status + " " + data.message);
+        }
+
+    } catch (error) {
+        console.error(error);
     }
-
-  } catch (error) {
-    console.error(error);
-  }
 }
 
 
@@ -777,24 +760,24 @@ async function fetchAlbums(searchParam ?: string) {
  * 6. Rufe {@link renderAlbumsEditModal} und {@link attachDelAlbumListener } auf
  * @param albums Ein Array vom Typ Album {@link Album}
  */
-function renderAlbums(albums : Album[]) {
-  const displayAlbumsContainer = document.querySelector("#display-albums") as  HTMLUListElement;
-  // Es existiert immer der Reiter Alle Fotos mit der id = "alleFotos"
-  displayAlbumsContainer.innerHTML = `
+function renderAlbums(albums: Album[]) {
+    const displayAlbumsContainer = document.querySelector("#display-albums") as HTMLUListElement;
+    // Es existiert immer der Reiter Alle Fotos mit der id = "alleFotos"
+    displayAlbumsContainer.innerHTML = `
       <li class="list-group-item d-flex align-items-center">
         <button id="alleFotos" class="btn w-100 d-flex justify-content-start">Alle Fotos</button>
       </li>
   `;
 
-  albums.forEach(album => {
-    const {id, title, tags } = album; // DESTRUCTURING
-    const albumChild = document.createElement("li") as HTMLElement;
-    albumChild.setAttribute("data-album-id", id.toString()); // Insert album id in parent container
-    if (typeof tags == "string") { // Wenn das Album Tags besitzt
-      albumChild.setAttribute("data-tags", tags); // Füge tags als kommaseparierter String in das parent Element ein
-    }
-    albumChild.className = "list-group-item d-flex align-items-center";
-    albumChild.innerHTML = `
+    albums.forEach(album => {
+        const {id, title, tags} = album; // DESTRUCTURING
+        const albumChild = document.createElement("li") as HTMLElement;
+        albumChild.setAttribute("data-album-id", id.toString()); // Insert album id in parent container
+        if (typeof tags == "string") { // Wenn das Album Tags besitzt
+            albumChild.setAttribute("data-tags", tags); // Füge tags als kommaseparierter String in das parent Element ein
+        }
+        albumChild.className = "list-group-item d-flex align-items-center";
+        albumChild.innerHTML = `
       <button class="btn w-75 d-flex justify-content-start album-title">${title}</button> <!-- Albumtitel hier einfügen -->
       <span>
           <!-- Edit Button - OPENS EDIT MODAL ALBUM -->
@@ -813,12 +796,12 @@ function renderAlbums(albums : Album[]) {
           </button>
       </span>
     `
-    displayAlbumsContainer.appendChild(albumChild);
-  })
-  showAllPhotos();
-  showPhotosFromAlbum();
-  attachClickListenerEditAlbum();
-  attachDelAlbumListener();
+        displayAlbumsContainer.appendChild(albumChild);
+    })
+    showAllPhotos();
+    showPhotosFromAlbum();
+    attachClickListenerEditAlbum();
+    attachDelAlbumListener();
 }
 
 /**
@@ -827,13 +810,13 @@ function renderAlbums(albums : Album[]) {
  * Rufe mit der selektierten Album ID die Funktion auf, die die http-Anfrage an den Server stellt, ein Album zu löschen {@link handleAlbumDelete }
  */
 function attachDelAlbumListener() {
-  (document.querySelectorAll(".del-btns") as NodeListOf<HTMLButtonElement>).forEach(delBtn => {
-    delBtn.addEventListener("click", async() => {
-      const closetLi = delBtn.closest("li") as HTMLLIElement;
-      const albumID = closetLi.getAttribute("data-album-id") as string;
-      await handleAlbumDelete(albumID);
-    })
-  });
+    (document.querySelectorAll(".del-btns") as NodeListOf<HTMLButtonElement>).forEach(delBtn => {
+        delBtn.addEventListener("click", async () => {
+            const closetLi = delBtn.closest("li") as HTMLLIElement;
+            const albumID = closetLi.getAttribute("data-album-id") as string;
+            await handleAlbumDelete(albumID);
+        })
+    });
 }
 
 /**
@@ -844,23 +827,23 @@ function attachDelAlbumListener() {
  *
  * @param albumID Die ID des Albums, die als Pfadparameter dem http-Req übergeben wird.
  */
-async function handleAlbumDelete(albumID : string) {
-  try {
-    const res = await fetch("http://localhost:8080/albums/" + albumID, {
-      method : "DELETE",
-      credentials : "include"
-    })
+async function handleAlbumDelete(albumID: string) {
+    try {
+        const res = await fetch("http://localhost:8080/albums/" + albumID, {
+            method: "DELETE",
+            credentials: "include"
+        })
 
-    if (res.status == 204) {
-      await fetchAlbums();
-    } else {
-      const data : { message : string } = await res.json();
-      console.log(res.status + " " + data.message);
+        if (res.status == 204) {
+            await fetchAlbums();
+        } else {
+            const data: { message: string } = await res.json();
+            console.log(res.status + " " + data.message);
+        }
+
+    } catch (err) {
+        console.log(err);
     }
-
-  } catch(err) {
-    console.log(err);
-  }
 }
 
 /**
@@ -869,14 +852,15 @@ async function handleAlbumDelete(albumID : string) {
  * Ruft mit dem neuen Titel und der albumID {@link handlerPatchAlbumsTitle} auf.
  */
 function patchAlbumsTitle() {
-  const submitEditAlbumNameBtn = document.querySelector("#submit-edit-album-name") as HTMLButtonElement;
-  const editAlbumNameInput = document.querySelector("#edit-album-name") as HTMLInputElement;
-  submitEditAlbumNameBtn.addEventListener("click", async () => {
-    const title = editAlbumNameInput.value;
-    const albumID = (document.querySelector("#editAlbumModal") as HTMLDivElement).getAttribute("data-album-id") as string;
-    await handlerPatchAlbumsTitle(title, parseInt(albumID));
-  })
+    const submitEditAlbumNameBtn = document.querySelector("#submit-edit-album-name") as HTMLButtonElement;
+    const editAlbumNameInput = document.querySelector("#edit-album-name") as HTMLInputElement;
+    submitEditAlbumNameBtn.addEventListener("click", async () => {
+        const title = editAlbumNameInput.value;
+        const albumID = (document.querySelector("#editAlbumModal") as HTMLDivElement).getAttribute("data-album-id") as string;
+        await handlerPatchAlbumsTitle(title, parseInt(albumID));
+    })
 }
+
 patchAlbumsTitle();
 
 /**
@@ -885,65 +869,70 @@ patchAlbumsTitle();
  * @param title Der neue Titel des Albums
  * @param albumID Die albumID des Albums
  */
-async function handlerPatchAlbumsTitle(title : string, albumID : number) {
-  try {
-    const res = await fetch("http://localhost:8080/albums/albumsTitle", {
-      method : "PATCH",
-      credentials : "include",
-      body : JSON.stringify({title : title, albumID : albumID})
-    })
+async function handlerPatchAlbumsTitle(title: string, albumID: number) {
+    try {
+        const res = await fetch("http://localhost:8080/albums/albumsTitle", {
+            method: "PATCH",
+            credentials: "include",
+            body: JSON.stringify({title: title, albumID: albumID})
+        })
 
-    if (res.ok) {
-      const data : { message : string, albumTitle : string } = await res.json();
-      console.log(`
-      ${res.status}
-      ${data.message}
-      ${data.albumTitle}
-      `);
-      (document.querySelector("#album-title") as HTMLHeadingElement).textContent = data.albumTitle; // Aktualisiere das Modal, sodass man nicht das Modal erst schließe und wieder öffnen kann
-      await fetchAlbums();
-    } else {
-      const data : { message : string } = await res.json();
-      console.log(res.status + " " + data.message);
+        const errorContainer = document.querySelector("#error-edit-album-container") as HTMLDivElement;
+        if (res.ok) {
+            renderError(errorContainer, true);
+            const data: { message: string, albumTitle: string } = await res.json();
+            console.log(`
+                ${res.status}
+                ${data.message}
+                ${data.albumTitle}
+            `);
+            (document.querySelector("#album-title") as HTMLHeadingElement).textContent = data.albumTitle; // Aktualisiere das Modal, sodass man nicht das Modal erst schließe und wieder öffnen kann
+            await fetchAlbums();
+        } else {
+            const data: { message: string } = await res.json();
+            console.log("called");
+            renderError(errorContainer, false, data.message);
+
+            console.log(res.status + " " + data.message);
+        }
+
+    } catch (err) {
+        console.log(err);
     }
-
-  } catch(err) {
-    console.log(err);
-  }
 }
 
 /**
  * Füge ein Event-Listener zu allen Edit Album Button hinzu, der auf ein Klick-Event reagiert und {@link extractAlbumData} mit dem entsprechenden geklickten Button aufruft.
  */
 function attachClickListenerEditAlbum() {
-  const editBtns = document.querySelectorAll(".edit-btns") as NodeListOf<HTMLButtonElement>;
-  editBtns.forEach(editBtn => {
-    const btn = editBtn;
-    editBtn.addEventListener("click", () => extractAlbumData(btn));
-  })
+    const editBtns = document.querySelectorAll(".edit-btns") as NodeListOf<HTMLButtonElement>;
+    editBtns.forEach(editBtn => {
+        const btn = editBtn;
+        editBtn.addEventListener("click", () => extractAlbumData(btn));
+    })
 }
 
 /**
  * Selektiere die Album-ID, den Titel und die Tags als kommaseparierter String aus dem entsprechenden Album, welches im Modal gerendert werden soll {@link renderAlbumsEditModal}
  * @param editBtn Der geklickte Button des Albums, welches im Modal bearbeitet werden soll
  */
-function extractAlbumData(editBtn : HTMLButtonElement) {
-  const closestLiElement = editBtn.closest("li") as HTMLElement;
-  const data_album_id = closestLiElement.getAttribute("data-album-id") as string;
-  const title = (closestLiElement.querySelector(".album-title") as HTMLButtonElement).textContent as string;
-  const data_tags = closestLiElement.hasAttribute("data-tags") ? closestLiElement.getAttribute("data-tags") as string : undefined;
-  renderAlbumsEditModal(data_album_id, title, data_tags);
+function extractAlbumData(editBtn: HTMLButtonElement) {
+    const closestLiElement = editBtn.closest("li") as HTMLElement;
+    const data_album_id = closestLiElement.getAttribute("data-album-id") as string;
+    const title = (closestLiElement.querySelector(".album-title") as HTMLButtonElement).textContent as string;
+    const data_tags = closestLiElement.hasAttribute("data-tags") ? closestLiElement.getAttribute("data-tags") as string : undefined;
+    renderAlbumsEditModal(data_album_id, title, data_tags);
 }
 
 /**
  * Setze die Eingabefelder des Modals zurück.
  */
 function resetEditAlbumsInputFields() {
-  const editAlbumNameInput = document.querySelector("#edit-album-name") as HTMLInputElement;
-  editAlbumNameInput.value = "";
+    const editAlbumNameInput = document.querySelector("#edit-album-name") as HTMLInputElement;
+    editAlbumNameInput.value = "";
 
-  const addTagToAlbumInput = document.querySelector("#addTagToAlbumInput") as HTMLInputElement;
-  addTagToAlbumInput.value = "";
+    const addTagToAlbumInput = document.querySelector("#addTagToAlbumInput") as HTMLInputElement;
+    addTagToAlbumInput.value = "";
 }
 
 /**
@@ -951,37 +940,37 @@ function resetEditAlbumsInputFields() {
  * Bindet die Album-ID und die Tags des Albums als kommaseparierter String an den Container des Modals
  * Rendert die Tags des Albums {@link renderAlbumsTags}
  */
-function renderAlbumsEditModal(data_album_id : string, title : string, data_tags : string | undefined) {
-  resetEditAlbumsInputFields();
+function renderAlbumsEditModal(data_album_id: string, title: string, data_tags: string | undefined) {
+    resetEditAlbumsInputFields();
 
-  const editAlbumModalContainer = document.querySelector("#editAlbumModal") as HTMLDivElement;
-  editAlbumModalContainer.setAttribute("data-album-id", data_album_id);
-  (document.querySelector("#album-title") as HTMLElement).textContent = title;
+    const editAlbumModalContainer = document.querySelector("#editAlbumModal") as HTMLDivElement;
+    editAlbumModalContainer.setAttribute("data-album-id", data_album_id);
+    (document.querySelector("#album-title") as HTMLElement).textContent = title;
 
-  renderAlbumsTags(data_tags);
+    renderAlbumsTags(data_tags);
 }
 
 /**
  * Rendert die Tags des Albums im Modal und ruft im Anschluss {@link attachDelTagFromAlbumListener} auf
  * @param data_tags
  */
-function renderAlbumsTags(data_tags : string | undefined) {
-  const tagsContainer = document.querySelector("#album-tags .row") as HTMLDivElement;
-  tagsContainer.innerHTML = "";
-  data_tags?.split(", ").forEach(tag => {
-    const tagContainer = document.createElement("div");
-    tagContainer.className = "col";
-    tagContainer.innerHTML = `
+function renderAlbumsTags(data_tags: string | undefined) {
+    const tagsContainer = document.querySelector("#album-tags .row") as HTMLDivElement;
+    tagsContainer.innerHTML = "";
+    data_tags?.split(", ").forEach(tag => {
+        const tagContainer = document.createElement("div");
+        tagContainer.className = "col";
+        tagContainer.innerHTML = `
         <p class="badge bg-light text-dark">
             ${tag}
             <button class="btn btn-close del-tag-album-btn" aria-label="Tag entfernen"> <!-- KONVENTION: Jeder Button, um den Tag zu entfernen hat die js Targetklasse del-tag-album-btn -->
             </button>
         </p>
       `
-    tagsContainer.append(tagContainer);
-  })
+        tagsContainer.append(tagContainer);
+    })
 
-  attachDelTagFromAlbumListener();
+    attachDelTagFromAlbumListener();
 }
 
 /**
@@ -989,14 +978,14 @@ function renderAlbumsTags(data_tags : string | undefined) {
  * Damit wird {@link handleTagDeleteFromAlbum} aufgerufen
  */
 function attachDelTagFromAlbumListener() {
-  const delTagFromAlbumBtns = document.querySelectorAll(".del-tag-album-btn") as  NodeListOf<HTMLButtonElement>;
-  delTagFromAlbumBtns.forEach(delTagFromAlbumBtn => {
-    delTagFromAlbumBtn.addEventListener("click", async () => {
-      const albumID = (delTagFromAlbumBtn.closest("#editAlbumModal") as HTMLDivElement).getAttribute("data-album-id") as string;
-      const tag = (delTagFromAlbumBtn.closest("p") as HTMLParagraphElement).textContent as string;
-      await handleTagDeleteFromAlbum(tag.trim(), parseInt(albumID));
+    const delTagFromAlbumBtns = document.querySelectorAll(".del-tag-album-btn") as NodeListOf<HTMLButtonElement>;
+    delTagFromAlbumBtns.forEach(delTagFromAlbumBtn => {
+        delTagFromAlbumBtn.addEventListener("click", async () => {
+            const albumID = (delTagFromAlbumBtn.closest("#editAlbumModal") as HTMLDivElement).getAttribute("data-album-id") as string;
+            const tag = (delTagFromAlbumBtn.closest("p") as HTMLParagraphElement).textContent as string;
+            await handleTagDeleteFromAlbum(tag.trim(), parseInt(albumID));
+        })
     })
-  })
 }
 
 /**
@@ -1004,28 +993,28 @@ function attachDelTagFromAlbumListener() {
  * @param tag Der Tagname wird im JSON übertragen
  * @param albumID Die Album-ID wird ebenfalls im JSON übertragen
  */
-async function handleTagDeleteFromAlbum(tag : string, albumID : number) {
-  try {
+async function handleTagDeleteFromAlbum(tag: string, albumID: number) {
+    try {
 
-    const res = await fetch("http://localhost:8080/albums/tag", {
-      method : "DELETE",
-      credentials : "include",
-      body : JSON.stringify({ tag : tag, albumID : albumID})
-    })
+        const res = await fetch("http://localhost:8080/albums/tag", {
+            method: "DELETE",
+            credentials: "include",
+            body: JSON.stringify({tag: tag, albumID: albumID})
+        })
 
-    if (res.status == 204) {
-      await fetchAlbums();
-      const albumLiElement = document.querySelector(`#albumOffcans li[data-album-id='${albumID}']`) as  HTMLLIElement;
-      const tags = albumLiElement.hasAttribute("data-tags") ? albumLiElement.getAttribute("data-tags") as string : undefined;
-      renderAlbumsTags(tags);
-    } else {
-      const data : {message : string } = await res.json();
-      console.log(`${res.status, data.message}`);
+        if (res.status == 204) {
+            await fetchAlbums();
+            const albumLiElement = document.querySelector(`#albumOffcans li[data-album-id='${albumID}']`) as HTMLLIElement;
+            const tags = albumLiElement.hasAttribute("data-tags") ? albumLiElement.getAttribute("data-tags") as string : undefined;
+            renderAlbumsTags(tags);
+        } else {
+            const data: { message: string } = await res.json();
+            console.log(`${res.status, data.message}`);
+        }
+
+    } catch (err) {
+        console.log(err);
     }
-
-  } catch (err) {
-    console.log(err);
-  }
 }
 
 
@@ -1034,13 +1023,14 @@ async function handleTagDeleteFromAlbum(tag : string, albumID : number) {
  * Wenn der Button gedrückt wird, wird der Name des Tags sowie die Album-ID des Modalcontainers extrahiert und {@link handlerAddTagToAlbum} aufgerufen
  */
 function addTagToAlbum() {
-  const submitAddTagToAlbumBtn = document.getElementById("submitAddTagToAlbumInput") as HTMLButtonElement;
-  submitAddTagToAlbumBtn.addEventListener("click", async () => {
-    const tag = (document.getElementById("addTagToAlbumInput") as HTMLInputElement).value;
-    const albumID = (document.querySelector("#editAlbumModal") as HTMLDivElement).getAttribute("data-album-id") as string;
-    await handlerAddTagToAlbum(tag, parseInt(albumID));
-  })
+    const submitAddTagToAlbumBtn = document.getElementById("submitAddTagToAlbumInput") as HTMLButtonElement;
+    submitAddTagToAlbumBtn.addEventListener("click", async () => {
+        const tag = (document.getElementById("addTagToAlbumInput") as HTMLInputElement).value;
+        const albumID = (document.querySelector("#editAlbumModal") as HTMLDivElement).getAttribute("data-album-id") as string;
+        await handlerAddTagToAlbum(tag, parseInt(albumID));
+    })
 }
+
 addTagToAlbum();
 
 /**
@@ -1048,31 +1038,34 @@ addTagToAlbum();
  * @param tag Wird als JSON im Body übertragen
  * @param albumID Wird als JSON im Body übertragen
  */
-async function handlerAddTagToAlbum(tag : string, albumID : number) {
-  try {
-    const res = await fetch("http://localhost:8080/albums/tag", {
-      method : "POST",
-      credentials : "include",
-      body : JSON.stringify({tag : tag, albumID : albumID})
-    })
+async function handlerAddTagToAlbum(tag: string, albumID: number) {
+    try {
+        const res = await fetch("http://localhost:8080/albums/tag", {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify({tag: tag, albumID: albumID})
+        })
 
-    if (res.status == 201) {
-      const data : { message : string } = await res.json();
-      console.log(res.status + " " + data.message);
-      await fetchAlbums();
+        const errorContainer = document.querySelector("#error-edit-album-container") as HTMLDivElement;
+        if (res.status == 201) {
+            renderError(errorContainer, true);
+            const data: { message: string } = await res.json();
+            console.log(res.status + " " + data.message);
+            await fetchAlbums();
 
-      const albumLiElement = document.querySelector(`#albumOffcans li[data-album-id='${albumID}']`) as  HTMLLIElement;
+            const albumLiElement = document.querySelector(`#albumOffcans li[data-album-id='${albumID}']`) as HTMLLIElement;
 
-      renderAlbumsTags(albumLiElement.getAttribute("data-tags") as string || undefined);
+            renderAlbumsTags(albumLiElement.getAttribute("data-tags") as string || undefined);
 
-    } else {
-      const data : { message : string } = await res.json();
-      console.log(res.status + " " + data.message);
+        } else {
+            const data: { message: string } = await res.json();
+            renderError(errorContainer, false, data.message);
+            console.log(res.status + " " + data.message);
+        }
+
+    } catch (err) {
+        console.log(err);
     }
-
-  } catch(err) {
-    console.log(err);
-  }
 }
 
 /**
@@ -1080,20 +1073,20 @@ async function handlerAddTagToAlbum(tag : string, albumID : number) {
  * {@link fetchPhotos}
  */
 function showAllPhotos() {
-  (document.querySelector("#alleFotos") as HTMLButtonElement).addEventListener("click", () =>  fetchPhotos());
+    (document.querySelector("#alleFotos") as HTMLButtonElement).addEventListener("click", () => fetchPhotos());
 }
 
 /**
  * Füge jedem Albumname (Button) ein Klick-Event-Listener hinzu, der die zugehörige Album-ID selektiert und diese als Argument an {@link fetchPhotosFromAlbum} übergibt.
  */
 function showPhotosFromAlbum() {
-  const albumsBtns = document.querySelectorAll(".album-title") as NodeListOf<HTMLButtonElement>;
-  albumsBtns.forEach(albumBtn => {
-    albumBtn.addEventListener("click", async() => {
-      const albumID = (albumBtn.closest("li") as HTMLElement).getAttribute("data-album-id") as string;
-      await fetchPhotosFromAlbum(parseInt(albumID));
+    const albumsBtns = document.querySelectorAll(".album-title") as NodeListOf<HTMLButtonElement>;
+    albumsBtns.forEach(albumBtn => {
+        albumBtn.addEventListener("click", async () => {
+            const albumID = (albumBtn.closest("li") as HTMLElement).getAttribute("data-album-id") as string;
+            await fetchPhotosFromAlbum(parseInt(albumID));
+        })
     })
-  })
 }
 
 /**
@@ -1101,115 +1094,114 @@ function showPhotosFromAlbum() {
  *
  * @param albumID Die ID des Albums aus welchem die Fotos angezeigt werden sollen
  */
-async function fetchPhotosFromAlbum(albumID : number) {
-  try {
-    const res : Response = await fetch(`/photos/${albumID}`, {
-      method : "GET",
-      credentials : "include"
-    });
-
-    if (!res.ok) {
-      const data : { message : string } = await res.json();
-      console.log(res.status + " " + data.message);
-    }
-
-    const data : { photos : Photo[] } = await res.json();
-
-    clearImages(document.querySelector("#main-photos-container .row") as HTMLDivElement);
-    data.photos.forEach(photo  => renderPhotos(photo));
-
-  } catch (error) {
-    console.error("Error GET /photos/:albumID", error);
-  }
-}
-
-
-
-function createAlbumList(albums : {id : number, title : string, contains : boolean}[]): void {
-  const albumMenu = document.getElementById('albumMenu') as HTMLUListElement;
-  albumMenu.innerHTML = ''; // Clear existing items
-
-  albums.forEach(album => {
-    const listItem = document.createElement('li');
-    const formCheck = document.createElement('div');
-    formCheck.className = 'form-check form-switch';
-
-    const input = document.createElement('input');
-    input.className = 'form-check-input';
-    input.type = 'checkbox';
-    input.id = `switch-${album.id}`;
-    input.checked = album.contains;
-    input.addEventListener('change', (event ) => handleSwitchChange(event, album.id));
-
-    const label = document.createElement('label');
-    label.className = 'form-check-label';
-    label.htmlFor = input.id;
-    label.textContent = `In ${album.title}`;
-
-    formCheck.appendChild(input);
-    formCheck.appendChild(label);
-    listItem.appendChild(formCheck);
-
-    albumMenu.appendChild(listItem);
-  });
-}
-
-async function photoIsInAlbum(photoID : number) {
-  const res = await fetch("http://localhost:8080/albums/contains/"+ photoID, {
-    method : "GET",
-    credentials : "include",
-  })
-
-  if (res.ok) {
-    const data: { id: number, title: string, contains: boolean }[] = await res.json();
-    return data;
-  } else {
-    const data : { message : string } = await res.json();
-    console.log(res.status + " " + data.message);
-    return data;
-  }
-}
-
-
-async function handleSwitchChange(evt : Event, albumID : number) {
-  const input = evt.target as HTMLInputElement;
-  const photoID = (document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id") as string;
-
-  const reqData = {
-    photoID : photoID,
-    albumID : albumID
-  }
-
-  if (input.checked) {
-
+async function fetchPhotosFromAlbum(albumID: number) {
     try {
-      const res = await fetch("http://localhost:8080/albums/photo", {
-        method : "POST",
-        credentials : "include",
-        body : JSON.stringify(reqData)
-      })
+        const res: Response = await fetch(`/photos/${albumID}`, {
+            method: "GET",
+            credentials: "include"
+        });
 
-      if (res.status != 201) {
-        const data : { messsage : string } = await res.json()
-        console.log(res.status + " " + data.messsage);
-      }
+        if (!res.ok) {
+            const data: { message: string } = await res.json();
+            console.log(res.status + " " + data.message);
+        }
 
-    } catch(err) {
-      console.log(err);
+        const data: { photos: Photo[] } = await res.json();
+
+        clearImages(document.querySelector("#main-photos-container .row") as HTMLDivElement);
+        data.photos.forEach(photo => renderPhotos(photo));
+
+    } catch (error) {
+        console.error("Error GET /photos/:albumID", error);
     }
+}
 
-  } else {
-    const res = await fetch("http://localhost:8080/albums/photo", {
-      method : "DELETE",
-      credentials : "include",
-      body : JSON.stringify(reqData)
+
+function createAlbumList(albums: { id: number, title: string, contains: boolean }[]): void {
+    const albumMenu = document.getElementById('albumMenu') as HTMLUListElement;
+    albumMenu.innerHTML = ''; // Clear existing items
+
+    albums.forEach(album => {
+        const listItem = document.createElement('li');
+        const formCheck = document.createElement('div');
+        formCheck.className = 'form-check form-switch';
+
+        const input = document.createElement('input');
+        input.className = 'form-check-input';
+        input.type = 'checkbox';
+        input.id = `switch-${album.id}`;
+        input.checked = album.contains;
+        input.addEventListener('change', (event) => handleSwitchChange(event, album.id));
+
+        const label = document.createElement('label');
+        label.className = 'form-check-label';
+        label.htmlFor = input.id;
+        label.textContent = `In ${album.title}`;
+
+        formCheck.appendChild(input);
+        formCheck.appendChild(label);
+        listItem.appendChild(formCheck);
+
+        albumMenu.appendChild(listItem);
+    });
+}
+
+async function photoIsInAlbum(photoID: number) {
+    const res = await fetch("http://localhost:8080/albums/contains/" + photoID, {
+        method: "GET",
+        credentials: "include",
     })
 
-    if (res.status != 204) {
-      const data : { message : string } = await res.json();
-      console.log(res.status + " " + data.message);
+    if (res.ok) {
+        const data: { id: number, title: string, contains: boolean }[] = await res.json();
+        return data;
+    } else {
+        const data: { message: string } = await res.json();
+        console.log(res.status + " " + data.message);
+        return data;
     }
-  }
+}
+
+
+async function handleSwitchChange(evt: Event, albumID: number) {
+    const input = evt.target as HTMLInputElement;
+    const photoID = (document.querySelector("#modal-img") as HTMLImageElement).getAttribute("data-id") as string;
+
+    const reqData = {
+        photoID: photoID,
+        albumID: albumID
+    }
+
+    if (input.checked) {
+
+        try {
+            const res = await fetch("http://localhost:8080/albums/photo", {
+                method: "POST",
+                credentials: "include",
+                body: JSON.stringify(reqData)
+            })
+
+            if (res.status != 201) {
+                const data: { messsage: string } = await res.json()
+                console.log(res.status + " " + data.messsage);
+            }
+
+        } catch (err) {
+            console.log(err);
+        }
+
+    } else {
+        const res = await fetch("http://localhost:8080/albums/photo", {
+            method: "DELETE",
+            credentials: "include",
+            body: JSON.stringify(reqData)
+        })
+
+        if (res.status != 204) {
+            const data: { message: string } = await res.json();
+            console.log(res.status + " " + data.message);
+        }
+    }
 
 }
 
