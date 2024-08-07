@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,14 +7,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-function initializePage() {
+// @ts-ignore
+import { renderError, togglePasswordVisibility } from "/helper.js";
+togglePasswordVisibility();
+function initializeUserPage() {
     return __awaiter(this, void 0, void 0, function* () {
         yield fetchUsers();
         addUserDeleteListener();
         giveUserIDToModal();
     });
 }
-initializePage();
+initializeUserPage();
 function searchUser() {
     const queryUsernameForm = document.querySelector("#queryUsername");
     queryUsernameForm.addEventListener("submit", (evt) => __awaiter(this, void 0, void 0, function* () {
@@ -101,11 +103,11 @@ function fetchUserDelete(userID) {
         }
     });
 }
-function resetModalInputs(modal) {
+function resetAddModalInputs() {
     document.querySelector("#field-username").value = "";
     document.querySelector("#field-password").value = "";
 }
-document.querySelector("#open-modal").addEventListener("click", resetModalInputs);
+document.querySelector("#open-modal").addEventListener("click", () => resetAddModalInputs());
 function addUser() {
     const addUserBtn = document.getElementById("addUserBtn");
     addUserBtn.addEventListener("click", (MouseEvent) => __awaiter(this, void 0, void 0, function* () {
@@ -124,8 +126,15 @@ function addUser() {
                 },
                 body: JSON.stringify(reqData),
             });
-            if (res.status == 201)
+            const errorContainer = document.querySelector("#error-add-user-container");
+            if (res.status == 201) {
+                renderError(errorContainer, true);
                 window.location.reload();
+            }
+            else {
+                const data = yield res.json();
+                renderError(errorContainer, false, data.message);
+            }
         }
         catch (error) {
             console.log("ERROR at POST /users");
@@ -174,12 +183,15 @@ function fetchEditPassword(userID, password) {
                 credentials: "include",
                 body: JSON.stringify({ password: password })
             });
-            const data = yield res.json();
+            const errorContainer = document.querySelector("#error-edit-user-container");
             if (res.ok) {
+                renderError(errorContainer, true);
                 window.location.reload();
             }
-            console.log(res.status);
-            console.log(data.message);
+            else {
+                const data = yield res.json();
+                renderError(errorContainer, false, data.message);
+            }
         }
         catch (err) {
             console.error(err);
@@ -194,12 +206,15 @@ function fetchEditUsername(userID, username) {
                 credentials: "include",
                 body: JSON.stringify({ username: username })
             });
-            const data = yield res.json();
+            const errorContainer = document.querySelector("#error-edit-user-container");
             if (res.ok) {
+                renderError(errorContainer, true);
                 window.location.reload();
             }
-            console.log(res.status);
-            console.log(data.message);
+            else {
+                const data = yield res.json();
+                renderError(errorContainer, false, data.message);
+            }
         }
         catch (err) {
             console.error(err);

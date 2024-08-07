@@ -1,4 +1,7 @@
-// TODO: Use of modules ES/CJS, um togglePasswordVisibility zu nutzen
+// @ts-ignore
+import {renderError, togglePasswordVisibility} from "/helper.js";
+togglePasswordVisibility();
+
 interface User {
     id : number
     username : string,
@@ -7,12 +10,12 @@ interface User {
 }
 
 
-async function initializePage() { // FIXME: TS2393: Duplicate function implementation?
+async function initializeUserPage() {
     await fetchUsers();
     addUserDeleteListener();
     giveUserIDToModal();
 }
-initializePage();
+initializeUserPage();
 
 function searchUser() {
     const queryUsernameForm = document.querySelector("#queryUsername") as HTMLFormElement;
@@ -105,11 +108,11 @@ async function fetchUserDelete(userID : number) {
     }
 }
 
-function resetModalInputs(modal : HTMLElement) { // FIXME: TS2393: Duplicate function implementation
+function resetAddModalInputs() {
     (document.querySelector("#field-username") as HTMLInputElement).value = "";
     (document.querySelector("#field-password") as HTMLInputElement).value = "";
 }
-(document.querySelector("#open-modal") as HTMLButtonElement).addEventListener("click", resetModalInputs);
+(document.querySelector("#open-modal") as HTMLButtonElement).addEventListener("click", () => resetAddModalInputs());
 
 function addUser() {
   const addUserBtn = (document.getElementById("addUserBtn") as HTMLButtonElement);
@@ -130,7 +133,16 @@ function addUser() {
         },
         body : JSON.stringify(reqData),
       });
-      if (res.status == 201) window.location.reload();
+
+      const errorContainer = document.querySelector("#error-add-user-container") as HTMLDivElement;
+      if (res.status == 201) {
+          renderError(errorContainer, true);
+          window.location.reload();
+      } else {
+          const data : { message : string } = await res.json();
+          renderError(errorContainer, false, data.message);
+      }
+
     } catch(error){
       console.log("ERROR at POST /users")
     }
@@ -188,14 +200,14 @@ async function fetchEditPassword(userID : number, password : string) {
             body : JSON.stringify({password : password })
         })
 
-        const data : { message : string } = await res.json();
-
+        const errorContainer = document.querySelector("#error-edit-user-container") as HTMLDivElement;
         if (res.ok) {
+            renderError(errorContainer, true);
             window.location.reload();
+        } else {
+            const data : { message : string } = await res.json();
+            renderError(errorContainer, false, data.message);
         }
-
-        console.log(res.status);
-        console.log(data.message);
 
     } catch(err) {
         console.error(err);
@@ -211,14 +223,16 @@ async function fetchEditUsername(userID : number, username : string) {
             body : JSON.stringify({username : username})
         })
 
-        const data : { message : string } = await res.json();
-
+        const errorContainer = document.querySelector("#error-edit-user-container") as HTMLDivElement;
         if (res.ok) {
+            renderError(errorContainer, true);
             window.location.reload();
+        } else {
+            const data : { message : string } = await res.json();
+            renderError(errorContainer, false, data.message);
         }
 
-        console.log(res.status);
-        console.log(data.message);
+
 
     } catch(err) {
         console.error(err);
