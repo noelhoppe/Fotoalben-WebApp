@@ -1,3 +1,141 @@
+# Projektanforderungen
+
+## Projektbeschreibung
+**Erstellen Sie eine Webanwendung, die multiuser-fähig ist und den Nutzern ermöglicht, Fotos zu verwalten und in Fotoalben zu organisieren.**
+
+---
+
+## Technische Anforderungen
+
+| Nr. | Anforderung      | Beschreibung                                                | Erfüllt |
+|-----|------------------|-------------------------------------------------------------|---------|
+| 1   | **Frontend**     | Umsetzung mit HTML, CSS, Bootstrap, Typescript, Fetch-API   | ✅       |
+| 2   | **Backend**      | Implementierung mit Java, Eclipse Vert.x, RESTful-API, JDBC | ✅       |
+| 3   | **Datenhaltung** | Nutzung von MariaDB zur Datenhaltung                        | ✅       |
+
+---
+
+## Anforderungen
+
+### 1. Login
+| Nr. | Anforderung       | Beschreibung                                                                         | Erfüllt |
+|-----|-------------------|--------------------------------------------------------------------------------------|---------|
+| 1.1 | **Loginseite**    | Nutzer kann sich mit Nutzernamen und Passwort anmelden                               | ✅       |
+| 1.2 | **Validierung**   | Validierung der Eingaben und entsprechende Fehlermeldungen bei fehlerhaften Eingaben | ✅       |
+| 1.3 | **Weiterleitung** | Weiterleitung zur Fotoalbumansicht bei erfolgreicher Anmeldung                       | ✅       |
+| 1.4 | **Fehlermeldung** | Anzeige einer Fehlermeldung bei nicht erfolgreicher Anmeldung                        | ✅       |
+| 1.5 | **Logout**        | Nutzer wird nach Logout automatisch zur Loginseite weitergeleitet                    | ✅       |
+
+### 2. Benutzerverwaltung (Rolle Admin)
+| Nr. | Anforderung                   | Beschreibung                                                                                         | Erfüllt |
+|-----|-------------------------------|------------------------------------------------------------------------------------------------------|---------|
+| 2.1 | **Admin-Existenz**            | Ein Admin existiert in der Datenbank und wird über ein DDL-Skript angelegt                           | ✅       |
+| 2.2 | **Nutzerkontenverwaltung**    | Admin kann Nutzerkonten verwalten (Anzeigen, Suchen, Hinzufügen, Bearbeiten, Löschen)                | ✅       |
+| 2.3 | **Einzigartigkeit**           | Nutzername ist eindeutig über alle Benutzer hinweg                                                   | ✅       |
+| 2.4 | **Passwortsicherheit**        | Passwörter werden gehasht in der Datenbank gespeichert                                               | ✅       |
+| 2.5 | **Rollenbeschränkung**        | Es können keine weiteren Admins erstellt werden                                                      | ✅       |
+| 2.6 | **Nutzerkonteninformationen** | Nutzerkonten enthalten mindestens einen Nutzernamen, ein Passwort und eine Rolle (Nutzer oder Admin) | ✅       |
+
+
+### 3. Fotos
+| Nr. | Anforderung            | Beschreibung                                                            | Erfüllt |
+|-----|------------------------|-------------------------------------------------------------------------|---------|
+| 3.1 | **Fotoverwaltung**     | Verwalten (Anzeigen, Suchen, Hinzufügen, Bearbeiten, Löschen) von Fotos | ✅       |
+| 3.2 | **Pflichtfelder**      | Ein Foto muss Titel und Aufnahmedatum enthalten                         | ✅       |
+| 3.3 | **Schlagwörter**       | Fotos können beliebig viele Schlagwörter enthalten                      | ✅       |
+| 3.4 | **Änderbarkeit**       | Titel, Datum und Schlagwörter müssen änderbar sein                      | ✅       |
+| 3.5 | **Nutzergebundenheit** | Fotos gehören einem Nutzer und sind nur für diesen sichtbar             | ✅       |
+
+### 4. Fotoalben
+| Nr. | Anforderung             | Beschreibung                                                                | Erfüllt |
+|-----|-------------------------|-----------------------------------------------------------------------------|---------|
+| 4.1 | **Fotoalbumverwaltung** | Verwalten (Anzeigen, Suchen, Hinzufügen, Bearbeiten, Löschen) von Fotoalben | ✅       |
+| 4.2 | **Pflichtfelder**       | Ein Fotoalbum muss einen Titel haben                                        | ✅       |
+| 4.3 | **Schlagwörter**        | Fotoalben können beliebig viele Schlagwörter enthalten                      | ✅       |
+| 4.4 | **Änderbarkeit**        | Titel und Schlagwörter müssen änderbar sein                                 | ✅       |
+| 4.5 | **Fotos in Alben**      | Fotoalben enthalten beliebig viele Fotos                                    | ✅       |
+| 4.6 | **Nutzergebundenheit**  | Fotoalben gehören einem Nutzer und sind nur für diesen sichtbar             | ✅       |
+| 4.7 | **Suchfunktion**        | Suche nach Fotoalben mit Anzeige der zugehörigen Fotos                      | ✅       |
+
+---
+
+## Nicht funktionale Anforderungen
+| Nr. | Anforderung                   | Beschreibung                                                                                                              | Erfüllt |
+|-----|-------------------------------|---------------------------------------------------------------------------------------------------------------------------|---------|
+| 1   | **RESTful-API**               | Bereitstellung einer RESTful-API für das Frontend                                                                         | ✅       |
+| 2   | **Dokumentation**             | Vollständige Projektdokumentation in der README.md (Inbetriebnahme, DDL-Skript, ERM, RESTful-API, Anforderungsauflistung) | ✅       |
+| 3   | **Source-Code Dokumentation** | Dokumentation mit JavaDoc und TSDoc                                                                                       | ✅       |
+
+---
+
+
+
+# Informationen zur Inbetriebnahme der Anwendung
+
+
+## Voraussetzungen
+
+Bevor du mit der Inbetriebnahme der Anwendung beginnst, stelle sicher, dass die folgenden Tools und Dienste auf deinem System installiert sind:
+
+- **Git**: [Git installieren](https://git-scm.com/) – Zum Klonen des Repositories.
+- **Java Development Kit (JDK) 11 oder höher**: [JDK installieren](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) – Erforderlich, um das Vert.x-Backend auszuführen.
+- **Maven**: [Maven installieren](https://maven.apache.org/install.html) – Zum Bauen und Verwalten von Java-Projekten.
+- **Node.js** und **npm**: [Node.js installieren](https://nodejs.org/) – Zum Bauen und Ausführen des TypeScript-Frontends.
+- **MariaDB**: [MariaDB installieren](https://mariadb.org/download/) – Zum Verwenden der Datenbank, die von der Anwendung benötigt wird.
+- **Browser**: Ein moderner Webbrowser (z.B. Chrome, Firefox) – Zum Testen und Anzeigen des Frontends.
+- **Internetverbindung**: Da Bootstrap über ein CDN eingebunden ist, benötigst du eine Internetverbindung, um die Bootstrap-Stylesheets und -Skripte zu laden.
+
+## Schritt 1: Repository klonen
+
+Zuerst musst du das Repository auf deinen lokalen Rechner klonen. Du kannst dies entweder mit HTTPS oder SSH tun:
+
+### Via HTTPS:
+```bash
+git clone https://git.thm.de/informatik-projekt/sose-2024-suess-rupp/gruppe-1.git
+```
+
+### Via SSH:
+```bahs
+git clone git@git.thm.de:informatik-projekt/sose-2024-suess-rupp/gruppe-1.git
+```
+
+## Schritt 2: In das Projektverzeichnis wechslen
+```bash
+cd gruppe-1
+```
+
+## Schritt 3: Das ddl-Skript ausführen und die MariaDB-Client-Sitzung beenden
+```bash 
+mysql -u your_user -p your_password;
+source ddl.sql;
+exit;
+```
+
+## Schritt 4: Passe die Datenbankkonfiguration in der config.json an
+```bash
+cd photoalbums/src/main/resources/
+
+```
+
+## Schritt 5: Projekt bauen und starten
+```bash
+cd ../../../
+
+./mvnw clean compile exec:java
+```
+
+## Schritt 6:  Anwendung im Broswer ausführen
+Öffne deinen Browser und gehe zu_
+```
+http://localhost:8080
+```
+
+
+
+# ERM-Diagramm
+<img alt="ERM-Diagramm" src="ERM-Diagramm.png">
+
+
 # Beschreibung des DDL-Skripts
 
 1. Das DDL-Sript legt zunächst eine Datenbank MediaVaultDB an und wählt diese aus.
@@ -34,8 +172,8 @@
 
 # Beschreibung der RESTful-API
 
-> Wenn bei einer Route kein Statuscode bei erfolg angegeben ist, <br>
-> wird bei Erfolg Statuscode 200 mit einer entsprechenden Statusmeldung zurückgegeben
+> Wenn bei einer Route kein Statuscode bei Erfolg angegeben ist, <br>
+> wird bei Erfolg Statuscode 200 mit einer entsprechenden Statusmeldung zurückgegeben.
 
 ### POST /login  
 > Gibt Statuscode 303 mit entsprechenden Location-Header zurück, wenn der Login erfolgreich war, d.h. das Paar Benutzername und Passwort existiert.  
@@ -206,7 +344,7 @@ http-Res:
 ---
 
 
-### photos/photoTitle=searchQuery&tag=serachQuery  
+### GET photos/photoTitle=searchQuery&tag=serachQuery  
 > Route, um Fotos zu durchsuchen. Es können diesleben Fehler wie oben auftreten.  
 
 
@@ -1583,6 +1721,7 @@ mögliche Fehlermeldungen:
   "message" : "Ein interner Serverfehler ist aufgetreten"
 }
 ```
+
 
 
 

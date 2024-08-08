@@ -17,6 +17,11 @@ async function initializeUserPage() {
 }
 initializeUserPage();
 
+/**
+ * Wartet auf das Submit-Event des Formulars nach einem Nutzer zu suchen und extrahiert, wenn dieses Event ausgelöst wird den eingegebenen Wert aus dem Input-Feld<br>
+ * Ruft mit dem extrahiertem Wert {@link fetchUsers} auf.
+ *
+ */
 function searchUser() {
     const queryUsernameForm = document.querySelector("#queryUsername") as HTMLFormElement;
     queryUsernameForm.addEventListener("submit", async(evt : SubmitEvent) => {
@@ -27,10 +32,18 @@ function searchUser() {
 }
 searchUser();
 
+/**
+ * Setzt die User Tabelle zurück
+ */
 function resetUserTable() {
     (document.querySelector("#tbody-display-users") as HTMLTableSectionElement).innerHTML = "";
 }
 
+/**
+ * Ruft GET /users mit optionalen Suchparametern auf<br>
+ * Setzt die User-Tabelle zurück {@link resetUserTable} und rendert diese neu {@link renderSingleUserRow} <br>
+ * @param searchParam Optionaler Suchparameter, der in der http-Anfrage berücksichtigt wird.
+ */
 async function fetchUsers(searchParam ?: string) {
     try {
         const res = await fetch("http://localhost:8080/users?" + (searchParam ? new URLSearchParams({username :  searchParam}) : ""));
@@ -50,6 +63,10 @@ async function fetchUsers(searchParam ?: string) {
     }
 }
 
+/**
+ * Rendert eine Zeile in der User-Tabelle
+ * @param user Der entsprechende Benutzer, der in der Tabelle gerendert wird.
+ */
 function renderSingleUserRow(user : User) {
     const tbodyContainer = document.querySelector("#tbody-display-users") as HTMLTableSectionElement;
 
@@ -64,10 +81,10 @@ function renderSingleUserRow(user : User) {
     actionCell.innerHTML = `
           <div class="row gy-3">
             <div class="col d-flex align-items-center">
-              <button class="btn btn-warning w-100 edit-user-btn" data-bs-toggle="modal" data-bs-target="#editModal">Bearbeiten</button>
+              <button class="btn btn-warning w-100 edit-user-btn" data-bs-toggle="modal" data-bs-target="#editModal">Bearbeiten</button> <!-- KONVENTION: Jeder "Benutzer löschen" Button hat die Klass .edit-user-btn -->
             </div>
             <div class="col d-flex align-items-center">
-              <button class="btn btn-danger w-100 del-user-btn">
+              <button class="btn btn-danger w-100 del-user-btn"> <!-- KONVENTION: Jeder "Benutzer löschen" Button hat die Klass .del-user-btn -->
                 Benutzer löschen
               </button>
             </div>
@@ -76,6 +93,10 @@ function renderSingleUserRow(user : User) {
 }
 // renderSingleUserRow({id : 1, username : "Noel", password : "0610", role : "ADMIN"});
 
+/**
+ * Setzt einen Klick-Event-Listener auf alle Buttons mit der Klasse .del-user.btn und extrahier bei Klick die userID des entsprechenden Benutzers.<br>
+ * Mit dieser ID wird {@link fetchUserDelete} aufgerufen
+ */
 function addUserDeleteListener() {
     const deleteButtons = document.querySelectorAll(".del-user-btn") as NodeListOf<HTMLButtonElement>
     deleteButtons.forEach((delBtn : HTMLButtonElement)  => {
@@ -87,7 +108,10 @@ function addUserDeleteListener() {
     })
 }
 
-
+/**
+ * DELETE /users/:userID
+ * @param userID Die ID des entsprechenden Benutzers
+ */
 async function fetchUserDelete(userID : number) {
     try {
         const res = await fetch("http://localhost:8080/users/" + userID, {
@@ -108,12 +132,20 @@ async function fetchUserDelete(userID : number) {
     }
 }
 
+/**
+ * Setze die Modal-Inputs, um einen Nutzer zu Erstellen, zurück
+ */
 function resetAddModalInputs() {
     (document.querySelector("#field-username") as HTMLInputElement).value = "";
     (document.querySelector("#field-password") as HTMLInputElement).value = "";
 }
 (document.querySelector("#open-modal") as HTMLButtonElement).addEventListener("click", () => resetAddModalInputs());
 
+/**
+ * Extrahiert die Felder username und password aus den input Feldern, wenn der Button gedrückt wird<br>
+ * Ruft mit den extrahierten Daten POST /users auf<br>
+ * Lädt die Seite bei Erfolg neu und setzt die Fehlermeldung zurück {@link renderError} und {@link renderError} bei Misserfolg
+ */
 function addUser() {
   const addUserBtn = (document.getElementById("addUserBtn") as HTMLButtonElement);
   addUserBtn.addEventListener("click", async (MouseEvent) => {
@@ -153,7 +185,9 @@ function addUser() {
 addUser();
 
 
-
+/**
+ * Extrahiert die Attribute des Nutzer aus der Tabelle und übertragt sie ins Modal.
+ */
 function giveUserIDToModal() {
     const editBtns = document.querySelectorAll(".edit-user-btn") as NodeListOf<HTMLButtonElement>;
     editBtns.forEach(editBtn => {
@@ -171,7 +205,9 @@ function giveUserIDToModal() {
 }
 
 
-
+/**
+ * Wartet auf das Submit-Event des entsprechenden Formulars und ruft mit den extrahierten Werten {@link fetchEditUsername} auf
+ */
 function editUsername() {
     (document.querySelector("#username-form") as HTMLFormElement).addEventListener("submit", (evt : SubmitEvent)  => {
         evt.preventDefault();
@@ -182,6 +218,9 @@ function editUsername() {
     })
 }
 
+/**
+ * Wartet auf das Submit-Event des entsprechenden Formulars und ruft mit den extrahierten Werten {@link fetchEditPassword} auf
+ */
 function editPassword() {
     (document.querySelector("#password-form") as HTMLFormElement).addEventListener("submit", async(evt : SubmitEvent) => {
         evt.preventDefault();
@@ -192,6 +231,11 @@ function editPassword() {
     })
 }
 
+/**
+ * PATCH /users/password/:userID
+ * @param userID Die ID des Benutzers
+ * @param password Das neue Password des Benutzers
+ */
 async function fetchEditPassword(userID : number, password : string) {
     try {
         const res = await fetch("http://localhost:8080/users/password/" + userID, {
@@ -214,7 +258,11 @@ async function fetchEditPassword(userID : number, password : string) {
     }
 }
 
-
+/**
+ * PATCH /users/username/:userID
+ * @param userID Die ID des Benutzers
+ * @param username Der neue Benutzername des Benutzers
+ */
 async function fetchEditUsername(userID : number, username : string) {
     try {
         const res = await fetch("http://localhost:8080/users/username/" + userID, {
@@ -240,7 +288,9 @@ async function fetchEditUsername(userID : number, username : string) {
 }
 
 
-
+/**
+ * Ruft, wenn der entsprechende Button geklickt wird /protected/photoalbums.html auf
+ */
 function redirectToPhotoalbumsPage() {
     (document.querySelector("#redirect-to-photoalbums") as HTMLButtonElement).addEventListener("click", async() => {
         try {
