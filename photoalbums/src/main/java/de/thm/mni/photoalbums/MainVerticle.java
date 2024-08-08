@@ -316,7 +316,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(authenticationHandler::isAdmin)
            .handler(adminHandler::userIDIsNumber)
            .handler(adminHandler::tryToDelAdmin)
-            .handler(adminHandler::deleteAllAlbumsFromUsersPhotos) // TODO
+            .handler(adminHandler::deleteAllAlbumsFromUsersPhotos)
             .handler(adminHandler::deleteAllTagsFromUsersPhotos)
            .handler(adminHandler::deleteAllPhotosFromUser)
             .handler(adminHandler::deleteAllTagsFromUsersAlbums)
