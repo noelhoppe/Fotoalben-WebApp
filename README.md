@@ -76,6 +76,12 @@
 Im Allgemeinen ist unter windows die PowerShell zu benutzen.  
 Unter macOS wurde zsh zur Inbetriebnahme benutzt.
 
+## Login-Daten für den zuvor mithilfe eines ddl-Scripts erstellten Admin
+username: admin  
+passwort: root
+
+Sollte nach der ersten Anwendung im admin-Portal geändert werden.
+
 
 ## Voraussetzungen
 
