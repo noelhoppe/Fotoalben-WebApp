@@ -18,6 +18,11 @@ function initializeUserPage() {
     });
 }
 initializeUserPage();
+/**
+ * Wartet auf das Submit-Event des Formulars nach einem Nutzer zu suchen und extrahiert, wenn dieses Event ausgelöst wird den eingegebenen Wert aus dem Input-Feld<br>
+ * Ruft mit dem extrahiertem Wert {@link fetchUsers} auf.
+ *
+ */
 function searchUser() {
     const queryUsernameForm = document.querySelector("#queryUsername");
     queryUsernameForm.addEventListener("submit", (evt) => __awaiter(this, void 0, void 0, function* () {
@@ -27,9 +32,17 @@ function searchUser() {
     }));
 }
 searchUser();
+/**
+ * Setzt die User Tabelle zurück
+ */
 function resetUserTable() {
     document.querySelector("#tbody-display-users").innerHTML = "";
 }
+/**
+ * Ruft GET /users mit optionalen Suchparametern auf<br>
+ * Setzt die User-Tabelle zurück {@link resetUserTable} und rendert diese neu {@link renderSingleUserRow} <br>
+ * @param searchParam Optionaler Suchparameter, der in der http-Anfrage berücksichtigt wird.
+ */
 function fetchUsers(searchParam) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -50,6 +63,10 @@ function fetchUsers(searchParam) {
         }
     });
 }
+/**
+ * Rendert eine Zeile in der User-Tabelle
+ * @param user Der entsprechende Benutzer, der in der Tabelle gerendert wird.
+ */
 function renderSingleUserRow(user) {
     const tbodyContainer = document.querySelector("#tbody-display-users");
     const { id, username, role } = user; // DESTRUCTURING
@@ -61,10 +78,10 @@ function renderSingleUserRow(user) {
     actionCell.innerHTML = `
           <div class="row gy-3">
             <div class="col d-flex align-items-center">
-              <button class="btn btn-warning w-100 edit-user-btn" data-bs-toggle="modal" data-bs-target="#editModal">Bearbeiten</button>
+              <button class="btn btn-warning w-100 edit-user-btn" data-bs-toggle="modal" data-bs-target="#editModal">Bearbeiten</button> <!-- KONVENTION: Jeder "Benutzer löschen" Button hat die Klass .edit-user-btn -->
             </div>
             <div class="col d-flex align-items-center">
-              <button class="btn btn-danger w-100 del-user-btn">
+              <button class="btn btn-danger w-100 del-user-btn"> <!-- KONVENTION: Jeder "Benutzer löschen" Button hat die Klass .del-user-btn -->
                 Benutzer löschen
               </button>
             </div>
@@ -72,6 +89,10 @@ function renderSingleUserRow(user) {
     `;
 }
 // renderSingleUserRow({id : 1, username : "Noel", password : "0610", role : "ADMIN"});
+/**
+ * Setzt einen Klick-Event-Listener auf alle Buttons mit der Klasse .del-user.btn und extrahier bei Klick die userID des entsprechenden Benutzers.<br>
+ * Mit dieser ID wird {@link fetchUserDelete} aufgerufen
+ */
 function addUserDeleteListener() {
     const deleteButtons = document.querySelectorAll(".del-user-btn");
     deleteButtons.forEach((delBtn) => {
@@ -82,6 +103,10 @@ function addUserDeleteListener() {
         }));
     });
 }
+/**
+ * DELETE /users/:userID
+ * @param userID Die ID des entsprechenden Benutzers
+ */
 function fetchUserDelete(userID) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -103,11 +128,19 @@ function fetchUserDelete(userID) {
         }
     });
 }
+/**
+ * Setze die Modal-Inputs, um einen Nutzer zu Erstellen, zurück
+ */
 function resetAddModalInputs() {
     document.querySelector("#field-username").value = "";
     document.querySelector("#field-password").value = "";
 }
 document.querySelector("#open-modal").addEventListener("click", () => resetAddModalInputs());
+/**
+ * Extrahiert die Felder username und password aus den input Feldern, wenn der Button gedrückt wird<br>
+ * Ruft mit den extrahierten Daten POST /users auf<br>
+ * Lädt die Seite bei Erfolg neu und setzt die Fehlermeldung zurück {@link renderError} und {@link renderError} bei Misserfolg
+ */
 function addUser() {
     const addUserBtn = document.getElementById("addUserBtn");
     addUserBtn.addEventListener("click", (MouseEvent) => __awaiter(this, void 0, void 0, function* () {
@@ -142,6 +175,9 @@ function addUser() {
     }));
 }
 addUser();
+/**
+ * Extrahiert die Attribute des Nutzer aus der Tabelle und übertragt sie ins Modal.
+ */
 function giveUserIDToModal() {
     const editBtns = document.querySelectorAll(".edit-user-btn");
     editBtns.forEach(editBtn => {
@@ -157,6 +193,9 @@ function giveUserIDToModal() {
         });
     });
 }
+/**
+ * Wartet auf das Submit-Event des entsprechenden Formulars und ruft mit den extrahierten Werten {@link fetchEditUsername} auf
+ */
 function editUsername() {
     document.querySelector("#username-form").addEventListener("submit", (evt) => {
         evt.preventDefault();
@@ -166,6 +205,9 @@ function editUsername() {
         fetchEditUsername(parseInt(userID), newUsername);
     });
 }
+/**
+ * Wartet auf das Submit-Event des entsprechenden Formulars und ruft mit den extrahierten Werten {@link fetchEditPassword} auf
+ */
 function editPassword() {
     document.querySelector("#password-form").addEventListener("submit", (evt) => __awaiter(this, void 0, void 0, function* () {
         evt.preventDefault();
@@ -175,6 +217,11 @@ function editPassword() {
         yield fetchEditPassword(parseInt(userID), newPassword);
     }));
 }
+/**
+ * PATCH /users/password/:userID
+ * @param userID Die ID des Benutzers
+ * @param password Das neue Password des Benutzers
+ */
 function fetchEditPassword(userID, password) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -198,6 +245,11 @@ function fetchEditPassword(userID, password) {
         }
     });
 }
+/**
+ * PATCH /users/username/:userID
+ * @param userID Die ID des Benutzers
+ * @param username Der neue Benutzername des Benutzers
+ */
 function fetchEditUsername(userID, username) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -221,6 +273,9 @@ function fetchEditUsername(userID, username) {
         }
     });
 }
+/**
+ * Ruft, wenn der entsprechende Button geklickt wird /protected/photoalbums.html auf
+ */
 function redirectToPhotoalbumsPage() {
     document.querySelector("#redirect-to-photoalbums").addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
         try {
