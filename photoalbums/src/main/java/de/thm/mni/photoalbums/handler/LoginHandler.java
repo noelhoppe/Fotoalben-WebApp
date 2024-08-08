@@ -22,6 +22,7 @@ public class LoginHandler {
 	 * Selektiert die Felder username und password aus dem RoutingContext. <br>
 	 * Gibt Statuscode 500 mit entsprechender JSON message zurück, wenn die Anfrage falsch formatiert ist oder der username oder das password null ist und beendet die http Anfrage im Anschluss. <br>
 	 * Ansonsten wird der nächste Handler aufgerufen.<br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void grabData(RoutingContext ctx) {
@@ -37,7 +38,7 @@ public class LoginHandler {
 			ctx.put("username", username);
 			ctx.put("password", password);
 			ctx.next();
-		} catch(IllegalArgumentException iae) {
+		} catch (IllegalArgumentException iae) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Die Anfrage muss folgendes Format haben und die keys username und password sind nicht null-Werte")
 				.put("username", "___")
@@ -49,6 +50,7 @@ public class LoginHandler {
 	/**
 	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn das Feld username leer ist oder Leerzeichen enthält und beendet die http-Anfrage. <br>
 	 * Ansonsten wird der nächste Handler aufgerufen. <br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void validateUsernameInput(RoutingContext ctx) {
@@ -62,9 +64,9 @@ public class LoginHandler {
 				.put("message", "Der Nutzername darf nicht leer sein")
 			);
 		} else if (ctx.data().get("username").toString().length() > 30) {
-        		MainVerticle.response(ctx.response(), 400, new JsonObject()
-          			.put("message", "Der Nutzername darf höchstens 30 Zeichen lang sein")
-        		);
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Der Nutzername darf höchstens 30 Zeichen lang sein")
+			);
 		} else {
 			ctx.next();
 		}
@@ -73,6 +75,7 @@ public class LoginHandler {
 	/**
 	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn das Feld password leer ist oder Leerzeichen enthält und beendet die http-Anfrage. <br>
 	 * Ansonsten wird der nächste Handler aufgerufen. <br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void validatePasswordInput(RoutingContext ctx) {
@@ -85,11 +88,11 @@ public class LoginHandler {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Das Passwort darf nicht leer sein")
 			);
-		} else if (ctx.data().get("password").toString().length() <4 || ctx.data().get("password").toString().length() > 30){
-        		MainVerticle.response(ctx.response(), 400, new JsonObject()
-          			.put("message", "Das Passwort muss zwischen 4 und 30 Zeichen lang sein")
-        		);
-      		} else {
+		} else if (ctx.data().get("password").toString().length() < 4 || ctx.data().get("password").toString().length() > 30) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Das Passwort muss zwischen 4 und 30 Zeichen lang sein")
+			);
+		} else {
 			ctx.next();
 		}
 	}
@@ -98,6 +101,7 @@ public class LoginHandler {
 	 * Gibt Statuscode 400 mit entsprechender Fehlermeldung zurück, wenn das Paar username und password nicht existiert und beendet die Anfrage. <br>
 	 * Gibt Statuscode 303 mit entsprechendem Location-Header zurück, wenn der Login erfolgreich war. <br>
 	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist. <br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void checkUsernamePasswordPair(RoutingContext ctx) {

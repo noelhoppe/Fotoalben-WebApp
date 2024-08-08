@@ -19,16 +19,17 @@ import java.util.List;
 
 public class AdminHandler {
 	private final JDBCPool jdbcPool;
-  private final Vertx vertx;
+	private final Vertx vertx;
 
 	public AdminHandler(JDBCPool jdbcPool, Vertx vertx) {
 		this.jdbcPool = jdbcPool;
-    this.vertx = vertx;
+		this.vertx = vertx;
 	}
 
 	/**
 	 * Gibt Statuscode 200 mit entsprechender Erfolgsmeldung zurück, wenn die Anfrage erfolgreich war.<br>
 	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void getUsers(RoutingContext ctx) {
@@ -76,42 +77,40 @@ public class AdminHandler {
 	public void deleteAllPhotosFromUser(RoutingContext ctx) {
 		System.out.println("called deleteAllPhotosFromUser in AdminHandler");
 
-    int userID = Integer.parseInt(ctx.pathParam("userID"));
+		int userID = Integer.parseInt(ctx.pathParam("userID"));
 
-    getAllPhotosURLsFromUser(userID).onComplete(asyncres -> {
-      if (asyncres.succeeded()) {
-        List<String> photoURLs = asyncres.result();
+		getAllPhotosURLsFromUser(userID).onComplete(asyncres -> {
+			if (asyncres.succeeded()) {
+				List<String> photoURLs = asyncres.result();
 
-        jdbcPool.preparedQuery("DELETE FROM Photos WHERE Users_ID = ?")
-          .execute(Tuple.of(userID), ar -> {
-            if (ar.succeeded()) {
+				jdbcPool.preparedQuery("DELETE FROM Photos WHERE Users_ID = ?")
+					.execute(Tuple.of(userID), ar -> {
+						if (ar.succeeded()) {
 
-              for (String url : photoURLs) {
-                vertx.fileSystem().delete("img/" + url, deleteResult -> {
-                  if (deleteResult.failed()) {
-                    MainVerticle.response(ctx.response(), 500, new JsonObject()
-                      .put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
-                    );
-                  }
-                });
-              }
+							for (String url : photoURLs) {
+								vertx.fileSystem().delete("img/" + url, deleteResult -> {
+									if (deleteResult.failed()) {
+										MainVerticle.response(ctx.response(), 500, new JsonObject()
+											.put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
+										);
+									}
+								});
+							}
 
-              ctx.next();
+							ctx.next();
 
-            } else {
-              MainVerticle.response(ctx.response(), 500, new JsonObject()
-                .put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
-              );
-            }
-          });
-      } else {
-        MainVerticle.response(ctx.response(), 500, new JsonObject()
-          .put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
-        );
-      }
-    });
-
-
+						} else {
+							MainVerticle.response(ctx.response(), 500, new JsonObject()
+								.put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
+							);
+						}
+					});
+			} else {
+				MainVerticle.response(ctx.response(), 500, new JsonObject()
+					.put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
+				);
+			}
+		});
 
 
 	}
@@ -144,48 +143,50 @@ public class AdminHandler {
 		try {
 			Integer.parseInt(ctx.pathParam("userID"));
 			ctx.next();
-		} catch(NumberFormatException e) {
+		} catch (NumberFormatException e) {
 			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "userID muss eine gültige Zahl sein")
 			);
 		}
 	}
 
-  /**
-   * Fügt einen Nutzer zur Datenbak hinzu
-   * Passwort wird mit Bcrypt gehashed
-   * @param ctx
-   */
-  public void addUser(RoutingContext ctx) {
-    String username = ctx.body().asJsonObject().getString("username");
-    String password = ctx.body().asJsonObject().getString("password");
+	/**
+	 * Fügt einen Nutzer zur Datenbak hinzu
+	 * Passwort wird mit Bcrypt gehashed
+	 *
+	 * @param ctx
+	 */
+	public void addUser(RoutingContext ctx) {
+		String username = ctx.body().asJsonObject().getString("username");
+		String password = ctx.body().asJsonObject().getString("password");
 
-    String pwdHash = BCrypt.hashpw(password, BCrypt.gensalt(10));
+		String pwdHash = BCrypt.hashpw(password, BCrypt.gensalt(10));
 
-    jdbcPool.preparedQuery("""
-                       		          INSERT INTO Users
-                                  (Username, Password)
-                                  VALUES (?, ?)
-                        			      """
-    ).execute(Tuple.of(username, pwdHash), res -> {
-      if (res.succeeded()) {
-        String response = "Nutzer " + username + " erfolgreich angelegt";
-        MainVerticle.response(ctx.response(), 201, new JsonObject()
-          .put("message", response));
+		jdbcPool.preparedQuery("""
+			  INSERT INTO Users
+			 (Username, Password)
+			 VALUES (?, ?)
+			"""
+		).execute(Tuple.of(username, pwdHash), res -> {
+			if (res.succeeded()) {
+				String response = "Nutzer " + username + " erfolgreich angelegt";
+				MainVerticle.response(ctx.response(), 201, new JsonObject()
+					.put("message", response));
 
-      } else {
-        System.err.println("Error: " + res.cause().getMessage());
-        MainVerticle.response(ctx.response(), 500, new JsonObject()
-          .put("message", "Fehler beim erstellen des Nutzers")
-        );
-      }
-    });
-  }
+			} else {
+				System.err.println("Error: " + res.cause().getMessage());
+				MainVerticle.response(ctx.response(), 500, new JsonObject()
+					.put("message", "Fehler beim erstellen des Nutzers")
+				);
+			}
+		});
+	}
 
 	/**
 	 * Prüft, ob versucht wird, den Admin zu löschen.<br>
 	 * Wenn ja, gebe Statuscode 403 zurück<br>
 	 * wenn nein, gebe die Anfrage an den nächsten Handler weiter.
+	 *
 	 * @param ctx
 	 */
 	public void tryToDelAdmin(RoutingContext ctx) {
@@ -203,7 +204,7 @@ public class AdminHandler {
 					} else {
 						ctx.next();
 					}
-				}  else {
+				} else {
 					MainVerticle.response(ctx.response(), 500, new JsonObject()
 						.put("message", "Ein interner Serverfehler ist aufgetreten")
 					);
@@ -214,6 +215,7 @@ public class AdminHandler {
 	/**
 	 * Entfernt einen Benutzer und gibt bei Erfolg Statuscode 204 zurück.<br>
 	 * Gibt Statuscode 500 mit Fehlermeldung zurück, wen ein Server - und/oder Datenbankfehler aufgetreten ist.<br>
+	 *
 	 * @param ctx
 	 */
 	public void delUser(RoutingContext ctx) {
@@ -253,6 +255,7 @@ public class AdminHandler {
 
 	/**
 	 * Ändert den Usernamen eines Benutzers<br>
+	 *
 	 * @param ctx
 	 */
 	public void handlePatchUsername(RoutingContext ctx) {
@@ -277,6 +280,7 @@ public class AdminHandler {
 
 	/**
 	 * Ändert das Passwort eines Benutzers.
+	 *
 	 * @param ctx
 	 */
 	public void handlerPatchPassword(RoutingContext ctx) {
@@ -323,32 +327,31 @@ public class AdminHandler {
 		return promise.future();
 	}
 
-  /**
-   * @param userID Die userID des Benutzers
-   * @return Eine Liste mit den zugehörigen URLs der Fotos, die dem Benutze gehören
-   */
-  Future<List<String>> getAllPhotosURLsFromUser(int userID) {
-    Promise<List<String>> promise = Promise.promise();
-    List<String> urls = new ArrayList<>();
+	/**
+	 * @param userID Die userID des Benutzers
+	 * @return Eine Liste mit den zugehörigen URLs der Fotos, die dem Benutze gehören
+	 */
+	Future<List<String>> getAllPhotosURLsFromUser(int userID) {
+		Promise<List<String>> promise = Promise.promise();
+		List<String> urls = new ArrayList<>();
 
-    jdbcPool.preparedQuery("SELECT url FROM Photos WHERE Users_ID = ?")
-      .execute(Tuple.of(userID), ar -> {
-        if (ar.succeeded()) {
-          RowSet<Row> rows = ar.result();
-          for (Row row : rows) {
-            urls.add(row.getString("url"));
-          }
-          promise.complete(urls);
-        } else {
-          promise.fail(ar.cause());
-        }
-      });
+		jdbcPool.preparedQuery("SELECT url FROM Photos WHERE Users_ID = ?")
+			.execute(Tuple.of(userID), ar -> {
+				if (ar.succeeded()) {
+					RowSet<Row> rows = ar.result();
+					for (Row row : rows) {
+						urls.add(row.getString("url"));
+					}
+					promise.complete(urls);
+				} else {
+					promise.fail(ar.cause());
+				}
+			});
 
-    return promise.future();
-  }
+		return promise.future();
+	}
 
 	/**
-	 *
 	 * @param userID Die userID des Benutzers
 	 * @return Eine Liste mit den zugehörigen IDs der Alben, die dem Benutzer gehören
 	 */
@@ -427,7 +430,7 @@ public class AdminHandler {
 				List<Integer> albumsIDs = ar.result();
 				List<Future<Void>> deleteFutures = new ArrayList<>();
 
-				for (Integer albumID: albumsIDs) {
+				for (Integer albumID : albumsIDs) {
 					Promise<Void> deletePromise = Promise.promise();
 					jdbcPool.preparedQuery("DELETE FROM AlbumsTags WHERE Alben_ID = ?")
 						.execute(Tuple.of(albumID), res -> {
@@ -459,9 +462,9 @@ public class AdminHandler {
 	}
 
 	/**
-	 *
 	 * Löscht aus der Verbindungstabelle AlbumsPhotos alle Verbindungen, die dem User gehören und gibt bei Erfolg an den nächsten Handler weiter<br>
 	 * Bei Misserfolg wird die Anfrage beendet und Statuscode 500 mit Fehlermeldung zurückgegeben.
+	 *
 	 * @param ctx Der Routing Context
 	 */
 	public void deleteAllAlbumsFromUsersPhotos(RoutingContext ctx) {
@@ -471,7 +474,7 @@ public class AdminHandler {
 				List<Integer> photosIDs = ar.result();
 				List<Future<Void>> deleteFutures = new ArrayList<>();
 
-				for (Integer photoID: photosIDs) {
+				for (Integer photoID : photosIDs) {
 					Promise<Void> deletePromise = Promise.promise();
 					jdbcPool.preparedQuery("DELETE FROM AlbumsPhotos WHERE Photos_ID = ?")
 						.execute(Tuple.of(photoID), res -> {

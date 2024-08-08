@@ -624,6 +624,10 @@ const addPhotoDate = document.getElementById("addPhotoDate") as HTMLInputElement
 let today = new Date().toISOString().split("T")[0];
 addPhotoDate.setAttribute("max", today);
 
+/**
+ * Wartet auf das Klick-Event des entsprechenden Buttons und extrahiert name, datum und das Bild<br>
+ * Ruft im Anschluss POST /photos auf
+ */
 function addPhoto() {
     const addPhotoSubmit = document.getElementById("addPhotoSubmit") as HTMLButtonElement;
     addPhotoSubmit.addEventListener("click", async (evt: MouseEvent) => {
@@ -640,7 +644,7 @@ function addPhoto() {
             const res: Response = await fetch("http://localhost:8080/photos", {
                 method: "POST",
                 credentials: "include",
-                headers: {},
+                headers: {}, // hier muss kein header übergeben werden
                 body: formData
             });
             const data: { message: string } = await res.json();

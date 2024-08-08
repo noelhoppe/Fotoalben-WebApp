@@ -1,12 +1,13 @@
 // @ts-ignore
 import {renderError, togglePasswordVisibility} from "/helper.js";
+
 togglePasswordVisibility();
 
 interface User {
-    id : number
-    username : string,
-    password : string,
-    role : string
+    id: number
+    username: string,
+    password: string,
+    role: string
 }
 
 
@@ -15,6 +16,7 @@ async function initializeUserPage() {
     addUserDeleteListener();
     giveUserIDToModal();
 }
+
 initializeUserPage();
 
 /**
@@ -24,12 +26,13 @@ initializeUserPage();
  */
 function searchUser() {
     const queryUsernameForm = document.querySelector("#queryUsername") as HTMLFormElement;
-    queryUsernameForm.addEventListener("submit", async(evt : SubmitEvent) => {
+    queryUsernameForm.addEventListener("submit", async (evt: SubmitEvent) => {
         evt.preventDefault();
         const usernameInput = (document.querySelector("#queryUsernameInput") as HTMLInputElement).value;
         await fetchUsers(usernameInput)
     })
 }
+
 searchUser();
 
 /**
@@ -46,19 +49,19 @@ function resetUserTable() {
  */
 async function fetchUsers(searchParam ?: string) {
     try {
-        const res = await fetch("http://localhost:8080/users?" + (searchParam ? new URLSearchParams({username :  searchParam}) : ""));
+        const res = await fetch("http://localhost:8080/users?" + (searchParam ? new URLSearchParams({username: searchParam}) : ""));
 
 
         if (res.ok) {
-            const data : { users : User[] } = await res.json();
+            const data: { users: User[] } = await res.json();
             const users = data.users;
             resetUserTable();
             users.forEach(user => renderSingleUserRow(user))
         } else {
-            const data : { message : string } = await res.json();
+            const data: { message: string } = await res.json();
             console.log(`Status ${res.status}. Message ${data.message}`);
         }
-    } catch(error) {
+    } catch (error) {
         console.error("Error GET /users", error);
     }
 }
@@ -67,7 +70,7 @@ async function fetchUsers(searchParam ?: string) {
  * Rendert eine Zeile in der User-Tabelle
  * @param user Der entsprechende Benutzer, der in der Tabelle gerendert wird.
  */
-function renderSingleUserRow(user : User) {
+function renderSingleUserRow(user: User) {
     const tbodyContainer = document.querySelector("#tbody-display-users") as HTMLTableSectionElement;
 
     const {id, username, role} = user; // DESTRUCTURING
@@ -91,6 +94,7 @@ function renderSingleUserRow(user : User) {
           </div>
     `;
 }
+
 // renderSingleUserRow({id : 1, username : "Noel", password : "0610", role : "ADMIN"});
 
 /**
@@ -99,7 +103,7 @@ function renderSingleUserRow(user : User) {
  */
 function addUserDeleteListener() {
     const deleteButtons = document.querySelectorAll(".del-user-btn") as NodeListOf<HTMLButtonElement>
-    deleteButtons.forEach((delBtn : HTMLButtonElement)  => {
+    deleteButtons.forEach((delBtn: HTMLButtonElement) => {
         delBtn.addEventListener("click", async () => {
             const trElement = delBtn.closest("tr") as HTMLTableRowElement;
             const userID = trElement.getAttribute("data-users-id") as string;
@@ -112,11 +116,11 @@ function addUserDeleteListener() {
  * DELETE /users/:userID
  * @param userID Die ID des entsprechenden Benutzers
  */
-async function fetchUserDelete(userID : number) {
+async function fetchUserDelete(userID: number) {
     try {
         const res = await fetch("http://localhost:8080/users/" + userID, {
-            method : "DELETE",
-            credentials : "include"
+            method: "DELETE",
+            credentials: "include"
         });
 
         console.log(res.status)
@@ -124,10 +128,10 @@ async function fetchUserDelete(userID : number) {
         if (res.status == 204) {
             await fetchUsers();
         } else {
-            const data : { message : string } = await res.json();
+            const data: { message: string } = await res.json();
             console.log(data.message)
         }
-    } catch(error) {
+    } catch (error) {
         console.error(error);
     }
 }
@@ -139,6 +143,7 @@ function resetAddModalInputs() {
     (document.querySelector("#field-username") as HTMLInputElement).value = "";
     (document.querySelector("#field-password") as HTMLInputElement).value = "";
 }
+
 (document.querySelector("#open-modal") as HTMLButtonElement).addEventListener("click", () => resetAddModalInputs());
 
 /**
@@ -147,41 +152,42 @@ function resetAddModalInputs() {
  * Lädt die Seite bei Erfolg neu und setzt die Fehlermeldung zurück {@link renderError} und {@link renderError} bei Misserfolg
  */
 function addUser() {
-  const addUserBtn = (document.getElementById("addUserBtn") as HTMLButtonElement);
-  addUserBtn.addEventListener("click", async (MouseEvent) => {
-    const username = (document.getElementById("field-username") as HTMLInputElement).value;
-    const passwd = (document.getElementById("field-password") as HTMLInputElement).value;
-    const reqData = {
-        username : username,
-        password : passwd
-    };
+    const addUserBtn = (document.getElementById("addUserBtn") as HTMLButtonElement);
+    addUserBtn.addEventListener("click", async (MouseEvent) => {
+        const username = (document.getElementById("field-username") as HTMLInputElement).value;
+        const passwd = (document.getElementById("field-password") as HTMLInputElement).value;
+        const reqData = {
+            username: username,
+            password: passwd
+        };
 
-    try {
-      const res : Response = await fetch( "http://localhost:8080/users", {
-        method: "POST",
-        credentials : "include",
-        headers : {
-          "Content-Type" : "application/json"
-        },
-        body : JSON.stringify(reqData),
-      });
+        try {
+            const res: Response = await fetch("http://localhost:8080/users", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(reqData),
+            });
 
-      const errorContainer = document.querySelector("#error-add-user-container") as HTMLDivElement;
-      if (res.status == 201) {
-          renderError(errorContainer, true);
-          window.location.reload();
-      } else {
-          const data : { message : string } = await res.json();
-          renderError(errorContainer, false, data.message);
-      }
+            const errorContainer = document.querySelector("#error-add-user-container") as HTMLDivElement;
+            if (res.status == 201) {
+                renderError(errorContainer, true);
+                window.location.reload();
+            } else {
+                const data: { message: string } = await res.json();
+                renderError(errorContainer, false, data.message);
+            }
 
-    } catch(error){
-      console.log("ERROR at POST /users")
-    }
-  });
+        } catch (error) {
+            console.log("ERROR at POST /users")
+        }
+    });
 
 
 }
+
 addUser();
 
 
@@ -209,7 +215,7 @@ function giveUserIDToModal() {
  * Wartet auf das Submit-Event des entsprechenden Formulars und ruft mit den extrahierten Werten {@link fetchEditUsername} auf
  */
 function editUsername() {
-    (document.querySelector("#username-form") as HTMLFormElement).addEventListener("submit", (evt : SubmitEvent)  => {
+    (document.querySelector("#username-form") as HTMLFormElement).addEventListener("submit", (evt: SubmitEvent) => {
         evt.preventDefault();
         const newUsername = (document.querySelector("#username") as HTMLInputElement).value;
         const editUserModalContainer = document.querySelector("#editModal") as HTMLDivElement;
@@ -222,7 +228,7 @@ function editUsername() {
  * Wartet auf das Submit-Event des entsprechenden Formulars und ruft mit den extrahierten Werten {@link fetchEditPassword} auf
  */
 function editPassword() {
-    (document.querySelector("#password-form") as HTMLFormElement).addEventListener("submit", async(evt : SubmitEvent) => {
+    (document.querySelector("#password-form") as HTMLFormElement).addEventListener("submit", async (evt: SubmitEvent) => {
         evt.preventDefault();
         const newPassword = (document.querySelector("#password") as HTMLInputElement).value;
         const editUserModalContainer = document.querySelector("#editModal") as HTMLDivElement;
@@ -236,12 +242,12 @@ function editPassword() {
  * @param userID Die ID des Benutzers
  * @param password Das neue Password des Benutzers
  */
-async function fetchEditPassword(userID : number, password : string) {
+async function fetchEditPassword(userID: number, password: string) {
     try {
         const res = await fetch("http://localhost:8080/users/password/" + userID, {
-            method : "PATCH",
-            credentials : "include",
-            body : JSON.stringify({password : password })
+            method: "PATCH",
+            credentials: "include",
+            body: JSON.stringify({password: password})
         })
 
         const errorContainer = document.querySelector("#error-edit-user-container") as HTMLDivElement;
@@ -249,11 +255,11 @@ async function fetchEditPassword(userID : number, password : string) {
             renderError(errorContainer, true);
             window.location.reload();
         } else {
-            const data : { message : string } = await res.json();
+            const data: { message: string } = await res.json();
             renderError(errorContainer, false, data.message);
         }
 
-    } catch(err) {
+    } catch (err) {
         console.error(err);
     }
 }
@@ -263,12 +269,12 @@ async function fetchEditPassword(userID : number, password : string) {
  * @param userID Die ID des Benutzers
  * @param username Der neue Benutzername des Benutzers
  */
-async function fetchEditUsername(userID : number, username : string) {
+async function fetchEditUsername(userID: number, username: string) {
     try {
         const res = await fetch("http://localhost:8080/users/username/" + userID, {
-            method : "PATCH",
-            credentials : "include",
-            body : JSON.stringify({username : username})
+            method: "PATCH",
+            credentials: "include",
+            body: JSON.stringify({username: username})
         })
 
         const errorContainer = document.querySelector("#error-edit-user-container") as HTMLDivElement;
@@ -276,13 +282,12 @@ async function fetchEditUsername(userID : number, username : string) {
             renderError(errorContainer, true);
             window.location.reload();
         } else {
-            const data : { message : string } = await res.json();
+            const data: { message: string } = await res.json();
             renderError(errorContainer, false, data.message);
         }
 
 
-
-    } catch(err) {
+    } catch (err) {
         console.error(err);
     }
 }
@@ -292,7 +297,7 @@ async function fetchEditUsername(userID : number, username : string) {
  * Ruft, wenn der entsprechende Button geklickt wird /protected/photoalbums.html auf
  */
 function redirectToPhotoalbumsPage() {
-    (document.querySelector("#redirect-to-photoalbums") as HTMLButtonElement).addEventListener("click", async() => {
+    (document.querySelector("#redirect-to-photoalbums") as HTMLButtonElement).addEventListener("click", async () => {
         try {
             const res = await fetch("http://localhost:8080/protected/photoalbums.html")
 
@@ -302,9 +307,10 @@ function redirectToPhotoalbumsPage() {
                 throw new Error(`HTTP Error! Status: ${res.status}`)
             }
 
-        } catch(error) {
+        } catch (error) {
             console.error("Error redirecting to /protected/photoalbums.html.", error);
         }
     });
 }
+
 redirectToPhotoalbumsPage();

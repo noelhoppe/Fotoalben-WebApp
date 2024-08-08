@@ -29,13 +29,14 @@ public class PhotoHandler {
 
 	public PhotoHandler(JDBCPool jdbcPool, Vertx vertx) {
 		this.jdbcPool = jdbcPool;
-    		this.vertx = vertx;
+		this.vertx = vertx;
 	}
 
 	/**
 	 * Handler für GET /photos <br>
 	 * Gibt Statuscode 200 und JSON mit allen Fotoinformationen inklusive Tags als kommaseparierter String zurück.<br>
 	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist. <br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void getAllPhotosFromUser(RoutingContext ctx) {
@@ -56,23 +57,23 @@ public class PhotoHandler {
 
 		// Build the SQL query
 		StringBuilder sql = new StringBuilder("""
-                      SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
-                      FROM Photos p
-                      LEFT JOIN PhotosTags pt
-                                ON pt.Photos_ID = p.ID
-                      LEFT JOIN Tags t
-                                 ON pt.TAGS_ID = t.ID
-                     WHERE p.ID IN (
-                     SELECT p_inner.ID
-                                FROM Photos p_inner
-                                LEFT JOIN PhotosTags pt_inner
-                                       	ON pt_inner.Photos_ID = p_inner.ID
-                                LEFT JOIN Tags t_inner
-                                       	ON pt_inner.TAGS_ID = t_inner.ID
-                                LEFT JOIN AlbumsPhotos aph
-                               		ON aph.Photos_ID = p_inner.ID
-                                WHERE p_inner.Users_ID = ?
-                  """);
+			    SELECT p.ID, p.title, p.taken, p.url, GROUP_CONCAT(t.name SEPARATOR ', ') as tags
+			    FROM Photos p
+			    LEFT JOIN PhotosTags pt
+			              ON pt.Photos_ID = p.ID
+			    LEFT JOIN Tags t
+			               ON pt.TAGS_ID = t.ID
+			   WHERE p.ID IN (
+			   SELECT p_inner.ID
+			              FROM Photos p_inner
+			              LEFT JOIN PhotosTags pt_inner
+			                     	ON pt_inner.Photos_ID = p_inner.ID
+			              LEFT JOIN Tags t_inner
+			                     	ON pt_inner.TAGS_ID = t_inner.ID
+			              LEFT JOIN AlbumsPhotos aph
+			             		ON aph.Photos_ID = p_inner.ID
+			              WHERE p_inner.Users_ID = ?
+			""");
 
 		List<Object> params = new ArrayList<>();
 		params.add(userIdStr);
@@ -94,11 +95,10 @@ public class PhotoHandler {
 		}
 
 		sql.append("""
-                                 GROUP BY p_inner.ID
-                      )
-                      GROUP BY p.ID, p.title, p.taken, p.url
-                  """);
-
+			               GROUP BY p_inner.ID
+			    )
+			    GROUP BY p.ID, p.title, p.taken, p.url
+			""");
 
 
 		jdbcPool.preparedQuery(sql.toString())
@@ -127,6 +127,7 @@ public class PhotoHandler {
 
 	/**
 	 * Sendet das Foto
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void servePhotos(RoutingContext ctx) {
@@ -139,6 +140,7 @@ public class PhotoHandler {
 	 * Prüft, ob das Bild in der Datenbank existiert.<br>
 	 * Wenn ja, rufe den nächsten Handler auf.<br>
 	 * Wenn nein, beende die Anfrage mit einem 404 und entsprechender Fehlermeldung<br>
+	 *
 	 * @param ctx Der Routing Context
 	 */
 	public void photoExists(RoutingContext ctx) {
@@ -158,6 +160,7 @@ public class PhotoHandler {
 	 * Prüft, ob das Bild dem Nutzer zugewiesen ist.
 	 * Wenn ja, rufe den nächsten Handler auf.
 	 * Wenn nein, beende die Anfrage mit einem 403 und entsprechender Fehlermeldung
+	 *
 	 * @param ctx
 	 */
 	public void photoIsUser(RoutingContext ctx) {
@@ -180,6 +183,7 @@ public class PhotoHandler {
 	 * Prüft, ob die photoID eine gültige Zahl ist. <br>
 	 * Wenn ja, rufe den nächsten Handler auf.<br>
 	 * Wenn nein, beende die http-Anfrage mit dem Statuscode 400 und einer entsprechenden Fehlermeldung.<br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void validatePhotoInputReq(RoutingContext ctx) {
@@ -200,6 +204,7 @@ public class PhotoHandler {
 	 * Prüft, ob das Feld tag leer ist, Leerzeichen enthält oder null ist. <br>
 	 * Wenn ja, gebe Statuscode 400 mit entsprechender Fehlermeldung zurück.<br>
 	 * Wenn nein, rufe den nächsten Handler auf.<br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void validateTagInputReq(RoutingContext ctx) {
@@ -218,7 +223,7 @@ public class PhotoHandler {
 				MainVerticle.response(ctx.response(), 400, new JsonObject()
 					.put("message", "Der Tag darf nicht leer sein")
 				);
-			} else if(tag.length() > 30){
+			} else if (tag.length() > 30) {
 				MainVerticle.response(ctx.response(), 400, new JsonObject()
 					.put("message", "Der Tag darf nicht länger als 30 Zeichen sein sein")
 				);
@@ -238,6 +243,7 @@ public class PhotoHandler {
 	/**
 	 * Gibt Statuscode 204 zurück, wenn der Tag erfolgreich vom Foto gelöscht wurde. <br>
 	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist<br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void deleteTag(RoutingContext ctx) {
@@ -277,6 +283,7 @@ public class PhotoHandler {
 	/**
 	 * Ruft den nächsten Handler auf, wenn alle Tags erfolgreich vom Foto entfernt wurden. <br>
 	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void deleteAllTagsFromPhoto(RoutingContext ctx) {
@@ -296,7 +303,6 @@ public class PhotoHandler {
 	}
 
 
-
 	/**
 	 * Handler für POST /photos/tag <br>
 	 * Gibt Statuscode 201 mit entsprechender Erfolgsmeldung zurück, wenn der Tag erfolgreich zum Foto hinzugefügt wurde.<br>
@@ -305,6 +311,7 @@ public class PhotoHandler {
 	 * Gibt Statuscode 401 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht Tags zu Fotos eines anderen Benutzers hinzuzufügen. <br>
 	 * Gibt Statuscode 409 mit entsprechender Fehlermeldung zurück, wenn ein Nutzer versucht einen Tag hinzuzufügen, der bereits dem entsprechenden Foto zugewiesen ist.
 	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void addTagToPhoto(RoutingContext ctx) {
@@ -356,7 +363,6 @@ public class PhotoHandler {
 
 
 	/**
-	 *
 	 * @param tag Der tag, der überprüft werden soll
 	 * @return
 	 */
@@ -386,7 +392,7 @@ public class PhotoHandler {
 			.execute(Tuple.of(tag), res -> {
 				if (res.succeeded()) {
 					promise.complete(res.result().property(JDBCPool.GENERATED_KEYS).getInteger(0));
-				}  else {
+				} else {
 					promise.fail(res.cause());
 				}
 			});
@@ -396,32 +402,33 @@ public class PhotoHandler {
 
 	/**
 	 * Prüft, ob der Fototitel nur aus Leerzeichen besteht, also leer ist. <br>
-   * Prüft ob der Fototitel länger als 30 Zeichen ist. <br>
+	 * Prüft ob der Fototitel länger als 30 Zeichen ist. <br>
 	 * Wenn ja, gebe Statuscode 400 mit entsprechender Fehlermeldung zurück. <br>
 	 * Wenn nein, gebe die Anfrage an den nächsten Handler weiter <br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void validatePhotoTitleReq(RoutingContext ctx) {
 		String photoTitle = ctx.data().get("photoTitle").toString();
 
-    		if (photoTitle.trim().isEmpty()) {
-	    		MainVerticle.response(ctx.response(), 400, new JsonObject()
+		if (photoTitle.trim().isEmpty()) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Titel darf nicht leer sein")
-	    		);
-    		} else if (photoTitle.length() > 30) {
-	    		MainVerticle.response(ctx.response(), 400, new JsonObject()
+			);
+		} else if (photoTitle.length() > 30) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
 				.put("message", "Der Titel darf maximal 30 Zeichen lang sein")
 			);
-    		} else {
-	    		ctx.next();
-    		}
+		} else {
+			ctx.next();
+		}
 	}
-
 
 
 	/**
 	 * Bearbeiten des Fototitels in der Datenbank, Statuscode 200 bei Erfolg<br>
 	 * Statuscode 500 mit Fehlermeldung bei Misserfolg.
+	 *
 	 * @param ctx
 	 */
 	public void editPhotoTitle(RoutingContext ctx) {
@@ -448,6 +455,7 @@ public class PhotoHandler {
 	 * Handler für PATCH /photoDate <br>
 	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn date nicht korrekt nach folgenden Schema formatiert ist 'YYYY-MM-DD' <br>
 	 * Gebe Statuscode 404 mit entsprechender Fehlermeldung zurück, wenn das Feld photoID kein gültiger Wert ist. <br>
+	 *
 	 * @param ctx Routing Context
 	 */
 	public void handleEditPhotoDate(RoutingContext ctx) {
@@ -478,7 +486,6 @@ public class PhotoHandler {
 	}
 
 	/**
-	 *
 	 * @param date Das Datum als String, das geparst werden soll
 	 * @return true, wenn das Datum im Format YYYY-MMM-DD vorliegt und in der Vergangenheit liegt; false sonst
 	 */
@@ -488,7 +495,7 @@ public class PhotoHandler {
 		try {
 			LocalDate parsedDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
 			return !parsedDate.isAfter(LocalDate.now());
-		} catch(DateTimeParseException e) {
+		} catch (DateTimeParseException e) {
 			return false;
 		}
 	}
@@ -496,174 +503,175 @@ public class PhotoHandler {
 	/**
 	 * Löscht das Foto mit der entsprechenden ID und gibt bei Erfolg Statuscode 204 zurück.<br>
 	 * Gibt Statuscode 500 mit entsprechender Fehlermeldung zurück, wenn ein Server- und/oder Datenbankfehler aufgetreten ist.<br>
+	 *
 	 * @param ctx Routing Context
 	 */
-  public void deletePhoto(RoutingContext ctx){
-    jdbcPool.preparedQuery("SELECT url from Photos WHERE ID = ?") //Dateiname abfragen
-      .execute(Tuple.of(ctx.data().get("photoID")), res -> {
+	public void deletePhoto(RoutingContext ctx) {
+		jdbcPool.preparedQuery("SELECT url from Photos WHERE ID = ?") //Dateiname abfragen
+			.execute(Tuple.of(ctx.data().get("photoID")), res -> {
 
-        if (res.succeeded() && res.result() != null && res.result().size() > 0) {
+				if (res.succeeded() && res.result() != null && res.result().size() > 0) {
 
-          String photoURL = res.result().iterator().next().getString("url");
-          if (photoURL != null) {
-            vertx.fileSystem().delete("img/" + photoURL, deleteResult -> {  //lösche Foto von Server
-              if (deleteResult.succeeded()) {
+					String photoURL = res.result().iterator().next().getString("url");
+					if (photoURL != null) {
+						vertx.fileSystem().delete("img/" + photoURL, deleteResult -> {  //lösche Foto von Server
+							if (deleteResult.succeeded()) {
 
-                jdbcPool.preparedQuery("DELETE FROM photostags WHERE Photos_ID = ?")  //entferne Referenzen von Tags
-                    .execute(Tuple.of(ctx.data().get("photoID")), res2 -> {
-                      if (res2.failed()) {
-                        MainVerticle.response(ctx.response(), 500, new JsonObject()
-                          .put("message", "Fehler beim Löschen des Fotos")
-                        );
-                      }
-                    });
+								jdbcPool.preparedQuery("DELETE FROM photostags WHERE Photos_ID = ?")  //entferne Referenzen von Tags
+									.execute(Tuple.of(ctx.data().get("photoID")), res2 -> {
+										if (res2.failed()) {
+											MainVerticle.response(ctx.response(), 500, new JsonObject()
+												.put("message", "Fehler beim Löschen des Fotos")
+											);
+										}
+									});
 
-                jdbcPool.preparedQuery("DELETE FROM Photos WHERE ID = ?") //lösche Foto aus Datenbank
-                  .execute(Tuple.of(ctx.data().get("photoID")), res3 -> {
+								jdbcPool.preparedQuery("DELETE FROM Photos WHERE ID = ?") //lösche Foto aus Datenbank
+									.execute(Tuple.of(ctx.data().get("photoID")), res3 -> {
 
-                    if (res3.succeeded()) {
-                      ctx.response()
-                        .setStatusCode(204)
-                        .end();
-                    } else {
-                      MainVerticle.response(ctx.response(), 500, new JsonObject()
-                        .put("message", "Fehler beim Löschen des Fotos")
-                      );
-                    }
+										if (res3.succeeded()) {
+											ctx.response()
+												.setStatusCode(204)
+												.end();
+										} else {
+											MainVerticle.response(ctx.response(), 500, new JsonObject()
+												.put("message", "Fehler beim Löschen des Fotos")
+											);
+										}
 
-                  });
-              } else {
-                System.err.println(deleteResult.cause().getMessage());
-                MainVerticle.response(ctx.response(), 500, new JsonObject()
-                  .put("message", "Fehler beim Löschen des Fotos")
-                );
-              }
-            });
-          }
-        } else {
-          MainVerticle.response(ctx.response(), 500, new JsonObject()
-            .put("message", "Fehler beim Löschen des Fotos")
-          );
-        }
-      });
-  }
-
-
-  /**
-   * Prüft ob eine Datei hochgeladen wurde <br>
-   * Wenn nein: gebe eine Fehlermeldung (400 Bad Request) aus, ansonsten gebe Anfrage an nächsten Handler weiter
-   * @param ctx Routing Context
-   */
-  public void containsUploadedFile(RoutingContext ctx) {
-    if (ctx.fileUploads().isEmpty()){
-      MainVerticle.response(ctx.response(), 400, new JsonObject()
-        .put("message", "Es wurde keine Bilddatei mitgesendet"));
-
-    }else {
-      ctx.next();
-    }
-
-  }
-
-  /**
-   * Prüft ob es sich um ein gültiges Foto handelt
-   * @param fileUpload fileUpload
-   * @return true wenn es sich um eine Bilddatei des  Typs png oder jpeg handelt, ansonsten false
-   */
-  private boolean isValidImage(FileUpload fileUpload) {
-    String mimeType = fileUpload.contentType();
-    return mimeType.equals("image/png") || mimeType.equals("image/jpeg");
-  }
-
-  /**
-   * Verwaltet Foto-Uploads <br>
-   * Legt das Foto in der Datenbank an <br>
-   * Wenn es sich um ein Foto handelt: Bennene die Datei nach der ID und passe den Datebankeintrag entsprechend an <br>
-   * Wenn es sich nicht um ein Foto handelt: Lösche Datei
-   * @param ctx Routing Context
-   */
-public void uploadPhoto(RoutingContext ctx){
-
-    int currentUserID = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
-    String photoTitle = ctx.request().getFormAttribute("title");
-    String photoDate = ctx.request().getFormAttribute("taken");
-
-  if (!isValidDate(photoDate)) {  //prüfe ob Datum gültig ist
-    MainVerticle.response(ctx.response(), 400, new JsonObject()
-      .put("message", "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen")
-    );
-  }
-
-    for (FileUpload file : ctx.fileUploads()) { //verarbeite FileUpload
-      String fileNameOriginal = file.fileName();
-      String fileNameUpload = file.uploadedFileName();
-      String fileExtension = fileNameOriginal.substring(fileNameOriginal.lastIndexOf("."));
+									});
+							} else {
+								System.err.println(deleteResult.cause().getMessage());
+								MainVerticle.response(ctx.response(), 500, new JsonObject()
+									.put("message", "Fehler beim Löschen des Fotos")
+								);
+							}
+						});
+					}
+				} else {
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Fehler beim Löschen des Fotos")
+					);
+				}
+			});
+	}
 
 
-      if (!isValidImage(file)) {  //lösche Datei, wenn es sich nicht um ein Bild handelt
-        vertx.fileSystem().delete(fileNameUpload, deleteResult -> {
-          if (deleteResult.failed()) {
-            System.err.println(deleteResult.cause().getMessage()); //gebe Fehlermeldung aus
-          }
-        });
-        MainVerticle.response(ctx.response(), 400, new JsonObject()
-          .put("message", "Die hochgeladene Datei muss eine Bilddatei des Typs JPEG oder PNG sein"));
-        return;
-      }
+	/**
+	 * Prüft ob eine Datei hochgeladen wurde <br>
+	 * Wenn nein: gebe eine Fehlermeldung (400 Bad Request) aus, ansonsten gebe Anfrage an nächsten Handler weiter
+	 *
+	 * @param ctx Routing Context
+	 */
+	public void containsUploadedFile(RoutingContext ctx) {
+		if (ctx.fileUploads().isEmpty()) {
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Es wurde keine Bilddatei mitgesendet"));
 
-      // --DATABASE--
-      //Lege Eintrag in der Datenbank an
-      jdbcPool.preparedQuery("""
-                       			INSERT INTO photos
-                        		     (Users_ID, title, taken, url)
-                        		     VALUES (?, ?, ?, ?)
-                        			"""
-      ).execute(Tuple.of(currentUserID, photoTitle, photoDate, fileNameUpload.substring(0, 29)), res -> { //TODO: evtl. in DB die max Länge für url erhöhen damit man hier den ganzen namen nehmen kann
-        if (res.succeeded()) {
-          int photoID = res.result().property(JDBCPool.GENERATED_KEYS).getInteger(0); //generate new File name
-          String fileNameNew = photoID + fileExtension; //neuer Dateiname ist ID + Endung der ursprünglichen Datei
+		} else {
+			ctx.next();
+		}
 
-          vertx.fileSystem().move(fileNameUpload, "img/" + fileNameNew, moveResult -> { //rename File
-            if (moveResult.failed()) {
-              System.err.println(moveResult.cause().getMessage());
-              MainVerticle.response(ctx.response(), 500, new JsonObject()
-                .put("message", "Fehler beim speichern des Fotos auf dem Server!"));
+	}
 
+	/**
+	 * Prüft ob es sich um ein gültiges Foto handelt
+	 *
+	 * @param fileUpload fileUpload
+	 * @return true wenn es sich um eine Bilddatei des  Typs png oder jpeg handelt, ansonsten false
+	 */
+	private boolean isValidImage(FileUpload fileUpload) {
+		String mimeType = fileUpload.contentType();
+		return mimeType.equals("image/png") || mimeType.equals("image/jpeg");
+	}
 
-            }
-          });
-          //passe Datenbank-Eintrag (URL) an neuen Namen an
-          jdbcPool.preparedQuery("""
-                       		          UPDATE photos
-                                     SET url = ?
-                                     WHERE ID = ?
-                        			      """
-          ).execute(Tuple.of(fileNameNew, photoID), res2 -> {
-            if (res2.succeeded()) {
+	/**
+	 * Verwaltet Foto-Uploads <br>
+	 * Legt das Foto in der Datenbank an <br>
+	 * Wenn es sich um ein Foto handelt: Bennene die Datei nach der ID und passe den Datebankeintrag entsprechend an <br>
+	 * Wenn es sich nicht um ein Foto handelt: Lösche Datei
+	 *
+	 * @param ctx Routing Context
+	 */
+	public void uploadPhoto(RoutingContext ctx) {
 
-              MainVerticle.response(ctx.response(), 201, new JsonObject()
-                .put("message", "Foto wurde erfolgreich hochgeladen!"));
+		int currentUserID = ctx.session().get(MainVerticle.SESSION_ATTRIBUTE_ID);
+		String photoTitle = ctx.request().getFormAttribute("title");
+		String photoDate = ctx.request().getFormAttribute("taken");
 
-            } else {
-              System.err.println("Error: " + res.cause().getMessage());
-              MainVerticle.response(ctx.response(), 500, new JsonObject()
-                .put("message", "Fehler beim speichern des Fotos auf dem Server")
-              );
-            }
-          });
-        } else {
-          System.err.println("Error: " + res.cause().getMessage());
-          MainVerticle.response(ctx.response(), 500, new JsonObject()
-            .put("message", "Fehler beim Upload des Fotos")
-          );
-        }
-      });
+		if (!isValidDate(photoDate)) {  //prüfe ob Datum gültig ist
+			MainVerticle.response(ctx.response(), 400, new JsonObject()
+				.put("message", "Ungültiges Feld date: Das Datum muss im Format 'YYYY-MM-DD' vorliegen und in der Vergangenheit liegen")
+			);
+		}
+
+		for (FileUpload file : ctx.fileUploads()) { // verarbeite FileUpload
+			String fileNameOriginal = file.fileName(); // wie hieß die Datei vor Upload auf meinem PC?
+			String fileNameUpload = file.uploadedFileName(); // automatisch generierter Name von vertx
+			String fileExtension = fileNameOriginal.substring(fileNameOriginal.lastIndexOf("."));
 
 
+			if (!isValidImage(file)) {  //lösche Datei, wenn es sich nicht um ein Bild handelt
+				vertx.fileSystem().delete(fileNameUpload, deleteResult -> {
+					if (deleteResult.failed()) {
+						System.err.println(deleteResult.cause().getMessage()); //gebe Fehlermeldung aus
+					}
+				});
+				MainVerticle.response(ctx.response(), 400, new JsonObject()
+					.put("message", "Die hochgeladene Datei muss eine Bilddatei des Typs JPEG oder PNG sein"));
+				return;
+			}
+
+			// --DATABASE--
+			//Lege Eintrag in der Datenbank an
+			jdbcPool.preparedQuery("""
+				INSERT INTO photos
+				     (Users_ID, title, taken, url)
+				     VALUES (?, ?, ?, ?)
+				"""
+			).execute(Tuple.of(currentUserID, photoTitle, photoDate, fileNameUpload.substring(0, 29)), res -> {
+				if (res.succeeded()) {
+					int photoID = res.result().property(JDBCPool.GENERATED_KEYS).getInteger(0); //generate new File name
+					String fileNameNew = photoID + fileExtension; //neuer Dateiname ist ID + Endung der ursprünglichen Datei
+
+					vertx.fileSystem().move(fileNameUpload, "img/" + fileNameNew, moveResult -> { //rename File
+						if (moveResult.failed()) {
+							System.err.println(moveResult.cause().getMessage());
+							MainVerticle.response(ctx.response(), 500, new JsonObject()
+								.put("message", "Fehler beim speichern des Fotos auf dem Server!"));
 
 
+						}
+					});
+					//passe Datenbank-Eintrag (URL) an neuen Namen an
+					jdbcPool.preparedQuery("""
+						  UPDATE photos
+						    SET url = ?
+						    WHERE ID = ?
+						"""
+					).execute(Tuple.of(fileNameNew, photoID), res2 -> {
+						if (res2.succeeded()) {
 
-    }
-}
+							MainVerticle.response(ctx.response(), 201, new JsonObject()
+								.put("message", "Foto wurde erfolgreich hochgeladen!"));
+
+						} else {
+							System.err.println("Error: " + res.cause().getMessage());
+							MainVerticle.response(ctx.response(), 500, new JsonObject()
+								.put("message", "Fehler beim speichern des Fotos auf dem Server")
+							);
+						}
+					});
+				} else {
+					System.err.println("Error: " + res.cause().getMessage());
+					MainVerticle.response(ctx.response(), 500, new JsonObject()
+						.put("message", "Fehler beim Upload des Fotos")
+					);
+				}
+			});
+
+
+		}
+	}
 
 }

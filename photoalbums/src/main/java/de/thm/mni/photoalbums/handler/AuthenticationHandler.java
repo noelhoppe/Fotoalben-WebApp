@@ -8,6 +8,7 @@ public class AuthenticationHandler {
 	/**
 	 * Wenn das Session-Objekt leer ist, d.h. kein Benutzer angemeldet ist, wird die http-Anfrage hier mit einem 401 Unauthorized und einer entsprechenden Fehlermeldung abgewiesen. <br>
 	 * Wenn das Session-Objekt nicht leer ist, d.h. ein Benutzer angemeldet ist, wird die http-Anfrage an den nächsten handler weitergegeben und weiterverarbeitet.<br>
+	 *
 	 * @param ctx Der Routing Context
 	 */
 	public void isLoggedIn(RoutingContext ctx) {
@@ -24,6 +25,7 @@ public class AuthenticationHandler {
 	 * Prüft, ob der angemeldete Benutzer der Admin ist.
 	 * Wenn ja, rufe den nächsten Handler auf.
 	 * Wenn nein, beende die Anfrage mit einem 403 und entsprechender Fehlermeldung.
+	 *
 	 * @param ctx
 	 */
 	public void isAdmin(RoutingContext ctx) {

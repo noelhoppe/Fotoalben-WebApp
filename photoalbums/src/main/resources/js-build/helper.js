@@ -9,15 +9,14 @@ export function renderError(errorContainer, resetErrorMessage, message) {
     if (resetErrorMessage) { // Wenn resetErrorMessage true ist, leeren wir die Fehlermeldung und verstecken den Container
         errorParagraph.textContent = '';
         errorContainer.classList.add("d-none");
-    }
-    else if (message && message.trim() != '') { // Wenn message definiert ist und nicht leer ist, zeigen wir die Fehlermeldung an
+    } else if (message && message.trim() != '') { // Wenn message definiert ist und nicht leer ist, zeigen wir die Fehlermeldung an
         errorParagraph.textContent = message;
         errorContainer.classList.remove("d-none");
-    }
-    else { // Wenn keine Nachricht vorhanden ist oder leer ist, verstecken wir den Container
+    } else { // Wenn keine Nachricht vorhanden ist oder leer ist, verstecken wir den Container
         errorContainer.classList.add("d-none");
     }
 }
+
 /**
  * Wechsele die Sichtbarkeit des Passwortes
  */
@@ -27,8 +26,7 @@ export function togglePasswordVisibility() {
         const inputField = document.getElementById("password");
         if (inputField.type == "password") {
             inputField.type = "text";
-        }
-        else {
+        } else {
             inputField.type = "password";
         }
     });

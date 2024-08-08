@@ -1,14 +1,37 @@
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    function adopt(value) {
+        return value instanceof P ? value : new P(function (resolve) {
+            resolve(value);
+        });
+    }
+
     return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        function fulfilled(value) {
+            try {
+                step(generator.next(value));
+            } catch (e) {
+                reject(e);
+            }
+        }
+
+        function rejected(value) {
+            try {
+                step(generator["throw"](value));
+            } catch (e) {
+                reject(e);
+            }
+        }
+
+        function step(result) {
+            result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+        }
+
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
 // @ts-ignore
-import { renderError } from "/helper.js";
+import {renderError} from "/helper.js";
+
 /**
  * Selektiert den Logout Button und führt bei dem Klick-Event<br>
  * POST /logout aus
@@ -24,25 +47,27 @@ function logout() {
             });
             if (res.redirected) {
                 window.location.href = res.url; // https://stackoverflow.com/questions/39735496/redirect-after-a-fetch-post-call
-            }
-            else {
+            } else {
                 const data = yield res.json();
                 console.log(res.status + " " + data.message);
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error POST /logout", error);
         }
     }));
 }
+
 logout();
+
 /**
  * Fügt einen Klick-Event-Listener zu Galerie-Elementen hinzu.
  */
 function attachGalleryItemClickListener() {
     document.addEventListener('click', handleGalleryItemClick);
 }
+
 attachGalleryItemClickListener();
+
 /**
  * Behandelt das Klick-Ereignis auf ein Galerie-Element, d.h
  * 1. Es extrahiert die Fotodaten aus dem angeklickten Bild {@link extractPhotoData}
@@ -56,6 +81,7 @@ function handleGalleryItemClick(e) {
         updateModalUI(photoData);
     }
 }
+
 /**
  * Extrahiert die Fotodatenattribute vom angeklickten Galerie-Element.
  * @param target HTMLElement
@@ -67,8 +93,9 @@ function extractPhotoData(target) {
     const imgUrl = target.getAttribute('src');
     const taken = target.getAttribute('data-date');
     const tags = target.getAttribute('data-tags');
-    return { id, title, taken, imgUrl, tags };
+    return {id, title, taken, imgUrl, tags};
 }
+
 /**
  * Aktualisiert das Modal mit den extrahierten Fotodaten<br>
  * {@link updateModalTags}<br>
@@ -78,7 +105,7 @@ function extractPhotoData(target) {
  */
 function updateModalUI(photoData) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { id, title, taken, imgUrl, tags } = photoData; // DESTRUCTURING
+        const {id, title, taken, imgUrl, tags} = photoData; // DESTRUCTURING
         // Aktualisiere die Modal Elemente
         const imageTitle = document.querySelector("#image-title");
         const modalImg = document.querySelector("#modal-img");
@@ -100,12 +127,12 @@ function updateModalUI(photoData) {
             if (Array.isArray(data)) {
                 createAlbumList(data);
             }
-        }
-        catch (err) {
+        } catch (err) {
             console.error("Fehler bei updateModalUI:", err);
         }
     });
 }
+
 /**
  * Aktualisiert die Modal-Tags-UI.<br>
  * Fügt den Delete Buttons für die Tags ein Event Listener hinzu, und bei ausgelöstem Klick-Event {@link handleTagDelete} aufruft
@@ -124,13 +151,16 @@ function updateModalTags(modalTags, tags) {
             const delBtn = document.createElement("button");
             delBtn.classList.add("btn", "btn-close");
             delBtn.setAttribute("aria-label", "Tag entfernen");
-            delBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () { return yield handleTagDelete(delBtn.closest("p").textContent, colDiv); }));
+            delBtn.addEventListener("click", () => __awaiter(this, void 0, void 0, function* () {
+                return yield handleTagDelete(delBtn.closest("p").textContent, colDiv);
+            }));
             tagElement.appendChild(delBtn);
             colDiv.appendChild(tagElement);
             modalTags.appendChild(colDiv);
         });
     }
 }
+
 /**
  * Setzt die Eingabefelder im Modal zurück.
  */
@@ -139,6 +169,7 @@ function resetModalInputs() {
     document.querySelector("#edit-date").value = "";
     document.querySelector("#addTagInput").value = "";
 }
+
 /**
  * Fügt einen Event-Listener zum Hinzufügen eines Tags hinzu<br>
  * und ruft {@link handleTagAdd} mit der entsprechenden extrahierten photoID und dem tagNamen auf.
@@ -153,7 +184,9 @@ function attachAddTagListener() {
         }));
     });
 }
+
 attachAddTagListener();
+
 /**
  *
  * Aktualisiert das Tag Attribute des entsprechenden Fotos und aktualisiert die Modaloberfläche {@link updateModalUI} mit den
@@ -190,23 +223,21 @@ function handleTagAdd(photoID, tagName) {
                 let tags = img.dataset.tags;
                 if (tags.length == 0) {
                     tags = tagName;
-                }
-                else {
+                } else {
                     tags = tags + `, ${tagName}`;
                 }
                 img.dataset.tags = tags;
                 updateModalUI(extractPhotoData(img));
-            }
-            else {
+            } else {
                 const data = yield res.json();
                 renderError(errorContainer, false, data.message);
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error POST /tag", error);
         }
     });
 }
+
 /**
  * Behandelt das Löschen eines Tags.
  * DELETE /tag
@@ -248,17 +279,16 @@ function handleTagDelete(tag, colDiv) {
                         imgElement.setAttribute("data-tags", updatedTags);
                     }
                 }
-            }
-            else {
+            } else {
                 const data = yield res.json();
                 renderError(errorContainer, false, data.message);
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error DELETE /tag", error);
         }
     });
 }
+
 /**
  * PATCH
  * {
@@ -287,18 +317,18 @@ function editPhotoTitle() {
                     img.setAttribute("title", data.photoTitle);
                     renderError(errorContainer, true);
                     updateModalUI(extractPhotoData(img));
-                }
-                else {
+                } else {
                     renderError(errorContainer, false, data.message);
                 }
-            }
-            catch (error) {
+            } catch (error) {
                 console.log("Error updating photo's title" + error);
             }
         }));
     });
 }
+
 editPhotoTitle();
+
 /**
  * GET /username
  */
@@ -314,12 +344,12 @@ function fetchUsername() {
             }
             const data = yield res.json();
             renderUsername(data.username);
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error GET /username", error);
         }
     });
 }
+
 /**
  * GET /role <br>
  * {@link renderGoToAdminPage}
@@ -333,12 +363,12 @@ function fetchRole() {
             });
             const data = yield res.json();
             renderGoToAdminPage(data.role);
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error GET /role" + error);
         }
     });
 }
+
 /**
  * Zeigt den Button "Zur Adminseite" nicht an, wenn der Nutzer kein Admin ist.
  * @param role Rolle des Benutzers
@@ -347,11 +377,11 @@ function renderGoToAdminPage(role) {
     const goToAdminPageItem = document.querySelector("#go-to-admin-page");
     if (role == "ADMIN") {
         goToAdminPageItem.classList.remove("d-none");
-    }
-    else {
+    } else {
         goToAdminPageItem.classList.add("d-none");
     }
 }
+
 /**
  * Leitet den Nutzer zur Adminseite weiter, wenn dieser auf den entsprechenden Button klickt und als Admin angemeldet ist
  */
@@ -360,13 +390,14 @@ function redirectToAdminPage() {
         try {
             const res = yield fetch("http://localhost:8080/protected/admin.html");
             window.location.href = res.url;
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error redirecting to Admin-Page");
         }
     }));
 }
+
 redirectToAdminPage();
+
 /**
  * Funktion zum Rendern des Benutzernamens im DOM
  * @param username Der Benutzername
@@ -375,6 +406,7 @@ function renderUsername(username) {
     const usernameField = document.querySelector("#username");
     usernameField.textContent = username;
 }
+
 /**
  * Extrahiert den Suchparameter aus dem entsprechenden Input-Feld, wenn das Submit-Event des entsprechenden Forms ausgelöst wurde<br>
  * Ruft mit dem extrahierten Suchparameter {@link fetchPhotos} auf
@@ -386,7 +418,9 @@ function addSearchPhotosListener() {
         yield fetchPhotos(query);
     }));
 }
+
 addSearchPhotosListener();
+
 /**
  * GET /photos <br>
  * Funktion zum Abrufen aller Fotos eines Benutzers vom Server, optional mit übergebenem Suchparameter
@@ -407,12 +441,12 @@ function fetchPhotos(searchVal) {
             const data = yield res.json();
             clearImages(document.querySelector("#main-photos-container .row"));
             data.photos.forEach(photo => renderPhotos(photo));
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error GET /photos", error);
         }
     });
 }
+
 /**
  * Funktion zum Initialisieren der Seite.
  */
@@ -424,7 +458,9 @@ function initializePage() {
         yield fetchRole();
     }));
 }
+
 initializePage();
+
 /**
  * Entfernt die Bilder aus dem DOM
  * @param element Das entsprechende Element
@@ -436,6 +472,7 @@ function clearImages(element) {
     }
     element.innerHTML = "";
 }
+
 /**
  * Fügt ein Bild in den DOM ein.
  * Dabei werden die Attribute src, title, date-date und data-tags gesetzt https://developer.mozilla.org/en-US/docs/Learn/HTML/Howto/Use_data_attributes
@@ -443,7 +480,7 @@ function clearImages(element) {
  * @param photo Ein Bild
  */
 function renderPhotos(photo) {
-    const { id, imgUrl, title, taken, tags } = photo;
+    const {id, imgUrl, title, taken, tags} = photo;
     // Hauptcontainer auswählen
     const mainContainer = document.querySelector("#main-photos-container .row");
     // Prüfen, ob das Element existiert
@@ -463,8 +500,7 @@ function renderPhotos(photo) {
     img.dataset.date = taken;
     if (photo.tags) {
         img.dataset.tags = tags;
-    }
-    else {
+    } else {
         img.dataset.tags = "";
     }
     // Für das Bootstrap modal erforderliche Attribute setzen
@@ -475,6 +511,7 @@ function renderPhotos(photo) {
     // Bild-Container in den Hauptcontainer einfügen
     mainContainer.appendChild(colDiv);
 }
+
 /**
  * Extrahiert die photoID aus dem entsprechendem HTML Element und ruft
  *
@@ -508,16 +545,15 @@ function handleEditPhotoDate(date) {
                 imgElement.dataset.date = data.newDate;
                 updateModalUI(extractPhotoData(imgElement));
                 renderError(document.querySelector("#error-edit-photo-container"), true);
-            }
-            else {
+            } else {
                 renderError(document.querySelector("#error-edit-photo-container"), false, data.message);
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error PATCH /photoDate");
         }
     });
 }
+
 /**
  * Wartet, bis der entsprechende Button ein click-event auslöst und ruft dann {@link handleEditPhotoDate} mit dem extrahiertem Fotodatum auf.<br>
  */
@@ -528,7 +564,9 @@ function editDateListener() {
         }));
     });
 }
+
 editDateListener();
+
 /**
  * Wartet, bis der entsprechende Button zum Löschen eines Fotos ein click-event auslöst und ruft mit der extrahierten photoID {@link handlePhotoDelete} auf
  */
@@ -537,7 +575,9 @@ function editDelPhotoBtnListener() {
         yield handlePhotoDelete(document.querySelector("#modal-img").dataset.id);
     }));
 }
+
 editDelPhotoBtnListener();
+
 /**
  * DELETE /img/:photoID
  * @param photoID Die ID des Fotos
@@ -553,22 +593,26 @@ function handlePhotoDelete(photoID) {
                 renderError(document.querySelector("#error-edit-photo-container"), true);
                 yield fetchPhotos();
                 window.location.reload();
-            }
-            else {
+            } else {
                 const data = yield res.json();
                 console.log(data.message);
                 renderError(document.querySelector("#error-edit-photo-container"), false, data.message);
             }
-        }
-        catch (err) {
+        } catch (err) {
             console.log(err);
         }
     });
 }
+
 //Don't allow Dates that are in the future for Image Date of creation
 const addPhotoDate = document.getElementById("addPhotoDate");
 let today = new Date().toISOString().split("T")[0];
 addPhotoDate.setAttribute("max", today);
+
+/**
+ * Wartet auf das Klick-Event des entsprechenden Buttons und extrahiert name, datum und das Bild<br>
+ * Ruft im Anschluss POST /photos auf
+ */
 function addPhoto() {
     const addPhotoSubmit = document.getElementById("addPhotoSubmit");
     addPhotoSubmit.addEventListener("click", (evt) => __awaiter(this, void 0, void 0, function* () {
@@ -583,24 +627,24 @@ function addPhoto() {
             const res = yield fetch("http://localhost:8080/photos", {
                 method: "POST",
                 credentials: "include",
-                headers: {},
+                headers: {}, // hier muss kein header übergeben werden
                 body: formData
             });
             const data = yield res.json();
             if (res.status == 201) {
                 window.location.reload();
                 renderError(document.querySelector("#error-add-photo-container"), true);
-            }
-            else {
+            } else {
                 renderError(document.querySelector("#error-add-photo-container"), false, data.message);
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.log("ERROR at POST /photos");
         }
     }));
 }
+
 addPhoto();
+
 /**
  * POST /albums
  * Sendet Daten zur Erstellung eines Albums an den Server
@@ -626,18 +670,18 @@ function addAlbum() {
             if (res.status == 201) {
                 renderError(errorContainer, true);
                 window.location.reload();
-            }
-            else {
+            } else {
                 const data = yield res.json();
                 renderError(errorContainer, false, data.message);
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.log("ERROR at POST /Albums", error);
         }
     }));
 }
+
 addAlbum();
+
 /**
  * Wartet auf das Submit Event des entsprechenden Formulars und extrahiere den Wert des Input-Feldes <br>
  * Gebe den Wert des Input-Feldes als Suchparameter an die entsprechende Funktion, die die http-Anfrage tätigt {@link fetchAlbums}
@@ -649,7 +693,9 @@ function searchAlbums() {
         yield fetchAlbums(query);
     }));
 }
+
 searchAlbums();
+
 /**
  * GET /albums <br>
  * Optional mit Suchparameter <br>
@@ -657,24 +703,23 @@ searchAlbums();
 function fetchAlbums(searchParam) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const res = yield fetch("http://localhost:8080/albums?" + (searchParam ? new URLSearchParams({ searchParam: searchParam }).toString() : ""), {
+            const res = yield fetch("http://localhost:8080/albums?" + (searchParam ? new URLSearchParams({searchParam: searchParam}).toString() : ""), {
                 method: "GET",
                 credentials: "include"
             });
             if (res.ok) {
                 const data = yield res.json();
                 renderAlbums(data.albums);
-            }
-            else {
+            } else {
                 const data = yield res.json();
                 console.log(res.status + " " + data.message);
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error(error);
         }
     });
 }
+
 /**
  * Render die Alben mit folgenden Besonderheiten.
  * 1. Setze den Container zurück
@@ -694,7 +739,7 @@ function renderAlbums(albums) {
       </li>
   `;
     albums.forEach(album => {
-        const { id, title, tags } = album; // DESTRUCTURING
+        const {id, title, tags} = album; // DESTRUCTURING
         const albumChild = document.createElement("li");
         albumChild.setAttribute("data-album-id", id.toString()); // Insert album id in parent container
         if (typeof tags == "string") { // Wenn das Album Tags besitzt
@@ -727,6 +772,7 @@ function renderAlbums(albums) {
     attachClickListenerEditAlbum();
     attachDelAlbumListener();
 }
+
 /**
  * Selektiere alle Buttons mit der js-target Klasse .del-btns und füge jedem Button ein Event-Listener hinzu (click).<br>
  * Selektiere beim Klick, die ID des Albums, welche als data-attribute im übergeordneten Element gespeichert ist<br>
@@ -741,6 +787,7 @@ function attachDelAlbumListener() {
         }));
     });
 }
+
 /**
  * DELETE /albums/:albumID
  *
@@ -758,17 +805,16 @@ function handleAlbumDelete(albumID) {
             });
             if (res.status == 204) {
                 yield fetchAlbums();
-            }
-            else {
+            } else {
                 const data = yield res.json();
                 console.log(res.status + " " + data.message);
             }
-        }
-        catch (err) {
+        } catch (err) {
             console.log(err);
         }
     });
 }
+
 /**
  * Fügt ein click Event Listener dem entsprechenden Button hinzu und extrahiert den neuen Titel des Albums aus dem Input-Feld sowie die albumID des Albums aus dem
  * Modalcontainer (data attribut).
@@ -783,7 +829,9 @@ function patchAlbumsTitle() {
         yield handlerPatchAlbumsTitle(title, parseInt(albumID));
     }));
 }
+
 patchAlbumsTitle();
+
 /**
  * PATCH /albums/albumsTitle mit den Parametern als JSON body
  *
@@ -796,7 +844,7 @@ function handlerPatchAlbumsTitle(title, albumID) {
             const res = yield fetch("http://localhost:8080/albums/albumsTitle", {
                 method: "PATCH",
                 credentials: "include",
-                body: JSON.stringify({ title: title, albumID: albumID })
+                body: JSON.stringify({title: title, albumID: albumID})
             });
             const errorContainer = document.querySelector("#error-edit-album-container");
             if (res.ok) {
@@ -809,19 +857,18 @@ function handlerPatchAlbumsTitle(title, albumID) {
             `);
                 document.querySelector("#album-title").textContent = data.albumTitle; // Aktualisiere das Modal, sodass man nicht das Modal erst schließe und wieder öffnen kann
                 yield fetchAlbums();
-            }
-            else {
+            } else {
                 const data = yield res.json();
                 console.log("called");
                 renderError(errorContainer, false, data.message);
                 console.log(res.status + " " + data.message);
             }
-        }
-        catch (err) {
+        } catch (err) {
             console.log(err);
         }
     });
 }
+
 /**
  * Füge ein Event-Listener zu allen Edit Album Button hinzu, der auf ein Klick-Event reagiert und {@link extractAlbumData} mit dem entsprechenden geklickten Button aufruft.
  */
@@ -832,6 +879,7 @@ function attachClickListenerEditAlbum() {
         editBtn.addEventListener("click", () => extractAlbumData(btn));
     });
 }
+
 /**
  * Selektiere die Album-ID, den Titel und die Tags als kommaseparierter String aus dem entsprechenden Album, welches im Modal gerendert werden soll {@link renderAlbumsEditModal}
  * @param editBtn Der geklickte Button des Albums, welches im Modal bearbeitet werden soll
@@ -843,6 +891,7 @@ function extractAlbumData(editBtn) {
     const data_tags = closestLiElement.hasAttribute("data-tags") ? closestLiElement.getAttribute("data-tags") : undefined;
     renderAlbumsEditModal(data_album_id, title, data_tags);
 }
+
 /**
  * Setze die Eingabefelder des Modals zurück.
  */
@@ -852,6 +901,7 @@ function resetEditAlbumsInputFields() {
     const addTagToAlbumInput = document.querySelector("#addTagToAlbumInput");
     addTagToAlbumInput.value = "";
 }
+
 /**
  * Setze die Eingabefelder des Modals zurück {@link resetEditAlbumsInputFields}
  * Bindet die Album-ID und die Tags des Albums als kommaseparierter String an den Container des Modals
@@ -864,6 +914,7 @@ function renderAlbumsEditModal(data_album_id, title, data_tags) {
     document.querySelector("#album-title").textContent = title;
     renderAlbumsTags(data_tags);
 }
+
 /**
  * Rendert die Tags des Albums im Modal und ruft im Anschluss {@link attachDelTagFromAlbumListener} auf
  * @param data_tags
@@ -885,6 +936,7 @@ function renderAlbumsTags(data_tags) {
     });
     attachDelTagFromAlbumListener();
 }
+
 /**
  * Funktion, die darauf wartet, dass der benutzer ein Button anklickt, um einen Tag zu löschen. Der Tagname wird extrahiert und die Album-ID aus dem Modal Container.<br>
  * Damit wird {@link handleTagDeleteFromAlbum} aufgerufen
@@ -899,6 +951,7 @@ function attachDelTagFromAlbumListener() {
         }));
     });
 }
+
 /**
  * DELETE /albums/tag
  * @param tag Der Tagname wird im JSON übertragen
@@ -910,24 +963,23 @@ function handleTagDeleteFromAlbum(tag, albumID) {
             const res = yield fetch("http://localhost:8080/albums/tag", {
                 method: "DELETE",
                 credentials: "include",
-                body: JSON.stringify({ tag: tag, albumID: albumID })
+                body: JSON.stringify({tag: tag, albumID: albumID})
             });
             if (res.status == 204) {
                 yield fetchAlbums();
                 const albumLiElement = document.querySelector(`#albumOffcans li[data-album-id='${albumID}']`);
                 const tags = albumLiElement.hasAttribute("data-tags") ? albumLiElement.getAttribute("data-tags") : undefined;
                 renderAlbumsTags(tags);
-            }
-            else {
+            } else {
                 const data = yield res.json();
                 console.log(`${res.status, data.message}`);
             }
-        }
-        catch (err) {
+        } catch (err) {
             console.log(err);
         }
     });
 }
+
 /**
  * Funktion, die darauf wartet, dass der Nutzer den Button klickt, um einen Tag hinzuzufügen.<br>
  * Wenn der Button gedrückt wird, wird der Name des Tags sowie die Album-ID des Modalcontainers extrahiert und {@link handlerAddTagToAlbum} aufgerufen
@@ -940,7 +992,9 @@ function addTagToAlbum() {
         yield handlerAddTagToAlbum(tag, parseInt(albumID));
     }));
 }
+
 addTagToAlbum();
+
 /**
  * POST /albums/tag
  * @param tag Wird als JSON im Body übertragen
@@ -952,7 +1006,7 @@ function handlerAddTagToAlbum(tag, albumID) {
             const res = yield fetch("http://localhost:8080/albums/tag", {
                 method: "POST",
                 credentials: "include",
-                body: JSON.stringify({ tag: tag, albumID: albumID })
+                body: JSON.stringify({tag: tag, albumID: albumID})
             });
             const errorContainer = document.querySelector("#error-edit-album-container");
             if (res.status == 201) {
@@ -962,18 +1016,17 @@ function handlerAddTagToAlbum(tag, albumID) {
                 yield fetchAlbums();
                 const albumLiElement = document.querySelector(`#albumOffcans li[data-album-id='${albumID}']`);
                 renderAlbumsTags(albumLiElement.getAttribute("data-tags") || undefined);
-            }
-            else {
+            } else {
                 const data = yield res.json();
                 renderError(errorContainer, false, data.message);
                 console.log(res.status + " " + data.message);
             }
-        }
-        catch (err) {
+        } catch (err) {
             console.log(err);
         }
     });
 }
+
 /**
  * Füge einen Event-Listener hinzu, der auf den Click auf "Alle Fotos" in der Sidebar wartet und alle Fotos anzeigt
  * {@link fetchPhotos}
@@ -981,6 +1034,7 @@ function handlerAddTagToAlbum(tag, albumID) {
 function showAllPhotos() {
     document.querySelector("#alleFotos").addEventListener("click", () => fetchPhotos());
 }
+
 /**
  * Füge jedem Albumname (Button) ein Klick-Event-Listener hinzu, der die zugehörige Album-ID selektiert und diese als Argument an {@link fetchPhotosFromAlbum} übergibt.
  */
@@ -993,6 +1047,7 @@ function showPhotosFromAlbum() {
         }));
     });
 }
+
 /**
  * GET /photos/:albumID
  *
@@ -1012,12 +1067,12 @@ function fetchPhotosFromAlbum(albumID) {
             const data = yield res.json();
             clearImages(document.querySelector("#main-photos-container .row"));
             data.photos.forEach(photo => renderPhotos(photo));
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error GET /photos/:albumID", error);
         }
     });
 }
+
 function createAlbumList(albums) {
     const albumMenu = document.getElementById('albumMenu');
     albumMenu.innerHTML = ''; // Clear existing items
@@ -1041,6 +1096,7 @@ function createAlbumList(albums) {
         albumMenu.appendChild(listItem);
     });
 }
+
 function photoIsInAlbum(photoID) {
     return __awaiter(this, void 0, void 0, function* () {
         const res = yield fetch("http://localhost:8080/albums/contains/" + photoID, {
@@ -1050,14 +1106,14 @@ function photoIsInAlbum(photoID) {
         if (res.ok) {
             const data = yield res.json();
             return data;
-        }
-        else {
+        } else {
             const data = yield res.json();
             console.log(res.status + " " + data.message);
             return data;
         }
     });
 }
+
 function handleSwitchChange(evt, albumID) {
     return __awaiter(this, void 0, void 0, function* () {
         const input = evt.target;
@@ -1077,12 +1133,10 @@ function handleSwitchChange(evt, albumID) {
                     const data = yield res.json();
                     console.log(res.status + " " + data.messsage);
                 }
-            }
-            catch (err) {
+            } catch (err) {
                 console.log(err);
             }
-        }
-        else {
+        } else {
             const res = yield fetch("http://localhost:8080/albums/photo", {
                 method: "DELETE",
                 credentials: "include",
@@ -1095,4 +1149,5 @@ function handleSwitchChange(evt, albumID) {
         }
     });
 }
+
 // --- ALBEN ---
