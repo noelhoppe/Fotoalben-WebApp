@@ -72,6 +72,10 @@
 
 # Informationen zur Inbetriebnahme der Anwendung
 
+## Hinweis
+Im Allgemeinen ist unter windows die PowerShell zu benutzen.  
+Unter macOS wurde zsh zur Inbetriebnahme benutzt.
+
 
 ## Voraussetzungen
 
@@ -104,20 +108,25 @@ git clone git@git.thm.de:informatik-projekt/sose-2024-suess-rupp/gruppe-1.git
 cd gruppe-1
 ```
 
-## Schritt 3: Das ddl-Skript ausführen und die MariaDB-Client-Sitzung beenden
+## Schritt 3 (Linux/macOS): Das ddl-Skript ausführen und die MariaDB-Client-Sitzung beenden
 ```bash 
 mysql -u your_user -p your_password;
 source ddl.sql;
 exit;
 ```
 
-## Schritt 4: Passe die Datenbankkonfiguration in der config.json an
+## Schritt 3 (windows) : Öffne MySQL Client und
 ```bash
-cd photoalbums/src/main/resources/
-
+source ddl.sql;
+exit;
 ```
 
-## Schritt 5: Projekt bauen und starten
+## Schritt 4: Passe die Datenbankkonfiguration in der config.json an (Felder url, user, password)
+```bash
+cd photoalbums/src/main/resources/
+```
+
+## Schritt 5 : Projekt bauen und starten
 ```bash
 cd ../../../
 
@@ -125,8 +134,8 @@ cd ../../../
 ```
 
 ## Schritt 6:  Anwendung im Broswer ausführen
-Öffne deinen Browser und gehe zu_
-```
+Öffne deinen Browser und gehe zu:
+```bahs
 http://localhost:8080
 ```
 
