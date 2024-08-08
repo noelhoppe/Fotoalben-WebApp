@@ -5,9 +5,6 @@ import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.*;
-import io.vertx.core.file.FileProps;
-import io.vertx.core.file.FileSystem;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
@@ -319,6 +316,7 @@ public class MainVerticle extends AbstractVerticle {
            .handler(authenticationHandler::isAdmin)
            .handler(adminHandler::userIDIsNumber)
            .handler(adminHandler::tryToDelAdmin)
+            .handler(adminHandler::deleteAllAlbumsFromUsersPhotos)
             .handler(adminHandler::deleteAllTagsFromUsersPhotos)
            .handler(adminHandler::deleteAllPhotosFromUser)
             .handler(adminHandler::deleteAllTagsFromUsersAlbums)

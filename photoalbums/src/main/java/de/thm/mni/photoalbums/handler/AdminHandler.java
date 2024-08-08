@@ -458,6 +458,46 @@ public class AdminHandler {
 		});
 	}
 
+	/**
+	 *
+	 * Löscht aus der Verbindungstabelle AlbumsPhotos alle Verbindungen, die dem User gehören und gibt bei Erfolg an den nächsten Handler weiter<br>
+	 * Bei Misserfolg wird die Anfrage beendet und Statuscode 500 mit Fehlermeldung zurückgegeben.
+	 * @param ctx Der Routing Context
+	 */
+	public void deleteAllAlbumsFromUsersPhotos(RoutingContext ctx) {
+		int userID = Integer.parseInt(ctx.pathParam("userID"));
+		getAllPhotosIDsFromUser(userID).onComplete(ar -> {
+			if (ar.succeeded()) {
+				List<Integer> photosIDs = ar.result();
+				List<Future<Void>> deleteFutures = new ArrayList<>();
 
+				for (Integer photoID: photosIDs) {
+					Promise<Void> deletePromise = Promise.promise();
+					jdbcPool.preparedQuery("DELETE FROM AlbumsPhotos WHERE Photos_ID = ?")
+						.execute(Tuple.of(photoID), res -> {
+							if (res.succeeded()) {
+								deletePromise.complete();
+							} else {
+								deletePromise.fail(res.cause());
+							}
+						});
+					deleteFutures.add(deletePromise.future());
+				}
 
+				Future.all(deleteFutures).onComplete(result -> {
+					if (result.succeeded()) {
+						ctx.next();
+					} else {
+						MainVerticle.response(ctx.response(), 500, new JsonObject()
+							.put("message", "Ein interner Serverfehler ist aufgetreten")
+						);
+					}
+				});
+			} else {
+				MainVerticle.response(ctx.response(), 500, new JsonObject()
+					.put("message", "Ein interner Serverfehler ist aufgetreten")
+				);
+			}
+		});
+	}
 }
