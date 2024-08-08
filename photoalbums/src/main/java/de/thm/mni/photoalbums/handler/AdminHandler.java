@@ -4,6 +4,7 @@ import de.thm.mni.photoalbums.MainVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
@@ -18,9 +19,11 @@ import java.util.List;
 
 public class AdminHandler {
 	private final JDBCPool jdbcPool;
+  private final Vertx vertx;
 
-	public AdminHandler(JDBCPool jdbcPool) {
+	public AdminHandler(JDBCPool jdbcPool, Vertx vertx) {
 		this.jdbcPool = jdbcPool;
+    this.vertx = vertx;
 	}
 
 	/**
@@ -73,17 +76,43 @@ public class AdminHandler {
 	public void deleteAllPhotosFromUser(RoutingContext ctx) {
 		System.out.println("called deleteAllPhotosFromUser in AdminHandler");
 
-		Integer userID = Integer.parseInt(ctx.pathParam("userID"));
-		jdbcPool.preparedQuery("DELETE FROM Photos WHERE Users_ID = ?")
-			.execute(Tuple.of(userID), ar -> {
-				if (ar.succeeded()) {
-					ctx.next();
-				} else {
-					MainVerticle.response(ctx.response(), 500, new JsonObject()
-						.put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
-					);
-				}
-			});
+    int userID = Integer.parseInt(ctx.pathParam("userID"));
+
+    getAllPhotosURLsFromUser(userID).onComplete(asyncres -> {
+      if (asyncres.succeeded()) {
+        List<String> photoURLs = asyncres.result();
+
+        jdbcPool.preparedQuery("DELETE FROM Photos WHERE Users_ID = ?")
+          .execute(Tuple.of(userID), ar -> {
+            if (ar.succeeded()) {
+
+              for (String url : photoURLs) {
+                vertx.fileSystem().delete("img/" + url, deleteResult -> {
+                  if (deleteResult.failed()) {
+                    MainVerticle.response(ctx.response(), 500, new JsonObject()
+                      .put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
+                    );
+                  }
+                });
+              }
+
+              ctx.next();
+
+            } else {
+              MainVerticle.response(ctx.response(), 500, new JsonObject()
+                .put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
+              );
+            }
+          });
+      } else {
+        MainVerticle.response(ctx.response(), 500, new JsonObject()
+          .put("message", "Ein interner Server- und/oder Datenbankfehler ist aufgetreten")
+        );
+      }
+    });
+
+
+
 
 	}
 
@@ -293,6 +322,30 @@ public class AdminHandler {
 
 		return promise.future();
 	}
+
+  /**
+   * @param userID Die userID des Benutzers
+   * @return Eine Liste mit den zugehörigen URLs der Fotos, die dem Benutze gehören
+   */
+  Future<List<String>> getAllPhotosURLsFromUser(int userID) {
+    Promise<List<String>> promise = Promise.promise();
+    List<String> urls = new ArrayList<>();
+
+    jdbcPool.preparedQuery("SELECT url FROM Photos WHERE Users_ID = ?")
+      .execute(Tuple.of(userID), ar -> {
+        if (ar.succeeded()) {
+          RowSet<Row> rows = ar.result();
+          for (Row row : rows) {
+            urls.add(row.getString("url"));
+          }
+          promise.complete(urls);
+        } else {
+          promise.fail(ar.cause());
+        }
+      });
+
+    return promise.future();
+  }
 
 	/**
 	 *

@@ -307,7 +307,7 @@ public class MainVerticle extends AbstractVerticle {
       .handler(photoHandler::uploadPhoto);
 
     // --- ADMIN HANDLER ---
-    AdminHandler adminHandler = new AdminHandler(jdbcPool);
+    AdminHandler adminHandler = new AdminHandler(jdbcPool, vertx);
 
     router.get("/users") // auch: /users?username=Benutzername
            .handler(authenticationHandler::isLoggedIn)
