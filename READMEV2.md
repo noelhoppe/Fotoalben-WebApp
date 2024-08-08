@@ -1,3 +1,37 @@
+# Beschreibung des DDL-Skripts
+
+1. Das DDL-Sript legt zunächst eine Datenbank MediaVaultDB an und wählt diese aus.
+2. In der Datenbank werden die folgenden Tabellen mit den jeweiligen Feldern angelegt
+   1. Users (Primärschlüssel ID) mit
+      1. ID (Integer) wird automatisch generiert
+      2. username (varchar(30)), ist eindeutig (UNIQUE) und darf nicht null sein
+      3. password (varchar(60)), darf nicht null sein
+      4. role (ENUM('ADMIN', 'USER')), als Standartwert ist USER fetgelegt
+   2. Photos (Primärschlüssel ID) mit
+      1. ID (Integer) wird automatisch generiert
+      2. Users_ID (Integer), ist ein Fremdschlüssel zu ID in der Tabelle Users und gibt an welchem Nutzer das Foto gehört
+      3. title (varchar(30)), darf nicht null sein
+      4. taken (DATE), darf nicht null sein
+      5. url (varchar(50)), ist eindeutig (UNIQUE) und gibt den Dateinamen an
+   3. Albums (Primärschlüssel ID) mit
+      1. ID (Integer) wird automatisch generiert
+      2. Users_ID (Integer) ist Fremdschlüssel zu ID in der Tabelle Users und gibt an welchem Nutzer das Foto gehört
+      3. title (varchar(30)), darf nicht null sein
+   4. AlbumsPhotos (zusammengesetzter Primärschlüssel aus Photos_ID und Albums_ID) mit 
+      1. Photos_ID (Integer), ist ein Fremdschlüssel zu ID in der Tabelle Fotos
+      2. Albums_ID (Integer), ist ein Fremdschlüssel zu ID in der Tabelle Albums
+   5. Tags (Primärschlüssel ID) mit
+      1. ID (Integer) wird automatisch generiert
+      2. name (varchar(30)), ist eindeutig (UNIQUE) und darf nicht null sein
+   6. PhotosTags (zusammengesetzter Primärschlüssel aus Photos_ID und TAGS_ID) mit
+      1. Photos_ID (Integer), ist ein Fremdschlüssel zu ID in der Tabelle Photos
+      2. TAGS_ID (Integer), ist ein Fremdschlüssel zu ID in der Tabelle Tags
+   7. AlbumsTags (zusammengesetzter Primärschlüssel aus Alben_ID und Tags_ID)
+      1. Alben_ID (Integer), ist ein Fremdschlüssel zu ID in der Tabelle Albums
+      2. Tags_ID (Integer), ist ein Fremdschlüssel zu ID in der Tabelle Tags
+3. Es wird ein Nutzer "admin" als Admin-Account erstellt. Als Standartpasswort für diesen Account ist "root" festgelegt 
+    (im DDL-Skript wird ein Eintrag in die Tabelle Users hinzugefügt mit den Werten username: root, password: (B-Crypt-Hash von 'root') role: ADMIN,)
+
 # Beschreibung der RESTful-API
 
 > Wenn bei einer Route kein Statuscode bei erfolg angegeben ist, <br>
