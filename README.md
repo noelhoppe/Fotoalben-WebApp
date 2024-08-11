@@ -1,3 +1,10 @@
+# Inhaltsverzeichnis
+-[Projektanforderungen](#Projektanforderungen)  
+-[Informationen zur Inbetriebnahme der Anwendung](#informationen-zur-inbetriebnahme-der-anwendung)  
+-[ERM-Diagramm inklusive kurzer Beschreibung](#ERM-Diagramm)  
+-[DDL Skript für die Initialsieirung der Datenbank (u.a anlegene eines Admin-Nutzer)](#beschreibung-des-ddl-skripts)  
+-[Beschreibung der RESTful API](#beschreibung-der-RESTful-API)
+
 # Projektanforderungen
 
 ## Projektbeschreibung
@@ -73,7 +80,7 @@
 # Informationen zur Inbetriebnahme der Anwendung
 
 ## Hinweis
-Im Allgemeinen ist unter windows die PowerShell zu benutzen.  
+Im Allgemeinen ist unter Windows die PowerShell zu benutzen.  
 Unter macOS wurde zsh zur Inbetriebnahme benutzt.
 
 ## Login-Daten für den zuvor mithilfe eines ddl-Scripts erstellten Admin
@@ -88,7 +95,7 @@ Sollte nach der ersten Anwendung im admin-Portal geändert werden.
 Bevor du mit der Inbetriebnahme der Anwendung beginnst, stelle sicher, dass die folgenden Tools und Dienste auf deinem System installiert sind:
 
 - **Git**: [Git installieren](https://git-scm.com/) – Zum Klonen des Repositories.
-- **Java Development Kit (JDK) 11 oder höher**: [JDK installieren](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) – Erforderlich, um das Vert.x-Backend auszuführen.
+- **Java Development Kit, am besten die neuste Version**: [JDK installieren](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) – Erforderlich, um das Vert.x-Backend auszuführen.
 - **Maven**: [Maven installieren](https://maven.apache.org/install.html) – Zum Bauen und Verwalten von Java-Projekten.
 - **Node.js** und **npm**: [Node.js installieren](https://nodejs.org/) – Zum Bauen und Ausführen des TypeScript-Frontends.
 - **MariaDB**: [MariaDB installieren](https://mariadb.org/download/) – Zum Verwenden der Datenbank, die von der Anwendung benötigt wird.
@@ -114,25 +121,34 @@ git clone git@git.thm.de:informatik-projekt/sose-2024-suess-rupp/gruppe-1.git
 cd gruppe-1
 ```
 
-## Schritt 3 (Linux/macOS): Das ddl-Skript ausführen und die MariaDB-Client-Sitzung beenden
+## Schritt 3: Das ddl-Skript ausführen und die MariaDB-Client-Sitzung beenden
+
+### MacOS/Linux
 ```bash 
 mysql -u your_user -p your_password;
 source ddl.sql;
 exit;
 ```
 
-## Schritt 3 (windows) : Öffne MySQL Client und
+### Windows
+
+> Öffne MySQL Client und melde dich mit deinem Datenbank-Passwort an.  
+> [Dateipfad ddl.sql] : vollständiger Dateipfad von ddl.sql (getrennt mit `/`) 
+
+
 ```bash
-source ddl.sql;
+source [Dateipfad ddl.sql];
 exit;
 ```
 
-## Schritt 4: Passe die Datenbankkonfiguration in der config.json an (Felder url, user, password)
+## Schritt 4: Passe die Datenbankkonfiguration in der config.json an 
 ```bash
 cd photoalbums/src/main/resources/
 ```
 
-## Schritt 5 : Projekt bauen und starten
+> Öffne `config.json` und passe die Felder url, user, password an.
+
+## Schritt 5: Projekt bauen und starten
 ```bash
 cd ../../../
 
@@ -150,10 +166,40 @@ http://localhost:8080
 # ERM-Diagramm
 <img alt="ERM-Diagramm" src="ERM-Diagramm.png">
 
+## Zur Tabelle Users
+1. Das Feld ID als Primärsschlüssel ist eine automatisch generierte Ganzzahl.  
+2. Das Feld username ist eine eindeutige Zeichenkette mit maximal 30 Zeichen. Das Feld darf nicht leer sein.   
+3. Das Feld password ist eine Zeichenkette mit maximal 60 Zeichen. Es wird durch bcrypt mit Rounds 10 gehast in der Datenbank gespeichert. Das Feld darf nicht leer sein.
+4. Das Feld role ist entweder 'ADMIN' oder 'USER' und ist standardmäßig 'USER'.
+
+## Zur Tabelle Photos
+1. Das Feld ID als Primärschlüssel ist eine automatisch generierte Ganzzhal.
+2. Das Feld Users_ID als Fremdschlüssel referenziert das Feld ID in der Tabelle Users.
+3. Das Feld title ist eine Zeichenkette mit maximal 30 Zeichen und darf nicht leer sein. Das Feld darf nicht leer sein.
+4. Das Feld taken ist ein Datum. Das Feld darf nicht leer sein.
+5. Das Feld url ist eine Zeichenkette mit maximal 50 zeichen. Das Feld darf nicht leer sein.
+
+## Zur Tabelle Albums
+1. Das Feld ID als Primärschlüssel ist eine automatisch generierte Ganzzahl.
+2. Das Feld Users_ID als Fremdschlüssel refernziert das Feld ID in der Tabelle Users.
+3. Das Feld title ist eine Zeichenkette mit maximal 30 Zeichen und darf nicht leer sein.
+
+## Zur Tabelle Tags 
+1. Das Feld ID als Primärschlüssel ist eine automatisch generierte Ganzzahl.
+2. Das Feld name ist eine Zeichenkette mit maximal 30 zeichen. Das Feld ist eindeutig und darf nicht leer sein.
+
+## Zur Tabelle AlbumsPhotos
+1. Die Felder Photos_ID und Tags_ID bilden einen Primärschlüssel und referenzieren die Felder ID in der Tabelle Photos und ID in der Tabelle Albums.
+
+## Zur Tabelle PhotosTags
+1. Die Felder Photos_ID und Tags_ID bilden einen Primärschlüssel und referenzieren die Felder ID in der Tabelle Photos und ID in der Tabelle Tags.
+
+## Zur Tabelle AlbumTags
+1. Die Felder Photos_ID und Tags_ID bilden einen zusammengesetzten Primärschlüssel und referenzieren die Felder ID in der Tabelle Albums bzw. Photos
+
 
 # Beschreibung des DDL-Skripts
-
-1. Das DDL-Sript legt zunächst eine Datenbank MediaVaultDB an und wählt diese aus.
+1. Das DDL-Skript legt zunächst eine Datenbank MediaVaultDB an und wählt diese aus.
 2. In der Datenbank werden die folgenden Tabellen mit den jeweiligen Feldern angelegt
    1. Users (Primärschlüssel ID) mit
       1. ID (Integer) wird automatisch generiert
@@ -1042,8 +1088,8 @@ mögliche Fehlermeldungen:
 http-Request
 ```JSON
 {
- "username" : ____ ,
-  "password" : ____
+ "username" : "____" ,
+  "password" : "____"
 }
 ```
 
@@ -1195,7 +1241,7 @@ mögliche Fehlermeldungen:
 http-Request
 ```JSON
 {
- "title" : ____
+ "title" : "____"
 }
 ```
 
@@ -1307,7 +1353,7 @@ http-Req
 ```JSON
 {
   "tag" : "___",
-  "albumID" : __
+  "albumID" : 10
 }
 ```
 
@@ -1389,8 +1435,8 @@ mögliche Fehlermeldungen:
 http-Req
 ```JSON
 {
-  "photoID" : __,
-  "albumID" : __
+  "photoID" : 10,
+  "albumID" : 12
 }
 ```
 
@@ -1514,8 +1560,8 @@ mögliche Fehlermeldungen:
 http-Req
 ```JSON
 {
-  "photoID" : __,
-  "albumID" : __
+  "photoID" : 12,
+  "albumID" : 13
 }
 ```
 
@@ -1616,7 +1662,7 @@ http-Res:
     "id": 5,
     "title": "katzen",
     "contains": false
- 
+  }
 ]
 ```
 
@@ -1662,7 +1708,7 @@ http-Req
 ```JSON
 {
   "tag" : "___",
-  "albumID" : __
+  "albumID" : 12
 }
 ```
 mögliche Fehlermeldungen:
