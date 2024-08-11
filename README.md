@@ -3,7 +3,7 @@
 -[Informationen zur Inbetriebnahme der Anwendung](#informationen-zur-inbetriebnahme-der-anwendung)  
 -[ERM-Diagramm inklusive kurzer Beschreibung](#erm-diagramm)  
 -[DDL Skript für die Initialisierung der Datenbank (u.a anlegene eines Admin-Nutzer)](#beschreibung-des-ddl-skripts)  
--[Beschreibung der RESTful API](#beschreibung-der-RESTful-API)
+-[Beschreibung der RESTful API](#beschreibung-der-restful-API)
 
 # Projektanforderungen
 
